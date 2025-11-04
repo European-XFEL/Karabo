@@ -16,65 +16,59 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Version_Test.cc
+ * File:   Version_Test.hh
  * Author: cas
  *
  * Created on February 11, 2016, 2:23 PM
  */
 
-#include "Version_Test.hh"
+#include <gtest/gtest.h>
 
 #include <karabo/util/Version.hh>
 #include <karabo/util/VersionMacros.hh>
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Version_Test);
 
-
-Version_Test::Version_Test() {}
-
-
-Version_Test::~Version_Test() {}
-
-
-void Version_Test::testVersion() {
+TEST(TestVersion, testVersion) {
     std::clog << "### KARABO VERSION: " << karabo::util::Version::getVersion() << " ###" << std::endl;
     const karabo::util::Version& v = karabo::util::Version::getKaraboVersion();
-    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), v.getString());
-    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from VersionMacros.hh
+    EXPECT_EQ(karabo::util::Version::getVersion(), v.getString());
+    EXPECT_EQ(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from VersionMacros.hh
 }
 
-void Version_Test::testVersionFromString() {
+
+TEST(TestVersion, testVersionFromString) {
     karabo::util::Version v("12.2.3");
-    CPPUNIT_ASSERT_EQUAL(12, v.getMajor());
-    CPPUNIT_ASSERT_EQUAL(2, v.getMinor());
-    CPPUNIT_ASSERT_EQUAL(3, v.getPatch());
-    CPPUNIT_ASSERT_EQUAL(false, v.isPreRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isPostRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isDevRelease());
+    EXPECT_EQ(12, v.getMajor());
+    EXPECT_EQ(2, v.getMinor());
+    EXPECT_EQ(3, v.getPatch());
+    EXPECT_EQ(false, v.isPreRelease());
+    EXPECT_EQ(false, v.isPostRelease());
+    EXPECT_EQ(false, v.isDevRelease());
     v = karabo::util::Version("12.2.3rc32");
-    CPPUNIT_ASSERT_EQUAL(12, v.getMajor());
-    CPPUNIT_ASSERT_EQUAL(2, v.getMinor());
-    CPPUNIT_ASSERT_EQUAL(3, v.getPatch());
-    CPPUNIT_ASSERT_EQUAL(true, v.isPreRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isPostRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isDevRelease());
+    EXPECT_EQ(12, v.getMajor());
+    EXPECT_EQ(2, v.getMinor());
+    EXPECT_EQ(3, v.getPatch());
+    EXPECT_EQ(true, v.isPreRelease());
+    EXPECT_EQ(false, v.isPostRelease());
+    EXPECT_EQ(false, v.isDevRelease());
     v = karabo::util::Version("12.2.3.post32");
-    CPPUNIT_ASSERT_EQUAL(12, v.getMajor());
-    CPPUNIT_ASSERT_EQUAL(2, v.getMinor());
-    CPPUNIT_ASSERT_EQUAL(3, v.getPatch());
-    CPPUNIT_ASSERT_EQUAL(false, v.isPreRelease());
-    CPPUNIT_ASSERT_EQUAL(true, v.isPostRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isDevRelease());
+    EXPECT_EQ(12, v.getMajor());
+    EXPECT_EQ(2, v.getMinor());
+    EXPECT_EQ(3, v.getPatch());
+    EXPECT_EQ(false, v.isPreRelease());
+    EXPECT_EQ(true, v.isPostRelease());
+    EXPECT_EQ(false, v.isDevRelease());
     v = karabo::util::Version("12.2.3rc32.dev21");
-    CPPUNIT_ASSERT_EQUAL(12, v.getMajor());
-    CPPUNIT_ASSERT_EQUAL(2, v.getMinor());
-    CPPUNIT_ASSERT_EQUAL(3, v.getPatch());
-    CPPUNIT_ASSERT_EQUAL(true, v.isPreRelease());
-    CPPUNIT_ASSERT_EQUAL(false, v.isPostRelease());
-    CPPUNIT_ASSERT_EQUAL(true, v.isDevRelease());
+    EXPECT_EQ(12, v.getMajor());
+    EXPECT_EQ(2, v.getMinor());
+    EXPECT_EQ(3, v.getPatch());
+    EXPECT_EQ(true, v.isPreRelease());
+    EXPECT_EQ(false, v.isPostRelease());
+    EXPECT_EQ(true, v.isDevRelease());
 }
 
-void Version_Test::testVersionComparison() {
+
+TEST(TestVersion, testVersionComparison) {
     // release version comparisons
     std::vector<std::string> versionsInStrictOrder{"b00b1e5",
                                                    "0.0.0",
@@ -115,49 +109,50 @@ void Version_Test::testVersionComparison() {
             const karabo::util::Version v2(version2);
             if (i1 < i2) {
                 std::string message = "Failed calculating '" + version1 + "' < '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 < v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 >= v2));
+                EXPECT_EQ(true, (v1 < v2)) << message;
+                EXPECT_EQ(false, (v1 >= v2)) << message;
             }
             if (i1 == i2) {
                 std::string message = "Failed calculating '" + version1 + "' == '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 == v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 != v2));
+                EXPECT_EQ(true, (v1 == v2)) << message;
+                EXPECT_EQ(false, (v1 != v2)) << message;
             }
             if (i1 >= i2) {
                 std::string message = "Failed calculating '" + version1 + "' >= '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 >= v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 < v2));
+                EXPECT_EQ(true, (v1 >= v2)) << message;
+                EXPECT_EQ(false, (v1 < v2)) << message;
             }
             if (i1 <= i2) {
                 std::string message = "Failed calculating '" + version1 + "' <= '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 <= v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 > v2));
+                EXPECT_EQ(true, (v1 <= v2)) << message;
+                EXPECT_EQ(false, (v1 > v2)) << message;
             }
             if (i1 > i2) {
                 std::string message = "Failed calculating '" + version1 + "' > '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 > v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 <= v2));
+                EXPECT_EQ(true, (v1 > v2)) << message;
+                EXPECT_EQ(false, (v1 <= v2)) << message;
             }
             if (i1 != i2) {
                 std::string message = "Failed calculating '" + version1 + "' != '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 != v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 == v2));
+                EXPECT_EQ(true, (v1 != v2)) << message;
+                EXPECT_EQ(false, (v1 == v2)) << message;
             }
         }
     }
 }
 
-void Version_Test::testVersionMacro() {
-    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(0, 3, 4));
-    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 1, 4));
-    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 2, 2));
+
+TEST(TestVersion, testVersionMacro) {
+    EXPECT_GT(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(0, 3, 4));
+    EXPECT_GT(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 1, 4));
+    EXPECT_GT(KARABO_VERSION_NUM(1, 2, 3), KARABO_VERSION_NUM(1, 2, 2));
 
     // Minor and patch are supported up to 999
-    CPPUNIT_ASSERT_LESS(KARABO_VERSION_NUM(2, 0, 0), KARABO_VERSION_NUM(1, 999, 999));
+    EXPECT_GT(KARABO_VERSION_NUM(2, 0, 0), KARABO_VERSION_NUM(1, 999, 999));
 
     // Exact represantation (test needed?)
-    CPPUNIT_ASSERT_EQUAL(1'004'014, KARABO_VERSION_NUM(1, 4, 14));
+    EXPECT_EQ(1'004'014, KARABO_VERSION_NUM(1, 4, 14));
 
     // Version macros are introduced far after Karabo 1.4.14
-    CPPUNIT_ASSERT_GREATER(KARABO_VERSION_NUM(1, 4, 14), KARABO_VERSION_NUM_CURRENT);
+    EXPECT_LT(KARABO_VERSION_NUM(1, 4, 14), KARABO_VERSION_NUM_CURRENT);
 }

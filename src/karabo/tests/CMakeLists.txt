@@ -182,10 +182,10 @@ set(netTestRunner_FILES
 )
 
 set(utilTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/DataLogUtils_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/MetaTools_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/util/Version_Test.cc
-    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/testDataLogUtils.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/testMetaTools.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/testMetaTools.cc
+    $<TARGET_OBJECTS:GTEST_RUNNER_NOLOOP>
 )
 
 set(xmsTestRunner_FILES

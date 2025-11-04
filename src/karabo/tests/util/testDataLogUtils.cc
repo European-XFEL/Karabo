@@ -16,33 +16,27 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   DataLogUtils_Test.cc
+ * File:   DataLogUtils_Test.hh
  * Author: costar
  *
  * Created on February 4, 2019, 9:58 AM
  */
-#include "DataLogUtils_Test.hh"
 
+#include <gtest/gtest.h>
+
+#include <boost/regex.hpp>
 #include <karabo/util/DataLogUtils.hh>
 
 #include "karabo/data/types/Exception.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(DataLogUtils_Test);
-
 namespace nl = nlohmann;
 
-DataLogUtils_Test::DataLogUtils_Test()
-    : m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended),
-      m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended) {}
+
+static boost::regex m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended);
+static boost::regex m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended);
 
 
-void DataLogUtils_Test::setUp() {}
-
-
-void DataLogUtils_Test::tearDown() {}
-
-
-void DataLogUtils_Test::testValidIndexLines() {
+TEST(TestDataLogUtils, testValidIndexLines) {
     std::vector<std::pair<std::string, std::vector<std::string>>> resultTable{
           std::make_pair(
                 "+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0",
@@ -79,23 +73,23 @@ void DataLogUtils_Test::testValidIndexLines() {
 
     for (auto& aPair : resultTable) {
         boost::smatch indexFields;
-        CPPUNIT_ASSERT(boost::regex_search(aPair.first, indexFields, m_indexRegex));
-        CPPUNIT_ASSERT_EQUAL(aPair.second[0], std::string(indexFields[1])); // indexFields[1] is not a string - LOG
-        CPPUNIT_ASSERT_EQUAL(aPair.second[1], std::string(indexFields[2])); // iso timestamp
-        CPPUNIT_ASSERT_EQUAL(aPair.second[2], std::string(indexFields[3])); // double timestamp
+        EXPECT_TRUE(boost::regex_search(aPair.first, indexFields, m_indexRegex));
+        EXPECT_EQ(aPair.second[0], std::string(indexFields[1])); // indexFields[1] is not a string - LOG
+        EXPECT_EQ(aPair.second[1], std::string(indexFields[2])); // iso timestamp
+        EXPECT_EQ(aPair.second[2], std::string(indexFields[3])); // double timestamp
         // Now the tail:
         boost::smatch tailFields;
         std::string tail = std::string(indexFields[4]);
-        CPPUNIT_ASSERT(boost::regex_search(tail, tailFields, m_indexTailRegex));
-        CPPUNIT_ASSERT_EQUAL(aPair.second[3], std::string(tailFields[1])); // train id
-        CPPUNIT_ASSERT_EQUAL(aPair.second[4], std::string(tailFields[2])); // index file position
-        CPPUNIT_ASSERT_EQUAL(aPair.second[5], std::string(tailFields[3])); // user name
-        CPPUNIT_ASSERT_EQUAL(aPair.second[6], std::string(tailFields[4])); // file number
+        EXPECT_TRUE(boost::regex_search(tail, tailFields, m_indexTailRegex));
+        EXPECT_EQ(aPair.second[3], std::string(tailFields[1])); // train id
+        EXPECT_EQ(aPair.second[4], std::string(tailFields[2])); // index file position
+        EXPECT_EQ(aPair.second[5], std::string(tailFields[3])); // user name
+        EXPECT_EQ(aPair.second[6], std::string(tailFields[4])); // file number
     }
 }
 
 
-void DataLogUtils_Test::testInvalidIndexLines() {
+TEST(TestDataLogUtils, testInvalidIndexLines) {
     std::vector<std::pair<std::string, int>> resultsTable{
           // The int which is the second element of the pair indicates whether the regex that didn't match was the
           // one for the whole line (value 1) or was the one for the regex for the line tail (value 2).
@@ -132,36 +126,35 @@ void DataLogUtils_Test::testInvalidIndexLines() {
                 faillingRegEx = 2;
             }
         }
-        CPPUNIT_ASSERT_MESSAGE("For invalid test #" + karabo::data::toString(invalidTestIdx) +
-                                     " a faillingRegEx value of " + karabo::data::toString(aPair.second) +
-                                     " was expected, but got " + karabo::data::toString(faillingRegEx),
-                               aPair.second == faillingRegEx);
+        EXPECT_TRUE(aPair.second == faillingRegEx)
+              << "For invalid test #" << invalidTestIdx << " a faillingRegEx value of " << aPair.second
+              << " was expected, but got " << faillingRegEx;
         invalidTestIdx++;
     }
 }
 
 
-void DataLogUtils_Test::testValueFromJSON() {
+TEST(TestDataLogUtils, testValueFromJSON) {
     boost::optional<std::string> value;
     nl::json j = nl::json::parse(std::string("null"));
     value = karabo::util::jsonValueAsString(j);
-    CPPUNIT_ASSERT_MESSAGE("optional value set on null input", !value);
+    EXPECT_TRUE(!value) << "optional value set on null input";
     j = nl::json::parse(std::string("\"anything\""));
     value = karabo::util::jsonValueAsString(j);
-    CPPUNIT_ASSERT_MESSAGE("optional value not set on string input", value);
+    EXPECT_TRUE(value) << "optional value not set on string input";
     j = nl::json::parse(std::string("true"));
     value = karabo::util::jsonValueAsString(j);
-    CPPUNIT_ASSERT_MESSAGE("optional value not set on bool input", value);
+    EXPECT_TRUE(value) << "optional value not set on bool input";
     j = nl::json::parse(std::string("0.1"));
     value = karabo::util::jsonValueAsString(j);
-    CPPUNIT_ASSERT_MESSAGE("optional value not set on float input", value);
+    EXPECT_TRUE(value) << "optional value not set on float input";
     j = nl::json::parse(std::string("42"));
     value = karabo::util::jsonValueAsString(j);
-    CPPUNIT_ASSERT_MESSAGE("optional value not set on integer input", value);
+    EXPECT_TRUE(value) << "optional value not set on integer input";
 }
 
 
-void DataLogUtils_Test::testMultipleJSONObjects() {
+TEST(TestDataLogUtils, testMultipleJSONObjects) {
     std::string simple =
           ""
           "{\"results\":"
@@ -180,19 +173,19 @@ void DataLogUtils_Test::testMultipleJSONObjects() {
     karabo::util::InfluxResultSet simpleInfluxResult;
     karabo::util::jsonResultsToInfluxResultSet(simple, simpleInfluxResult, "");
 
-    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.first.size());              // check the number of columns
-    CPPUNIT_ASSERT_EQUAL(std::string("time"), simpleInfluxResult.first[0]);  // check the column title
-    CPPUNIT_ASSERT_EQUAL(std::string("value"), simpleInfluxResult.first[1]); // check the column title
-    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.second.size());             // check the number of rows
-    CPPUNIT_ASSERT(simpleInfluxResult.second[0][0]);                         // 1st row, 1st column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"),
-                         *simpleInfluxResult.second[0][0]);                    // 1st row, 1st column: check value
-    CPPUNIT_ASSERT(simpleInfluxResult.second[0][1]);                           // 1st row, 2nd column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("40"), *simpleInfluxResult.second[0][1]); // 1st row, 2nd column: check value
-    CPPUNIT_ASSERT(simpleInfluxResult.second[1][0]);                           // 2nd row, 1st column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"),
-                         *simpleInfluxResult.second[1][0]); // 2nd row, 1st column: check value
-    CPPUNIT_ASSERT(!simpleInfluxResult.second[1][1]);       // 2nd row, 2nd column **is** null
+    ASSERT_EQ(2ul, simpleInfluxResult.first.size());  // check the number of columns
+    EXPECT_EQ("time", simpleInfluxResult.first[0]);   // check the column title
+    EXPECT_EQ("value", simpleInfluxResult.first[1]);  // check the column title
+    ASSERT_EQ(2ul, simpleInfluxResult.second.size()); // check the number of rows
+    EXPECT_TRUE(simpleInfluxResult.second[0][0]);     // 1st row, 1st column is not null
+    EXPECT_EQ("1597043525897755",
+              *simpleInfluxResult.second[0][0]);       // 1st row, 1st column: check value
+    EXPECT_TRUE(simpleInfluxResult.second[0][1]);      // 1st row, 2nd column is not null
+    EXPECT_EQ("40", *simpleInfluxResult.second[0][1]); // 1st row, 2nd column: check value
+    EXPECT_TRUE(simpleInfluxResult.second[1][0]);      // 2nd row, 1st column is not null
+    EXPECT_EQ("1597043525897855",
+              *simpleInfluxResult.second[1][0]);   // 2nd row, 1st column: check value
+    EXPECT_TRUE(!simpleInfluxResult.second[1][1]); // 2nd row, 2nd column **is** null
     std::string complex =
           ""
           "{\"results\":"
@@ -219,18 +212,18 @@ void DataLogUtils_Test::testMultipleJSONObjects() {
     karabo::util::InfluxResultSet complexInfluxResult;
 
     karabo::util::jsonResultsToInfluxResultSet(complex, complexInfluxResult, "");
-    CPPUNIT_ASSERT_EQUAL(2ul, complexInfluxResult.first.size());              // check the number of columns
-    CPPUNIT_ASSERT_EQUAL(std::string("time"), complexInfluxResult.first[0]);  // check the column title
-    CPPUNIT_ASSERT_EQUAL(std::string("value"), complexInfluxResult.first[1]); // check the column title
-    CPPUNIT_ASSERT_EQUAL(4ul, complexInfluxResult.second.size());             // check the number of rows
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"), *complexInfluxResult.second[0][0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("40"), *complexInfluxResult.second[0][1]);
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"), *complexInfluxResult.second[1][0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("42"), *complexInfluxResult.second[1][1]);
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897955"), *complexInfluxResult.second[2][0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("44"), *complexInfluxResult.second[2][1]);
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525898055"), *complexInfluxResult.second[3][0]);
-    CPPUNIT_ASSERT_EQUAL(std::string("46"), *complexInfluxResult.second[3][1]);
+    ASSERT_EQ(2ul, complexInfluxResult.first.size());  // check the number of columns
+    EXPECT_EQ("time", complexInfluxResult.first[0]);   // check the column title
+    EXPECT_EQ("value", complexInfluxResult.first[1]);  // check the column title
+    ASSERT_EQ(4ul, complexInfluxResult.second.size()); // check the number of rows
+    EXPECT_EQ("1597043525897755", *complexInfluxResult.second[0][0]);
+    EXPECT_EQ("40", *complexInfluxResult.second[0][1]);
+    EXPECT_EQ("1597043525897855", *complexInfluxResult.second[1][0]);
+    EXPECT_EQ("42", *complexInfluxResult.second[1][1]);
+    EXPECT_EQ("1597043525897955", *complexInfluxResult.second[2][0]);
+    EXPECT_EQ("44", *complexInfluxResult.second[2][1]);
+    EXPECT_EQ("1597043525898055", *complexInfluxResult.second[3][0]);
+    EXPECT_EQ("46", *complexInfluxResult.second[3][1]);
 
 
     std::string mixed =
@@ -256,6 +249,6 @@ void DataLogUtils_Test::testMultipleJSONObjects() {
           "}]"
           "}]}";
 
-    CPPUNIT_ASSERT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""),
-                         karabo::data::NotSupportedException);
+    EXPECT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""),
+                 karabo::data::NotSupportedException);
 }
