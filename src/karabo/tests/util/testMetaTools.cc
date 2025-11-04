@@ -22,28 +22,36 @@
  * Created on August 11, 2016, 11:18 AM
  */
 
-#ifndef METATOOLS_TEST_HH
-#define METATOOLS_TEST_HH
-
-#include <cppunit/extensions/HelperMacros.h>
+#include <gtest/gtest.h>
 
 #include <boost/asio.hpp>
 #include <chrono>
 #include <functional>
 #include <iostream>
-#include <karabo/net/EventLoop.hh>
-#include <karabo/util/MetaTools.hh>
 #include <memory>
 #include <thread>
 #include <unordered_map>
 
 #include "karabo/data/types/Hash.hh"
+#include "karabo/net/EventLoop.hh"
+#include "karabo/util/MetaTools.hh"
+#include "karabo/util/PackParameters.hh"
+
+
+using namespace karabo::data;
+using namespace karabo::util;
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
+
 
 struct MyPublicHash : public karabo::data::Hash {};
 
 struct MyProtectedHash : protected karabo::data::Hash {};
 
 struct MyPrivateHash : private karabo::data::Hash {};
+
 
 struct PointerTest {
     template <class T>
@@ -62,6 +70,7 @@ struct PointerTest {
     }
 };
 
+
 struct BindWeakTest : public std::enable_shared_from_this<BindWeakTest> {
     int add(const int a, const int b) {
         return a + b;
@@ -71,9 +80,11 @@ struct BindWeakTest : public std::enable_shared_from_this<BindWeakTest> {
     }
 };
 
+
 struct Test_SignalSlotable : public std::enable_shared_from_this<Test_SignalSlotable> {
     virtual ~Test_SignalSlotable() {}
 };
+
 
 struct Test_Device : public virtual Test_SignalSlotable {
     boost::asio::steady_timer m_timer;
@@ -100,30 +111,30 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
             auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
             int v = f1(1, 1);
-            CPPUNIT_ASSERT(v == 2);
+            EXPECT_TRUE(v == 2);
 
             auto f2 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, _1);
             v = f2(1);
-            CPPUNIT_ASSERT(v == 2);
+            EXPECT_TRUE(v == 2);
 
             auto f3 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, 1);
             v = f3(1);
-            CPPUNIT_ASSERT(v == 2);
+            EXPECT_TRUE(v == 2);
 
             auto f4 = karabo::util::bind_weak(&BindWeakTest::dummyFunction,
                                               const_cast<const BindWeakTest*>(bindWeakTest.get()), _1);
             v = f4(1);
-            CPPUNIT_ASSERT(v == 1);
+            EXPECT_TRUE(v == 1);
 
             auto f5 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, 1);
             v = f5();
-            CPPUNIT_ASSERT(v == 2);
+            EXPECT_TRUE(v == 2);
 
             // Since the object was destroyed, the f5 return value should be the function return type default value
             // (in this case 0, since the return type is int)
             bindWeakTest.reset();
             v = f5();
-            CPPUNIT_ASSERT(v == 0);
+            EXPECT_TRUE(v == 0);
         }
 
         // Now the real test starts:
@@ -158,6 +169,7 @@ struct Test_Device : public virtual Test_SignalSlotable {
     }
 };
 
+
 struct Test_DeviceServer {
     boost::asio::steady_timer m_deviceDestructTimer;
     std::map<std::string, std::shared_ptr<Test_Device> > m_devices;
@@ -177,23 +189,127 @@ struct Test_DeviceServer {
     }
 };
 
-class MetaTools_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(MetaTools_Test);
-    CPPUNIT_TEST(testMethod);
-    CPPUNIT_TEST(testWeakBind);
-    CPPUNIT_TEST(testCastResolvers);
-    CPPUNIT_TEST(testCallFromTuple);
-    CPPUNIT_TEST_SUITE_END();
 
-   public:
-    MetaTools_Test();
-    virtual ~MetaTools_Test();
+TEST(TestMetaTools, testMethod) {
+    EXPECT_TRUE(PointerTest::isSharedPointer<std::shared_ptr<int> >());
+    EXPECT_TRUE(!PointerTest::isSharedPointer<int>());
 
-   private:
-    void testMethod();
-    void testWeakBind();
-    void testCastResolvers();
-    void testCallFromTuple();
+    EXPECT_TRUE((std::is_base_of<Hash, MyPublicHash>::value));
+    EXPECT_TRUE((std::is_base_of<Hash, MyProtectedHash>::value));
+    EXPECT_TRUE((std::is_base_of<Hash, MyPrivateHash>::value));
+    EXPECT_TRUE((!std::is_base_of<Hash, int>::value));
+}
+
+
+TEST(TestMetaTools, testWeakBind) {
+    std::vector<std::string> messages;
+    std::unique_ptr<Test_DeviceServer> d(new Test_DeviceServer(&messages));
+    karabo::net::EventLoop::addThread(4);
+    karabo::net::EventLoop::run();
+
+    ASSERT_TRUE(messages.size() >= 4);
+    EXPECT_TRUE(messages[0] == "Test_Device created");
+    EXPECT_TRUE(messages[1] == "Tick 5");
+    EXPECT_TRUE(messages[2] == "Tick 6");
+    EXPECT_TRUE(messages[messages.size() - 1] == "Test_Device deleted");
+}
+
+
+struct Base : public std::enable_shared_from_this<Base> {
+    virtual ~Base() {}
 };
 
-#endif /* METATOOLS_TEST_HH */
+
+struct VirtualBase : public std::enable_shared_from_this<VirtualBase> {
+    virtual void foo() {};
+    virtual ~VirtualBase(){};
+};
+
+
+struct FinalInterim : public Base {
+    virtual ~FinalInterim(){};
+};
+
+
+struct FinalInterimVirtual : public virtual VirtualBase {
+    virtual ~FinalInterimVirtual(){};
+};
+
+
+struct Final : public std::enable_shared_from_this<Final> {};
+
+
+struct FinalVirtual : public std::enable_shared_from_this<FinalVirtual> {
+    virtual void foo() {};
+    virtual ~FinalVirtual(){};
+};
+
+
+TEST(TestMetaTools, testCastResolvers) {
+    // note that we verify compile-time functionality here. This will simply not compile if the cast resolvers
+    // do not treat cases appropriately.
+    std::shared_ptr<Final> f(new Final());
+    { std::shared_ptr<Final> sf = karabo::util::cond_dyn_cast<std::true_type>::cast(f.get()); }
+
+    std::shared_ptr<FinalVirtual> fv(new FinalVirtual());
+    { std::shared_ptr<FinalVirtual> sfv = karabo::util::cond_dyn_cast<std::true_type>::cast(fv.get()); }
+
+    std::shared_ptr<FinalInterim> fi(new FinalInterim());
+    { std::shared_ptr<FinalInterim> sfi = karabo::util::cond_dyn_cast<std::false_type>::cast(fi.get()); }
+
+    std::shared_ptr<FinalInterimVirtual> fiv(new FinalInterimVirtual());
+
+    { std::shared_ptr<FinalInterimVirtual> sfiv = karabo::util::cond_dyn_cast<std::false_type>::cast(fiv.get()); }
+
+    EXPECT_TRUE(true);
+}
+
+
+struct Foo {
+    Foo() {}
+
+    Foo(const Foo&) {
+        nCopies++;
+    }
+
+    static int nCopies;
+};
+
+
+int Foo::nCopies = 0;
+
+
+struct Bar {
+    Bar() : gotCalled(false) {}
+
+    void bar(int, const std::string&, const Foo& f) {
+        gotCalled = true;
+    }
+
+    bool gotCalled;
+};
+
+
+TEST(TestMetaTools, testCallFromTuple) {
+    int i(42);
+    std::string s("test");
+    Foo f;
+    Bar b;
+    EXPECT_EQ(0, Foo::nCopies);
+
+    Hash h;
+    pack(h, i, s, f); // We will copy f once here!!
+    EXPECT_EQ(1, Foo::nCopies);
+    auto barFn = std::bind(&Bar::bar, &b, _1, _2, _3);
+    call(barFn, unpack<int, std::string, Foo>(h)); // But not here!!
+
+    EXPECT_TRUE(b.gotCalled == true);
+    EXPECT_EQ(1, Foo::nCopies);
+
+    // But we copy if we go via function with arguments by value
+    b.gotCalled = false;
+    std::function<void(int, std::string, Foo)> funcWithArgsByValue = barFn;
+    call(funcWithArgsByValue, unpack<int, std::string, Foo>(h));
+    EXPECT_TRUE(b.gotCalled == true);
+    EXPECT_LT(1, Foo::nCopies); // At least one extra copy
+}
