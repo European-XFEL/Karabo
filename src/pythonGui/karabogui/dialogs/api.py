@@ -49,5 +49,5 @@ from .textdialog import TextDialog
 from .time_detail_dialog import RequestTimeDialog
 from .topology_device_dialog import TopologyDeviceDialog
 from .update_dialog import UpdateDialog
-from .utils import get_dialog_ui
+from .utils import get_dialog_ui, get_pkg_version
 from .webdialog import WebDialog, WebValidator

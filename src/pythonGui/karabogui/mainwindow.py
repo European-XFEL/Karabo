@@ -41,7 +41,7 @@ from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ApplicationConfigurationDialog, ClientTopologyDialog,
     DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo,
-    ProjectTopologyDialog, UpdateDialog, UserSessionDialog)
+    ProjectTopologyDialog, UpdateDialog, UserSessionDialog, get_pkg_version)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -77,6 +77,13 @@ ACCESS_LEVEL_INFO = """<html><head/><body><p><span style=" font-size:10pt;
 font-style:italic; font-weight:normal; color:#242424;">Currently logged in as
 temporary user <b>'{user}'</b> with the access level <b>'{access_level}'</b>.
 Do you really want to end the Temporary session?</span></p>
+"""
+
+VERSION_INFO = f"""GUI extensions can not be updated from bundled Karabo GUI.
+
+Current Versions:
+Karabo GUI     : {const.GUI_VERSION_LONG}\n
+GUI extensions : {get_pkg_version('GUIExtensions')}
 """
 
 
@@ -523,7 +530,6 @@ class MainWindow(QMainWindow):
 
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
-        self.acCheckUpdates.setVisible(not is_bundled_gui())
 
         self.acCheckProject = QAction("Check for Project Duplicates", self)
         self.acCheckProject.triggered.connect(self.onInvestigateProject)
@@ -860,6 +866,11 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def onCheckUpdates(self):
+        if is_bundled_gui():
+            title = "Info"
+            messagebox.show_information(
+                text=VERSION_INFO, title=title, parent=self)
+            return
         dialog = UpdateDialog(parent=self)
         dialog.open()
 
