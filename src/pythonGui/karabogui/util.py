@@ -18,6 +18,7 @@ import html
 import os
 import os.path as op
 import re
+import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -469,3 +470,9 @@ def convert_npy_to_csv(file_name, parent=None):
         return
 
     return csv_file_name
+
+
+def is_bundled_gui() -> bool:
+    """Check if the GUI is launched from the pyinstaller bundle or from the
+    source code."""
+    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
