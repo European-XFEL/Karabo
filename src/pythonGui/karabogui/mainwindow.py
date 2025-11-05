@@ -58,7 +58,7 @@ from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import (
     convert_npy_to_csv, generateObjectName, get_reason_parts, getOpenFileName,
-    getSaveFileName, move_to_cursor, process_qt_events)
+    getSaveFileName, is_bundled_gui, move_to_cursor, process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -443,7 +443,7 @@ class MainWindow(QMainWindow):
         """This method is called on gui launch if a new version of GUI
         Extensions is available.
         """
-        self.update_extensions_action.setVisible(True)
+        self.update_extensions_action.setVisible(not is_bundled_gui())
 
     # --------------------------------------
     # private methods
@@ -523,6 +523,7 @@ class MainWindow(QMainWindow):
 
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
+        self.acCheckUpdates.setVisible(not is_bundled_gui())
 
         self.acCheckProject = QAction("Check for Project Duplicates", self)
         self.acCheckProject.triggered.connect(self.onInvestigateProject)
