@@ -15,15 +15,21 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include "testRunner.hh"
+
+#include <gtest/gtest.h>
 
 #include <thread>
 
 #include "karabo/net/EventLoop.hh"
 
-int main(int argc, char* argv[]) {
+
+/*
+ * @brief GoogleTest entry point
+ */
+int main(int argc, char** argv) {
     std::jthread eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
-    int result = run_test(argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
+    auto ret = RUN_ALL_TESTS();
     karabo::net::EventLoop::stop();
-    return result;
+    return ret;
 }

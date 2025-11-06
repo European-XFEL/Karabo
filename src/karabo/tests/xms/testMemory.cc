@@ -22,49 +22,55 @@
  * Created on September 26, 2016, 9:28 AM
  */
 
-#include "Memory_Test.hh"
+#include <gtest/gtest.h>
+
+#include <karabo/xms.hpp>
+
+
+class TestMemory : public ::testing::Test {
+   protected:
+    TestMemory() {}
+    ~TestMemory() override {}
+
+    void SetUp() override;
+    void TearDown() override;
+
+    unsigned int m_channelId;
+    unsigned int m_chunkId;
+};
 
 using namespace karabo::data;
 using namespace karabo::xms;
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Memory_Test);
-
-
-Memory_Test::Memory_Test() {}
-
-
-Memory_Test::~Memory_Test() {}
-
-
-void Memory_Test::setUp() {
+void TestMemory::SetUp() {
     m_channelId = Memory::registerChannel();
     m_chunkId = Memory::registerChunk(m_channelId);
 }
 
 
-void Memory_Test::tearDown() {
+void TestMemory::TearDown() {
     Memory::unregisterChannel(m_channelId);
 }
 
 
-void Memory_Test::testSimpleReadAndWrite() {
+TEST_F(TestMemory, testSimpleReadAndWrite) {
     const Hash data("a", 42, "b", 3.14, "c", "Karabo");
     Hash readData;
 
     {
         Memory::write(data, m_channelId, m_chunkId, Memory::MetaData("fooSource", karabo::data::Timestamp()));
-        CPPUNIT_ASSERT(Memory::size(m_channelId, m_chunkId) != 0);
+        ASSERT_TRUE(Memory::size(m_channelId, m_chunkId) != 0);
 
         Memory::read(readData, 0, m_channelId, m_chunkId);
-        CPPUNIT_ASSERT(readData == data);
+        ASSERT_TRUE(readData == data);
 
         Memory::clearChunkData(m_channelId, m_chunkId);
-        CPPUNIT_ASSERT(Memory::size(m_channelId, m_chunkId) == 0);
+        ASSERT_TRUE(Memory::size(m_channelId, m_chunkId) == 0);
     }
 }
 
-void Memory_Test::testModifyAfterWrite() {
+TEST_F(TestMemory, testModifyAfterWrite) {
     Hash writeData("a", 1111);
     Hash readData;
 
@@ -73,8 +79,8 @@ void Memory_Test::testModifyAfterWrite() {
         writeData.set<int>("a", 9999);
         Memory::read(readData, 0, m_channelId, m_chunkId);
 
-        CPPUNIT_ASSERT(readData.get<int>("a") != writeData.get<int>("a"));
-        CPPUNIT_ASSERT(readData.get<int>("a") == 1111);
+        ASSERT_TRUE(readData.get<int>("a") != writeData.get<int>("a"));
+        ASSERT_TRUE(readData.get<int>("a") == 1111);
 
         Memory::clearChunkData(m_channelId, m_chunkId);
     }
