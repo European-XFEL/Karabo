@@ -16,8 +16,12 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "testRunner.hh"
+#include <gtest/gtest.h>
 
-int main(int argc, char* argv[]) {
-    return run_test(argc, argv);
+/*
+ * @brief GoogleTest entry point
+ */
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

@@ -16,28 +16,27 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   Signal_Test.cc
+ * File:   testSignal.cc
  *
  * Created on Feb 9, 2023
  */
 
-#include "Signal_Test.hh"
-
-#include <cppunit/TestAssert.h>
+#include <gtest/gtest.h>
 
 #include "karabo/xms/Signal.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Signal_Test);
+class TestSignal : public ::testing::Test {
+   protected:
+    TestSignal() {}
+    ~TestSignal() override {}
+    void SetUp() override;
+    void TearDown() override {}
+};
 
 
-Signal_Test::Signal_Test() {}
-
-
-Signal_Test::~Signal_Test() {}
-
-void Signal_Test::setUp() {
+void TestSignal::SetUp() {
     // Logger::configure(Hash("priority", "ERROR"));
     // Logger::useConsole();
     //  Event loop is started in xmsTestRunner.cc's main()
@@ -45,27 +44,24 @@ void Signal_Test::setUp() {
 }
 
 
-void Signal_Test::tearDown() {}
-
-
-void Signal_Test::testRegisterSlots() {
+TEST_F(TestSignal, testRegisterSlots) {
     auto sigSlot = karabo::xms::SignalSlotable::MakeShared("one");
     // sigSlot->start(); not needed here to start communication
 
     karabo::xms::Signal s(sigSlot.get(), sigSlot->getConnection(), sigSlot->getInstanceId(), "mySignal");
 
     //  test register
-    CPPUNIT_ASSERT(s.registerSlot("otherId", "slotA"));
-    CPPUNIT_ASSERT(!s.registerSlot("otherId", "slotA")); // cannot register twice
-    CPPUNIT_ASSERT(s.registerSlot("otherId", "slotB"));
+    ASSERT_TRUE(s.registerSlot("otherId", "slotA"));
+    ASSERT_TRUE(!s.registerSlot("otherId", "slotA")); // cannot register twice
+    ASSERT_TRUE(s.registerSlot("otherId", "slotB"));
 
     // test unregister
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId", "slotC"));  // unknown slot
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId2", "slotA")); // unknown instance
-    CPPUNIT_ASSERT(s.unregisterSlot("otherId", "slotA"));
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId", "slotA")); // already unregistered
-    CPPUNIT_ASSERT(s.unregisterSlot("otherId", ""));       // all remaining unregistered
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId", "slotB")); // already unregistered as remaining
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId", ""));      // already unregistered
-    CPPUNIT_ASSERT(!s.unregisterSlot("otherId2 ", ""));    // was never registered
+    ASSERT_TRUE(!s.unregisterSlot("otherId", "slotC"));  // unknown slot
+    ASSERT_TRUE(!s.unregisterSlot("otherId2", "slotA")); // unknown instance
+    ASSERT_TRUE(s.unregisterSlot("otherId", "slotA"));
+    ASSERT_TRUE(!s.unregisterSlot("otherId", "slotA")); // already unregistered
+    ASSERT_TRUE(s.unregisterSlot("otherId", ""));       // all remaining unregistered
+    ASSERT_TRUE(!s.unregisterSlot("otherId", "slotB")); // already unregistered as remaining
+    ASSERT_TRUE(!s.unregisterSlot("otherId", ""));      // already unregistered
+    ASSERT_TRUE(!s.unregisterSlot("otherId2 ", ""));    // was never registered
 }

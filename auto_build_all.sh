@@ -66,26 +66,10 @@ activateKaraboBuildTree() {
     fi
 }
 
-checkCppUnitTestResults() {
-    # activate karabo to get a python environment
-    activateKarabo
-    local mergeArgs=""
-    safeRunCommand "python -m pip install --upgrade ${scriptDir}/ci/utils/cppunitxmlparser/."
+copyCppUnitTestResults() {
     for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
-        mergeArgs="${mergeArgs} ${name}"
+        cp ${name} $scriptDir/junit.$(basename ${name})
     done
-    if [[ ${mergeArgs} = "" ]]; then
-        echo "ERROR! No XML output file was generated!"
-        exit 1
-    fi
-    # process the cppunit report files into a junit compatible file
-    cppunitxml-check -f${mergeArgs} -o $scriptDir/junit.cpp.xml
-    # this should have a non-zero return value if errors are present.
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-        exit $ret_code
-    fi
-    deactivate
 }
 
 
@@ -549,7 +533,7 @@ if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONT
     # deactivate the environment where C++ tests are run
     deactivateKarabo
     # Parse the XML test outputs
-    checkCppUnitTestResults
+    copyCppUnitTestResults
     if [ $tests_ret_code != 0 ]; then
         echo "Test execution FAILED"
         echo "Report files processing did not find errors..."

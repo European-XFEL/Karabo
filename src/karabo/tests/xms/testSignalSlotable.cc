@@ -16,16 +16,15 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   SignalSlotable_Test.cc
+ * File:   testSignalSlotable.cc
  * Author: heisenb
  *
  * Created on Apr 4, 2013, 1:24:22 PM
  */
 
-#include "SignalSlotable_Test.hh"
+#include <gtest/gtest.h>
 
-#include <cppunit/TestAssert.h>
-
+#include <boost/shared_ptr.hpp>
 #include <chrono>
 #include <future>
 #include <string>
@@ -37,6 +36,7 @@
 #include "karabo/tests/BrokerUtils.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
+
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
 using namespace karabo::data;
@@ -47,6 +47,7 @@ using std::placeholders::_1;
 const int numWaitIterations = 2'000;
 const int sleepPerWaitIterationMs = 5;
 const int slotCallTimeout = 10'000;
+
 
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
     const std::string m_othersId;
@@ -176,10 +177,23 @@ void waitEqual(Type target, const Type& test, int trials = 10) {
 }
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
+class TestSignalSlotable : public ::testing::Test {
+   protected:
+    TestSignalSlotable();
+    ~TestSignalSlotable() override;
+    void SetUp() override;
+    void TearDown() override;
+
+    void _loopFunction(const std::string& functionName, const std::function<void()>& testFunction);
+
+    std::string m_karaboBrokerBackup;
+    std::string m_amqpTimeoutBackup;
+    // using a Karabo Hash to match the insertion order.
+    karabo::data::Hash m_brokersUnderTest;
+};
 
 
-SignalSlotable_Test::SignalSlotable_Test() : m_amqpTimeoutBackup(""), m_brokersUnderTest(getBrokersFromEnv()) {
+TestSignalSlotable::TestSignalSlotable() : m_amqpTimeoutBackup(""), m_brokersUnderTest(getBrokersFromEnv()) {
     const char* amqpTimeout = getenv("KARABO_AMQP_TIMEOUT");
     if (amqpTimeout) {
         m_amqpTimeoutBackup.assign(amqpTimeout);
@@ -190,7 +204,7 @@ SignalSlotable_Test::SignalSlotable_Test() : m_amqpTimeoutBackup(""), m_brokersU
 }
 
 
-SignalSlotable_Test::~SignalSlotable_Test() {
+TestSignalSlotable::~TestSignalSlotable() {
     if (m_amqpTimeoutBackup.empty()) {
         unsetenv("KARABO_AMQP_TIMEOUT");
     }
@@ -203,7 +217,7 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 }
 
 
-void SignalSlotable_Test::setUp() {
+void TestSignalSlotable::SetUp() {
     // Logger::configure(Hash("priority", "ERROR"));
     // Logger::useConsole();
     //  Event loop is started in xmsTestRunner.cc's main()
@@ -211,9 +225,10 @@ void SignalSlotable_Test::setUp() {
 }
 
 
-void SignalSlotable_Test::tearDown() {}
+void TestSignalSlotable::TearDown() {}
 
-void SignalSlotable_Test::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
+
+void TestSignalSlotable::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
     if (m_brokersUnderTest.empty()) {
         std::clog << "\n\t" << functionName << " No broker specified in the environment, skipping" << std::endl;
     }
@@ -227,39 +242,47 @@ void SignalSlotable_Test::_loopFunction(const std::string& functionName, const s
 }
 
 
-void SignalSlotable_Test::testUniqueInstanceId() {
-    _loopFunction(__FUNCTION__, [this] { this->_testUniqueInstanceId(); });
+static void waitDemoOk(const std::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10) {
+    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
+    unsigned int millisecondsSleep = 2;
+    do {
+        if (demo->wasOk(messageCalls)) {
+            break;
+        }
+        std::this_thread::sleep_for(milliseconds(millisecondsSleep));
+        millisecondsSleep *= 2;
+    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
 }
 
 
-void SignalSlotable_Test::_testUniqueInstanceId() {
+static void _testUniqueInstanceId() {
     auto one = std::make_shared<SignalSlotable>("one");
     auto two = std::make_shared<SignalSlotable>("two", karabo::data::Hash(), 30, karabo::data::Hash("type", "sigslot"));
     auto one_again = std::make_shared<SignalSlotable>("one");
 
     // Hijack test to check default "type"
     Hash instanceInfo(one->getInstanceInfo());
-    CPPUNIT_ASSERT_EQUAL(std::string("unknown"), instanceInfo.get<std::string>("type"));
+    EXPECT_EQ("unknown", instanceInfo.get<std::string>("type"));
     instanceInfo = two->getInstanceInfo();
-    CPPUNIT_ASSERT_EQUAL(std::string("sigslot"), instanceInfo.get<std::string>("type"));
+    EXPECT_EQ("sigslot", instanceInfo.get<std::string>("type"));
     // Done with instanceInfo "type"
 
-    CPPUNIT_ASSERT_NO_THROW(one->start());
-    CPPUNIT_ASSERT_NO_THROW(two->start());
-    CPPUNIT_ASSERT_THROW(one_again->start(), SignalSlotException);
+    EXPECT_NO_THROW(one->start());
+    EXPECT_NO_THROW(two->start());
+    EXPECT_THROW(one_again->start(), SignalSlotException);
 }
 
 
-void SignalSlotable_Test::testValidInstanceId() {
-    _loopFunction(__FUNCTION__, [this] { this->_testValidInstanceId(); });
+TEST_F(TestSignalSlotable, testUniqueInstanceId) {
+    _loopFunction(__FUNCTION__, [] { _testUniqueInstanceId(); });
 }
 
 
-void SignalSlotable_Test::_testValidInstanceId() {
+static void _testValidInstanceId() {
     const auto allowedChars = "0123456789_abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ/";
     // all allowed characters should allow the instance to start
     auto s = std::make_shared<SignalSlotable>(allowedChars);
-    CPPUNIT_ASSERT_NO_THROW(s->start());
+    EXPECT_NO_THROW(s->start());
 
     // Now check that bad character lead to exceptions:
     // No dot '.' since id often used as key in Hash.
@@ -272,17 +295,17 @@ void SignalSlotable_Test::_testValidInstanceId() {
     for (size_t i = 0; i < sizeof(badCharacters) / sizeof(badCharacters[0]); ++i) {
         instanceId[1] = badCharacters[i]; // Replace 2nd character by an invalid one
         s = std::make_shared<SignalSlotable>(instanceId);
-        CPPUNIT_ASSERT_THROW_MESSAGE("Tested id: " + instanceId, s->start(), SignalSlotException);
+        EXPECT_THROW(s->start(), SignalSlotException) << "Tested id: " << instanceId;
     }
 }
 
 
-void SignalSlotable_Test::testReceiveAsync() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReceiveAsync(); });
+TEST_F(TestSignalSlotable, testValidInstanceId) {
+    _loopFunction(__FUNCTION__, [] { _testValidInstanceId(); });
 }
 
 
-void SignalSlotable_Test::_testReceiveAsync() {
+static void _testReceiveAsync() {
     auto greeter = std::make_shared<SignalSlotable>("greeter");
     auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
@@ -302,7 +325,7 @@ void SignalSlotable_Test::_testReceiveAsync() {
         if (result == "Hello, world!") break;
         std::this_thread::sleep_for(20ms);
     }
-    CPPUNIT_ASSERT(result == "Hello, world!");
+    ASSERT_TRUE(result == "Hello, world!");
 
     // Trying to receive less reply values than come is OK as well!
     bool receivedIgnoringReplyValue = false;
@@ -313,17 +336,17 @@ void SignalSlotable_Test::_testReceiveAsync() {
     waitEqual(receivedIgnoringReplyValue, true);
     // Sleep > 200 ms (the timeout used) so that any wrong call to error handler due to timeout would have happened
     std::this_thread::sleep_for(210ms);
-    CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
-    CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
+    EXPECT_EQ(calledErrorHandler, false);
+    EXPECT_EQ(receivedIgnoringReplyValue, true);
 }
 
 
-void SignalSlotable_Test::testReceiveAsyncError() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReceiveAsyncError(); });
+TEST_F(TestSignalSlotable, testReceiveAsync) {
+    _loopFunction(__FUNCTION__, [] { _testReceiveAsync(); });
 }
 
 
-void SignalSlotable_Test::_testReceiveAsyncError() {
+static void _testReceiveAsyncError() {
     auto greeter = std::make_shared<SignalSlotable>("greeter");
     auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
@@ -347,7 +370,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     // ensure reply could be delivered (though not in time)
     std::this_thread::sleep_for(200ms);
 
-    CPPUNIT_ASSERT(result == "");
+    ASSERT_TRUE(result == "");
 
     // Now the same, but test error handling, first timeout, then remote exception
     result = "some";
@@ -380,15 +403,15 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     // not called when delayed reply finally comes:
     std::this_thread::sleep_for(100ms);
 
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
-    CPPUNIT_ASSERT_EQUAL(std::string("some"), result); // Would be "Hello, world!" if successHandler called
+    EXPECT_EQ(int(ExceptionType::timeout), int(caughtType));
+    EXPECT_EQ("some", result); // Would be "Hello, world!" if successHandler called
 
     caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Please, throw!")
           .timeout(50) // short timeout: should immediately throw
           .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::remote, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
+    EXPECT_EQ(int(ExceptionType::remote), int(caughtType));
 
     // Trying to receive int where string comes gives SignalSlotException
     // since Slot::callRegisteredSlotFunctions converts the underlying CastException
@@ -397,7 +420,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Hello").timeout(200).receiveAsync<int>(badSuccessHandler1, errHandler);
     waitEqual(ExceptionType::signalslot, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
+    EXPECT_EQ(int(ExceptionType::signalslot), int(caughtType));
 
     // Trying to receive more items than come gives karabo::data::SignalSlotException:
     const auto badSuccessHandler2 = [](const std::string& answer, int answer2) {};
@@ -406,7 +429,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
           .timeout(200)
           .receiveAsync<std::string, int>(badSuccessHandler2, errHandler);
     waitEqual(ExceptionType::signalslot, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
+    EXPECT_EQ(int(ExceptionType::signalslot), int(caughtType));
 
     // Trying to receive less reply values than come is OK. See testReceiveAsync.
 
@@ -416,13 +439,13 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
           .timeout(200)
           .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::remote, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
+    EXPECT_EQ(int(ExceptionType::remote), int(caughtType));
 
     // Too few arguments to slot
     caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer").timeout(200).receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::remote, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType));
+    EXPECT_EQ(int(ExceptionType::remote), int(caughtType));
 
     // Non existing slot of existing instanceId
     caughtType = ExceptionType::none;
@@ -430,7 +453,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
           .timeout(200)
           .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::remote, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::remote), int(caughtType)); // remote exception
+    EXPECT_EQ(int(ExceptionType::remote), int(caughtType)); // remote exception
 
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
     caughtType = ExceptionType::none;
@@ -438,16 +461,16 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
           .timeout(150)
           .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::timeout, caughtType);
-    CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType)); // timeout exception
+    EXPECT_EQ(int(ExceptionType::timeout), int(caughtType)); // timeout exception
 }
 
 
-void SignalSlotable_Test::testReceiveAsyncNoReply() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReceiveAsyncNoReply(); });
+TEST_F(TestSignalSlotable, testReceiveAsyncError) {
+    _loopFunction(__FUNCTION__, [] { _testReceiveAsyncError(); });
 }
 
 
-void SignalSlotable_Test::_testReceiveAsyncNoReply() {
+static void _testReceiveAsyncNoReply() {
     auto greeter = std::make_shared<SignalSlotable>("greeter");
     auto responder = std::make_shared<SignalSlotable>("responder");
     greeter->start();
@@ -482,8 +505,8 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
         if (handlerCalled || errorCode != 0) break;
         std::this_thread::sleep_for(20ms);
     }
-    CPPUNIT_ASSERT(handlerCalled);
-    CPPUNIT_ASSERT_EQUAL(0, errorCode);
+    ASSERT_TRUE(handlerCalled);
+    EXPECT_EQ(0, errorCode);
     //
     // Now test reply argument mismatch of automatically placed reply()
     //
@@ -505,17 +528,17 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
 
     // Assert that the handler was not called, but the error handler with the correct exception (due to argument
     // mismatch)
-    CPPUNIT_ASSERT(!handlerCalled);
-    CPPUNIT_ASSERT_EQUAL(4200, errorCode);
+    ASSERT_TRUE(!handlerCalled);
+    EXPECT_EQ(4200, errorCode);
 }
 
 
-void SignalSlotable_Test::testReceiveExceptions() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReceiveExceptions(); });
+TEST_F(TestSignalSlotable, testReceiveAsyncNoReply) {
+    _loopFunction(__FUNCTION__, [] { _testReceiveAsyncNoReply(); });
 }
 
 
-void SignalSlotable_Test::_testReceiveExceptions() {
+static void _testReceiveExceptions() {
     // Testing the different kinds of exceptions
     auto greeter = std::make_shared<SignalSlotable>("greeter");
     auto responder = std::make_shared<SignalSlotable>("responder");
@@ -530,9 +553,8 @@ void SignalSlotable_Test::_testReceiveExceptions() {
 
     // Trying to receive int where string comes gives CastException:
     int resultInt;
-    CPPUNIT_ASSERT_THROW(
-          greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(resultInt),
-          karabo::data::CastException);
+    EXPECT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(resultInt),
+                 karabo::data::CastException);
     karabo::data::Exception::clearTrace();
     // Trying to receive more items than come gives karabo::data::SignalSlotException:
     std::string answer;
@@ -541,55 +563,53 @@ void SignalSlotable_Test::_testReceiveExceptions() {
         throw KARABO_LOGIC_EXCEPTION("Incompatible request did not throw");
     } catch (const karabo::data::SignalSlotException& e) {
         const std::string msg(e.detailedMsg());
-        CPPUNIT_ASSERT_MESSAGE("Message: " + msg, msg.find("Key 'a2' does not exist") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE("Message: " + msg,
-                               msg.find("Error while 'greeter' received following reply from 'responder': "
-                                        "'a1' => Hello, world! STRING") != std::string::npos);
+        EXPECT_TRUE(msg.find("Key 'a2' does not exist") != std::string::npos) << "Message: " << msg;
+        EXPECT_TRUE(msg.find("Error while 'greeter' received following reply from 'responder': "
+                             "'a1' => Hello, world! STRING") != std::string::npos)
+              << "Message: " << msg;
     } catch (const std::exception& e) {
-        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") + e.what(), false);
+        EXPECT_TRUE(false) << "Unexpected exception: " << e.what();
     }
     karabo::data::Exception::clearTrace();
     // Too short timeout gives TimeoutException:
-    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
-                         karabo::data::TimeoutException);
+    EXPECT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
+                 karabo::data::TimeoutException);
     karabo::data::Exception::clearTrace();
     // Wrong argument type to slot
-    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(slotCallTimeout).receive(answer),
-                         karabo::data::RemoteException);
+    EXPECT_THROW(greeter->request("responder", "slotAnswer", 42).timeout(slotCallTimeout).receive(answer),
+                 karabo::data::RemoteException);
     karabo::data::Exception::clearTrace();
     // Too many arguments to slot seems not to harm - should we make it harm?
-    // CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello",
+    // EXPECT_THROW(greeter->request("responder", "slotAnswer", "Hello",
     // 42).timeout(slotCallTimeout).receive(answer),
     //                     karabo::data::RemoteException);
     // karabo::data::Exception::clearTrace();
     // Too few arguments to slot
-    CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer").timeout(slotCallTimeout).receive(answer),
-                         karabo::data::RemoteException);
+    EXPECT_THROW(greeter->request("responder", "slotAnswer").timeout(slotCallTimeout).receive(answer),
+                 karabo::data::RemoteException);
     karabo::data::Exception::clearTrace();
     // Non existing slot of existing instanceId
-    CPPUNIT_ASSERT_THROW(
-          greeter->request("responder", "slot_no_answer", "Hello").timeout(slotCallTimeout).receive(answer),
-          karabo::data::RemoteException);
+    EXPECT_THROW(greeter->request("responder", "slot_no_answer", "Hello").timeout(slotCallTimeout).receive(answer),
+                 karabo::data::RemoteException);
     karabo::data::Exception::clearTrace();
     // Non existing empty slot name of existing instanceId
-    CPPUNIT_ASSERT_THROW(greeter->request("responder", "").timeout(slotCallTimeout).receive(answer),
-                         karabo::data::RemoteException);
+    EXPECT_THROW(greeter->request("responder", "").timeout(slotCallTimeout).receive(answer),
+                 karabo::data::RemoteException);
     karabo::data::Exception::clearTrace();
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
-    CPPUNIT_ASSERT_THROW(greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150).receive(answer),
-                         karabo::data::TimeoutException);
+    EXPECT_THROW(greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150).receive(answer),
+                 karabo::data::TimeoutException);
     karabo::data::Exception::clearTrace();
     // Finally no exception:
-    CPPUNIT_ASSERT_NO_THROW(
-          greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer));
+    EXPECT_NO_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer));
 }
 
-void SignalSlotable_Test::testNoWait() {
-    _loopFunction(__FUNCTION__, [this] { this->_testNoWait(); });
+TEST_F(TestSignalSlotable, testReceiveExceptions) {
+    _loopFunction(__FUNCTION__, [] { _testReceiveExceptions(); });
 }
 
 
-void SignalSlotable_Test::_testNoWait() {
+static void _testNoWait() {
     auto greeter = std::make_shared<SignalSlotable>("greeter");
     auto responder = std::make_shared<SignalSlotable>("responder");
 
@@ -604,16 +624,17 @@ void SignalSlotable_Test::_testNoWait() {
 
     greeter->requestNoWait("responder", "slotA", "slotReplyOfA", 21);
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, futReceived.wait_for(milliseconds(slotCallTimeout)));
-    CPPUNIT_ASSERT_EQUAL(42, futReceived.get());
-}
-
-void SignalSlotable_Test::testConnectAsync() {
-    _loopFunction(__FUNCTION__, [this] { this->_testConnectAsync(); });
+    EXPECT_EQ(std::future_status::ready, futReceived.wait_for(milliseconds(slotCallTimeout)));
+    EXPECT_EQ(42, futReceived.get());
 }
 
 
-void SignalSlotable_Test::_testConnectAsync() {
+TEST_F(TestSignalSlotable, testNoWait) {
+    _loopFunction(__FUNCTION__, [] { _testNoWait(); });
+}
+
+
+static void _testConnectAsync() {
     auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
     signaler->start();
@@ -638,7 +659,7 @@ void SignalSlotable_Test::_testConnectAsync() {
         if (connected) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connected);
+    ASSERT_TRUE(connected);
 
     signaler->emit("signal", 52);
 
@@ -647,8 +668,8 @@ void SignalSlotable_Test::_testConnectAsync() {
         if (slotCalled) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(slotCalled);
-    CPPUNIT_ASSERT_EQUAL(42, inSlot);
+    ASSERT_TRUE(slotCalled);
+    EXPECT_EQ(42, inSlot);
 
     ///////////////////////////////////////////////////////////////////////////
     // Another test for connectHandler:
@@ -659,7 +680,7 @@ void SignalSlotable_Test::_testConnectAsync() {
         if (connected) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connected);
+    ASSERT_TRUE(connected);
 
     ///////////////////////////////////////////////////////////////////////////
     // Now test failureHandler - non-existing signal gives specific exception type and message
@@ -688,12 +709,12 @@ void SignalSlotable_Test::_testConnectAsync() {
         if (connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(!connectTimeout);
+    ASSERT_TRUE(connectFailed);
+    ASSERT_TRUE(!connectTimeout);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("has no signal 'NOT_A_signal'.") != std::string::npos);
+    EXPECT_TRUE(connectFailedMsg.find("has no signal 'NOT_A_signal'.") != std::string::npos)
+          << "Full message: " << connectFailedMsg;
 
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -707,19 +728,19 @@ void SignalSlotable_Test::_testConnectAsync() {
         if (connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(!connectTimeout);
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos);
+    ASSERT_TRUE(connectFailed);
+    ASSERT_TRUE(!connectTimeout);
+    EXPECT_TRUE(connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos)
+          << "Full message: " << connectFailedMsg;
 }
 
 
-void SignalSlotable_Test::testConnectAsyncMulti() {
-    _loopFunction(__FUNCTION__, [this] { this->_testConnectAsyncMulti(); });
+TEST_F(TestSignalSlotable, testConnectAsync) {
+    _loopFunction(__FUNCTION__, [] { _testConnectAsync(); });
 }
 
 
-void SignalSlotable_Test::_testConnectAsyncMulti() {
+static void _testConnectAsyncMulti() {
     // One instance with two signals
     auto signaler = std::make_shared<SignalSlotable>("signaler");
     signaler->registerSignal<int>("signalA");
@@ -760,8 +781,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         if (connected || connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connected);
-    CPPUNIT_ASSERT(!connectFailed);
+    ASSERT_TRUE(connected);
+    ASSERT_TRUE(!connectFailed);
 
     signaler->emit("signalA", 52);
     signaler->emit("signalB", -32);
@@ -771,14 +792,14 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         if (slotCalledA && slotCalledB) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(slotCalledA);
-    CPPUNIT_ASSERT(slotCalledB);
-    CPPUNIT_ASSERT_EQUAL(42, inSlotA);
-    CPPUNIT_ASSERT_EQUAL(-42, inSlotB);
+    ASSERT_TRUE(slotCalledA);
+    ASSERT_TRUE(slotCalledB);
+    EXPECT_EQ(42, inSlotA);
+    EXPECT_EQ(-42, inSlotB);
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
-        CPPUNIT_ASSERT(slotter->disconnect(con.signalInstanceId, con.signal, con.slot));
+        ASSERT_TRUE(slotter->disconnect(con.signalInstanceId, con.signal, con.slot));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -810,12 +831,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         if (connected || connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(!connected);
+    ASSERT_TRUE(connectFailed);
+    ASSERT_TRUE(!connected);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("has no signal 'NOT_A_signal'.") != std::string::npos);
+    EXPECT_TRUE(connectFailedMsg.find("has no signal 'NOT_A_signal'.") != std::string::npos)
+          << "Full message: " << connectFailedMsg;
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
@@ -836,12 +857,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         if (connected || connectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(connectFailed);
-    CPPUNIT_ASSERT(!connected);
+    ASSERT_TRUE(connectFailed);
+    ASSERT_TRUE(!connected);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
-                           connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos);
+    EXPECT_TRUE(connectFailedMsg.find("no slot 'NOT_A_slot'.") != std::string::npos)
+          << "Full message: " << connectFailedMsg;
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
@@ -851,12 +872,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
 }
 
 
-void SignalSlotable_Test::testDisconnectAsync() {
-    _loopFunction(__FUNCTION__, [this] { this->_testDisconnectAsync(); });
+TEST_F(TestSignalSlotable, testConnectAsyncMulti) {
+    _loopFunction(__FUNCTION__, [] { _testConnectAsyncMulti(); });
 }
 
 
-void SignalSlotable_Test::_testDisconnectAsync() {
+static void _testDisconnectAsync() {
     auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
     signaler->start();
@@ -869,7 +890,7 @@ void SignalSlotable_Test::_testDisconnectAsync() {
 
     ///////////////////////////////////////////////////////////////////////////
     // First test successful asyncDisconnect
-    CPPUNIT_ASSERT(slotter->connect("signalInstance", "signal", "slot"));
+    ASSERT_TRUE(slotter->connect("signalInstance", "signal", "slot"));
 
     // Give signal some time to travel - but it won't, since disconnected!
     std::this_thread::sleep_for(200ms);
@@ -898,13 +919,13 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         if (disconnectSuccess || disconnectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, !disconnectFailed);
-    CPPUNIT_ASSERT(disconnectSuccess);
+    EXPECT_TRUE(!disconnectFailed) << disconnectFailedMsg;
+    ASSERT_TRUE(disconnectSuccess);
 
     signaler->emit("signal");
     // Give signal some time to travel - but it won't, since disconnected!
     std::this_thread::sleep_for(200ms);
-    CPPUNIT_ASSERT(!slotCalled);
+    ASSERT_TRUE(!slotCalled);
 
     ///////////////////////////////////////////////////////////////////////////
     // Disconnecting from a non-existing signalInstance succeeds - we just unsubscribe from broker
@@ -919,8 +940,8 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         if (disconnectSuccess || disconnectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(disconnectSuccess);
-    CPPUNIT_ASSERT(!disconnectFailed);
+    ASSERT_TRUE(disconnectSuccess);
+    ASSERT_TRUE(!disconnectFailed);
 
     ///////////////////////////////////////////////////////////////////////////
     // Now test failureHandler - we are not connected, so fail
@@ -934,13 +955,12 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         if (disconnectSuccess || disconnectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
+    ASSERT_TRUE(!disconnectSuccess);
+    ASSERT_TRUE(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it (in two steps)
-    CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg,
-                           disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectFailedMsg.find("was not connected") != std::string::npos);
+    EXPECT_TRUE(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos) << disconnectFailedMsg;
+    EXPECT_TRUE(disconnectFailedMsg.find("was not connected") != std::string::npos) << disconnectFailedMsg;
 
     ///////////////////////////////////////////////////////////////////////////
     // Another test of failure (disconnect from non-existing signal), but exactly the same symptom
@@ -955,24 +975,24 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         if (disconnectSuccess || disconnectFailed) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
+    ASSERT_TRUE(!disconnectSuccess);
+    ASSERT_TRUE(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg,
-                           disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectFailedMsg.find("was not connected") != std::string::npos);
+    EXPECT_TRUE(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos) << disconnectFailedMsg;
+    EXPECT_TRUE(disconnectFailedMsg.find("was not connected") != std::string::npos) << disconnectFailedMsg;
 
     ///////////////////////////////////////////////////////////////////////////
     // No need to test non-existing slot - it is exactly the same as a non-connected slot
 }
 
-void SignalSlotable_Test::testDisconnectConnectAsyncStress() {
-    _loopFunction(__FUNCTION__, [this] { this->_testDisconnectConnectAsyncStress(); });
+
+TEST_F(TestSignalSlotable, testDisconnectAsync) {
+    _loopFunction(__FUNCTION__, [] { _testDisconnectAsync(); });
 }
 
 
-void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
+static void _testDisconnectConnectAsyncStress() {
     // Stress test a disconnect followed immediately by a connect: We should be connected all the times!
     auto signaler = std::make_shared<SignalSlotable>("signalInstance");
     signaler->registerSignal<int>("signal");
@@ -987,7 +1007,7 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
     slotter->start();
 
     // Start connected
-    CPPUNIT_ASSERT(slotter->connect("signalInstance", "signal", "slot"));
+    ASSERT_TRUE(slotter->connect("signalInstance", "signal", "slot"));
 
     for (int i = 0; i < 100; ++i) {
         // Disconnect handlers
@@ -1030,10 +1050,10 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
             std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
         };
         // Both, disconnect and connect, succeeded (show failure message if not)
-        CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectSuccess);
-        CPPUNIT_ASSERT_MESSAGE(connectFailedMsg, connectSuccess);
-        CPPUNIT_ASSERT_EQUAL(std::string(), disconnectFailedMsg);
-        CPPUNIT_ASSERT_EQUAL(std::string(), connectFailedMsg);
+        EXPECT_TRUE(disconnectSuccess) << disconnectFailedMsg;
+        EXPECT_TRUE(connectSuccess) << connectFailedMsg;
+        EXPECT_EQ(std::string(), disconnectFailedMsg);
+        EXPECT_EQ(std::string(), connectFailedMsg);
 
         // Now proof connection by emitting signal
         signaler->emit("signal", 42);
@@ -1053,17 +1073,18 @@ void SignalSlotable_Test::_testDisconnectConnectAsyncStress() {
                 std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
             };
         }
-        CPPUNIT_ASSERT_MESSAGE(msg.str(), *slotCalled);
+        EXPECT_TRUE(*slotCalled) << msg.str();
         *slotCalled = false; // reset for next loop
     }
 }
 
-void SignalSlotable_Test::testMethod() {
-    _loopFunction(__FUNCTION__, [this] { this->_testMethod(); });
+
+TEST_F(TestSignalSlotable, testDisconnectConnectAsyncStress) {
+    _loopFunction(__FUNCTION__, [] { _testDisconnectConnectAsyncStress(); });
 }
 
 
-void SignalSlotable_Test::_testMethod() {
+static void _testMethod() {
     const std::string instanceId("SignalSlotDemo");
     auto demo = std::make_shared<SignalSlotDemo>(instanceId, "dummy");
     demo->start();
@@ -1076,21 +1097,21 @@ void SignalSlotable_Test::_testMethod() {
     try {
         demo->request(instanceId, "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::data::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC", false);
+        EXPECT_TRUE(false) << "Timeout request/receive slotC";
     }
-    CPPUNIT_ASSERT_EQUAL(2, reply);
+    EXPECT_EQ(2, reply);
 
     // The same, but request to self addressed as shortcut
     reply = 0;
     try {
         demo->request("", "slotC", 1).timeout(500).receive(reply);
     } catch (karabo::data::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive slotC via \"\"", false);
+        EXPECT_TRUE(false) << "Timeout request/receive slotC via \"\"";
     }
-    CPPUNIT_ASSERT_EQUAL(2, reply);
+    EXPECT_EQ(2, reply);
 
     // The same, but test that one can ignore the reply value:
-    CPPUNIT_ASSERT_NO_THROW(demo->request("", "slotC", 1).timeout(slotCallTimeout).receive());
+    EXPECT_NO_THROW(demo->request("", "slotC", 1).timeout(slotCallTimeout).receive());
 
     std::string someData("myPrivateStuff");
     demo->request(instanceId, "slotC", 1).receiveAsync<int>(std::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
@@ -1105,23 +1126,24 @@ void SignalSlotable_Test::_testMethod() {
     try {
         demo->request("", "noded.slot", 1).timeout(500).receive(reply);
     } catch (karabo::data::TimeoutException&) {
-        CPPUNIT_ASSERT_MESSAGE("Timeout request/receive noded.slot", false);
+        EXPECT_TRUE(false) << "Timeout request/receive noded.slot";
     }
-    CPPUNIT_ASSERT_EQUAL(2, reply);
+    EXPECT_EQ(2, reply);
 
     reply = 0;
     // Give e bit more time for the extra thread hops of the async reply.
-    CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(1000).receive(reply));
-    CPPUNIT_ASSERT_EQUAL(42, reply);
+    EXPECT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(1000).receive(reply));
+    EXPECT_EQ(42, reply);
 
     waitDemoOk(demo, 13);
-    CPPUNIT_ASSERT(demo->wasOk(13));
+    ASSERT_TRUE(demo->wasOk(13));
 }
 
 
-void SignalSlotable_Test::testAsyncReply() {
-    _loopFunction(__FUNCTION__, [this] { this->_testAsyncReply(); });
+TEST_F(TestSignalSlotable, testMethod) {
+    _loopFunction(__FUNCTION__, [] { _testMethod(); });
 }
+
 
 namespace {
     class SignalSlotableAsyncReply : public karabo::xms::SignalSlotable {
@@ -1179,7 +1201,8 @@ namespace {
     };
 } // namespace
 
-void SignalSlotable_Test::_testAsyncReply() {
+
+static void _testAsyncReply() {
     auto slotter = std::make_shared<SignalSlotableAsyncReply>("slotter");
     auto sender = std::make_shared<SignalSlotable>("sender");
     sender->start();
@@ -1200,9 +1223,9 @@ void SignalSlotable_Test::_testAsyncReply() {
         if (slotter->m_slotCallEnded) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
-    CPPUNIT_ASSERT(slotter->m_slotCallEnded);
+    ASSERT_TRUE(slotter->m_slotCallEnded);
     // ...but reply is not yet received
-    CPPUNIT_ASSERT(!received);
+    ASSERT_TRUE(!received);
 
     // Now wait until reply is received
     counter = numWaitIterations;
@@ -1211,10 +1234,10 @@ void SignalSlotable_Test::_testAsyncReply() {
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
-    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
-    CPPUNIT_ASSERT(received);
-    CPPUNIT_ASSERT(resultIs7);
-    CPPUNIT_ASSERT(!errorHappened);
+    ASSERT_TRUE(slotter->m_asynReplyHandlerCalled);
+    ASSERT_TRUE(received);
+    ASSERT_TRUE(resultIs7);
+    ASSERT_TRUE(!errorHappened);
 
     //
     // Now check AsyncReply::error
@@ -1243,9 +1266,9 @@ void SignalSlotable_Test::_testAsyncReply() {
         if (slotter->m_slotCallEnded_error) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
-    CPPUNIT_ASSERT(slotter->m_slotCallEnded_error);
+    ASSERT_TRUE(slotter->m_slotCallEnded_error);
     // ...but reply is not yet received
-    CPPUNIT_ASSERT(!receivedSuccess && !receivedError);
+    ASSERT_TRUE(!receivedSuccess && !receivedError);
 
     // Now wait until reply is received
     counter = numWaitIterations;
@@ -1254,43 +1277,43 @@ void SignalSlotable_Test::_testAsyncReply() {
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
-    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled_error);
-    CPPUNIT_ASSERT(receivedError);
-    CPPUNIT_ASSERT(!receivedSuccess);
+    ASSERT_TRUE(slotter->m_asynReplyHandlerCalled_error);
+    ASSERT_TRUE(receivedError);
+    ASSERT_TRUE(!receivedSuccess);
     // The text we have is part of the full exception message that e.g. also contains the time stamp
-    CPPUNIT_ASSERT_MESSAGE("Full error text: " + errorText,
-                           errorText.find("Something nasty to be expected!") != std::string::npos);
-    CPPUNIT_ASSERT(remoteError);
+    EXPECT_TRUE(errorText.find("Something nasty to be expected!") != std::string::npos)
+          << "Full error text: " << errorText;
+    ASSERT_TRUE(remoteError);
 
     //
     // Check also calling synchronously to a slot that answers an error via AsyncReply
     //
-    CPPUNIT_ASSERT_THROW(sender->request("slotter", "slotAsyncErrorReply").timeout(slotCallTimeout).receive(),
-                         karabo::data::RemoteException);
+    EXPECT_THROW(sender->request("slotter", "slotAsyncErrorReply").timeout(slotCallTimeout).receive(),
+                 karabo::data::RemoteException);
 
     //
     // Now check that we can call a slot with an async reply directly (although the reply does not matter)
     //
     slotter->m_slotCallEnded = false;
     slotter->m_asynReplyHandlerCalled = false;
-    CPPUNIT_ASSERT_NO_THROW(slotter->slotAsyncReply(3));
-    CPPUNIT_ASSERT(slotter->m_slotCallEnded);
+    EXPECT_NO_THROW(slotter->slotAsyncReply(3));
+    ASSERT_TRUE(slotter->m_slotCallEnded);
 
     counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_asynReplyHandlerCalled) break;
         std::this_thread::sleep_for(milliseconds(sleepPerWaitIterationMs));
     }
-    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
+    ASSERT_TRUE(slotter->m_asynReplyHandlerCalled);
 }
 
 
-void SignalSlotable_Test::testAutoConnect() {
-    _loopFunction(__FUNCTION__, [this] { this->_testAutoConnect(); });
+TEST_F(TestSignalSlotable, testAsyncReply) {
+    _loopFunction(__FUNCTION__, [] { _testAsyncReply(); });
 }
 
 
-void SignalSlotable_Test::_testAutoConnect() {
+static void _testAutoConnect() {
     // Give a unique name to exclude interference with other tests
     const std::string instanceId("SignalSlotDemoAutoConnectSignal");
     const std::string instanceId2(instanceId + "2");
@@ -1301,8 +1324,8 @@ void SignalSlotable_Test::_testAutoConnect() {
     demo->connect(instanceId2, "signalA", "slotA");
     demo->emit("signalA", "Hello World!");
     // Allow for some travel time - although nothing should travel...
-    waitDemoOk(demo, 0, 6);         // 6 trials: slightly more than 100 ms sleep
-    CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
+    waitDemoOk(demo, 0, 6);      // 6 trials: slightly more than 100 ms sleep
+    ASSERT_TRUE(demo->wasOk(0)); // demo is not interested in its own signals
 
     auto demo2 = std::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
@@ -1323,16 +1346,16 @@ void SignalSlotable_Test::_testAutoConnect() {
         waitDemoOk(demo, 2, 8); // 8: about 500 ms max waiting
     } while (!demo->wasOk(2) && ++count < 10);
 
-    CPPUNIT_ASSERT(demo->wasOk(2));
+    ASSERT_TRUE(demo->wasOk(2));
 }
 
 
-void SignalSlotable_Test::testRegisterSlotTwice() {
-    _loopFunction(__FUNCTION__, [this] { this->_testRegisterSlotTwice(); });
+TEST_F(TestSignalSlotable, testAutoConnect) {
+    _loopFunction(__FUNCTION__, [] { _testAutoConnect(); });
 }
 
 
-void SignalSlotable_Test::_testRegisterSlotTwice() {
+static void _testRegisterSlotTwice() {
     // Registering two function of the same signature for the same slot means that both are executed
     // when the slot is called.
     auto instance = std::make_shared<SignalSlotable>("instance");
@@ -1345,31 +1368,31 @@ void SignalSlotable_Test::_testRegisterSlotTwice() {
     bool secondIsCalled = false;
     auto second = [&secondIsCalled]() { secondIsCalled = true; };
     // Adding second with same signature is fine in contrast to third below:
-    CPPUNIT_ASSERT_NO_THROW(instance->registerSlot(second, "slot"));
+    EXPECT_NO_THROW(instance->registerSlot(second, "slot"));
 
     auto tester = std::make_shared<SignalSlotable>("tester");
     tester->start();
     // Synchronous request to avoid sleeps in test - assert that no timeout happens.
     // Our slot functions do not place any answers, so an empty one will be added.
     // Note: With timeout 500, seen a failure in a CI job.
-    CPPUNIT_ASSERT_NO_THROW(tester->request("instance", "slot").timeout(slotCallTimeout).receive());
+    EXPECT_NO_THROW(tester->request("instance", "slot").timeout(slotCallTimeout).receive());
 
-    CPPUNIT_ASSERT(firstIsCalled);
-    CPPUNIT_ASSERT(secondIsCalled);
+    ASSERT_TRUE(firstIsCalled);
+    ASSERT_TRUE(secondIsCalled);
 
     // Trying to register a further method with another signature raises an exception:
     auto third = [](int arg) {};
-    CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::data::SignalSlotException);
+    EXPECT_THROW(instance->registerSlot<int>(third, "slot"), karabo::data::SignalSlotException);
     karabo::data::Exception::clearTrace();
 }
 
 
-void SignalSlotable_Test::testAsyncConnectInputChannel() {
-    _loopFunction(__FUNCTION__, [this] { this->_testAsyncConnectInputChannel(); });
+TEST_F(TestSignalSlotable, testRegisterSlotTwice) {
+    _loopFunction(__FUNCTION__, [] { _testRegisterSlotTwice(); });
 }
 
 
-void SignalSlotable_Test::_testAsyncConnectInputChannel() {
+static void _testAsyncConnectInputChannel() {
     using karabo::data::Hash;
 
     // Setup sender
@@ -1401,66 +1424,67 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     // First test: successful connection
     receiver->asyncConnectInputChannel(inputChannel, handler);
     // slotCallTimeout + 1000: asyncConnectInputChannel includes a slot call and TCP connection on top
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
+    EXPECT_EQ(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     std::pair<bool, std::string> result(handlerFuture.get());
-    CPPUNIT_ASSERT(result.first);
-    CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
+    ASSERT_TRUE(result.first);
+    EXPECT_EQ(std::string(), result.second);
 
     // Reset handler
     handlerPromise = std::promise<std::pair<bool, std::string>>();
     handlerFuture = handlerPromise.get_future();
 
     // Second test: one output is missing (but output instance exists), so we get failure
-    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // first clear
+    ASSERT_TRUE(receiver->removeInputChannel("input")); // first clear
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").push_back("sender:not_an_output");
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
+    EXPECT_EQ(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     result = handlerFuture.get();
-    CPPUNIT_ASSERT(!result.first);
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
-                           result.second.find("SignalSlot Exception") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(
-          "Full message: " + result.second,
-          result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
+    ASSERT_TRUE(!result.first);
+    EXPECT_TRUE(result.second.find("SignalSlot Exception") != std::string::npos) << "Full message: " << result.second;
+    EXPECT_TRUE(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos)
+          << "Full message: " << result.second;
 
     // Reset handler again
     handlerPromise = std::promise<std::pair<bool, std::string>>();
     handlerFuture = handlerPromise.get_future();
 
     // Third test: one output is missing (because instance does not exist), so we get failure
-    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // clear again
+    ASSERT_TRUE(receiver->removeInputChannel("input")); // clear again
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").back() = "not_a_sender:output";
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
     // Larger timeout here: In SignalSlotable::connectInputToOutputChannel it is 10 s to receive the reply from
     // slotGetOutputChannelInformation of the (in this case not existing) instance of the output
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(12500ms));
+    EXPECT_EQ(std::future_status::ready, handlerFuture.wait_for(12500ms));
     result = handlerFuture.get();
-    CPPUNIT_ASSERT(!result.first);
-    CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
-                           result.second.find("SignalSlot Exception") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(
-          "Full message: " + result.second,
-          result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
+    ASSERT_TRUE(!result.first);
+    EXPECT_TRUE(result.second.find("SignalSlot Exception") != std::string::npos) << "Full message: " << result.second;
+    EXPECT_TRUE(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos)
+          << "Full message: " << result.second;
 
     // Reset handler once more
     handlerPromise = std::promise<std::pair<bool, std::string>>();
     handlerFuture = handlerPromise.get_future();
 
     // Forth test: no output configured at all which means success
-    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // clear once more
+    ASSERT_TRUE(receiver->removeInputChannel("input")); // clear once more
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").clear();
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
+    EXPECT_EQ(std::future_status::ready, handlerFuture.wait_for(milliseconds(slotCallTimeout + 1000)));
     result = handlerFuture.get();
-    CPPUNIT_ASSERT_MESSAGE("Failure reason: " + result.second, result.first);
-    CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
+    EXPECT_TRUE(result.first) << "Failure reason: " + result.second;
+    EXPECT_EQ(std::string(), result.second);
 }
 
 
-void SignalSlotable_Test::testUuid() {
+TEST_F(TestSignalSlotable, testAsyncConnectInputChannel) {
+    _loopFunction(__FUNCTION__, [] { _testAsyncConnectInputChannel(); });
+}
+
+
+TEST_F(TestSignalSlotable, testUuid) {
     // Test idea: The uuids generated by SignalSlotable::generateUUID() have to be unique since they are used as keys
     //            in several containers used for sync. and asyn. communication.
     //            They can be generated in various threads in parallel and still must be unique.
@@ -1508,24 +1532,11 @@ void SignalSlotable_Test::testUuid() {
     // 2) even if we put all together into the first set, their sizes add (i.e. generation is thread safe)
     for (size_t i = 0; i < numParallel; ++i) {
         // If not all uuids are different, the set is smaller:
-        CPPUNIT_ASSERT_EQUAL(numGen, uuidSets[i].size());
+        EXPECT_EQ(numGen, uuidSets[i].size());
         if (i != 0) { // Add to first set
             uuidSets[0].insert(uuidSets[i].begin(), uuidSets[i].end());
         }
     }
     // Now the first set should be numParallel times as large as before except if clashes between threads
-    CPPUNIT_ASSERT_EQUAL(numParallel * numGen, uuidSets[0].size());
-}
-
-
-void SignalSlotable_Test::waitDemoOk(const std::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials) {
-    // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
-    unsigned int millisecondsSleep = 2;
-    do {
-        if (demo->wasOk(messageCalls)) {
-            break;
-        }
-        std::this_thread::sleep_for(milliseconds(millisecondsSleep));
-        millisecondsSleep *= 2;
-    } while (--trials > 0); // trials is signed to avoid --trials to be very large for input of 0
+    EXPECT_EQ(numParallel * numGen, uuidSets[0].size());
 }

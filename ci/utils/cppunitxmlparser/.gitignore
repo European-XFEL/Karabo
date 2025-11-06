@@ -1,3 +1,0 @@
-*.egg-info
-__pycache__/
-cppunitxmlparser/test/missingFile.xml

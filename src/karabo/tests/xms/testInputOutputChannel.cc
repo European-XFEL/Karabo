@@ -22,8 +22,7 @@
  * Created on November 8, 2016, 3:54 PM
  */
 
-#include "InputOutputChannel_Test.hh"
-
+#include <gtest/gtest.h>
 #include <ifaddrs.h>
 #include <sys/types.h>
 
@@ -115,46 +114,50 @@ class ThreadAdder {
     const int m_nThreads;
 };
 
+
 const int connectTimeoutMs = 10000; // once saw CI failure with 5000!
 
-CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_Test);
 
-bool InputOutputChannel_Test::m_calledTestAsyncUpdate = false;
+class TestInputOutputChannel : public ::testing::Test {
+    static bool m_calledTestAsyncUpdate;
 
-InputOutputChannel_Test::InputOutputChannel_Test() {
+   protected:
+    TestInputOutputChannel();
+    ~TestInputOutputChannel() override {}
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+// Static initialization
+bool TestInputOutputChannel::m_calledTestAsyncUpdate = false;
+
+
+TestInputOutputChannel::TestInputOutputChannel() {
     if (!m_calledTestAsyncUpdate) {
         m_calledTestAsyncUpdate = true;
-        std::clog << " Settings given for InputOutputChannel_Test::testAsyncUpdate<NxM> are: "
+        std::clog << " Settings given for TestInputOutputChannel::testAsyncUpdate<NxM> are: "
                   << "onSlowness, dataDistribution, memoryLocation, safeNDArray:" << std::endl;
     }
 }
 
 
-void InputOutputChannel_Test::setUp() {
-    // Event loop started in testRunner.cc's main().
-}
-
-
-void InputOutputChannel_Test::tearDown() {}
-
-
-void InputOutputChannel_Test::testOutputChannelElement() {
+TEST_F(TestInputOutputChannel, testOutputChannelElement) {
     Schema pipeSchema;
     INT32_ELEMENT(pipeSchema).key("int32").readOnly().commit();
 
     Schema s;
-    CPPUNIT_ASSERT_NO_THROW(
+    EXPECT_NO_THROW(
           OUTPUT_CHANNEL_ELEMENT(s).key("validkey").displayedName("Valid output").dataSchema(pipeSchema).commit());
-    CPPUNIT_ASSERT(s.has("validkey.schema.int32"));
-    CPPUNIT_ASSERT_EQUAL(std::string("OutputSchema"), s.getDisplayType("validkey.schema"));
+    EXPECT_TRUE(s.has("validkey.schema.int32"));
+    EXPECT_EQ("OutputSchema", s.getDisplayType("validkey.schema"));
 
     // The deviceId/channel delimiters ':' and (for backward compatibility) '@' are not allowed in keys.
-    CPPUNIT_ASSERT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid:key"), karabo::data::ParameterException);
-    CPPUNIT_ASSERT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid@key2"), karabo::data::ParameterException);
+    EXPECT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid:key"), karabo::data::ParameterException);
+    EXPECT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid@key2"), karabo::data::ParameterException);
 }
 
 
-void InputOutputChannel_Test::testManyToOne() {
+TEST_F(TestInputOutputChannel, testManyToOne) {
     // To switch on logging output for debugging, do e.g. the following:
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
@@ -197,7 +200,7 @@ void InputOutputChannel_Test::testManyToOne() {
     for (size_t i = 0; i < outputs.size(); ++i) {
         // Connect
         Hash outputInfo(outputs[i]->getInformation());
-        CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
+        EXPECT_LT(0u, outputInfo.get<unsigned int>("port"));
         outputInfo.set("outputChannelString", outputIds[i]);
         // Alternate scenarios to test both memory location code paths:
         outputInfo.set("memoryLocation",
@@ -212,23 +215,22 @@ void InputOutputChannel_Test::testManyToOne() {
         // Initiate connect and block until done - fail test if timeout.
         // Being more clever and waiting only once for all connections in one go is not worth it in the test here.
         input->connect(outputInfo, connectHandler);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i], std::future_status::ready,
-                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
-                                     karabo::net::ErrorCode(), // i.e. no error
-                                     connectFuture.get());
+        ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)))
+              << "attempt for " << outputIds[i];
+        EXPECT_EQ(karabo::net::ErrorCode(), // i.e. no error
+                  connectFuture.get())
+              << "attempt for " << outputIds[i];
 
         // All up to the last one are connected now
         auto connectStatusMap(input->getConnectionStatus());
-        CPPUNIT_ASSERT_EQUAL(outputs.size(), connectStatusMap.size());
+        EXPECT_EQ(outputs.size(), connectStatusMap.size());
         for (size_t j = 0; j < outputs.size(); ++j) {
-            CPPUNIT_ASSERT(connectStatusMap.find(outputIds[j]) != connectStatusMap.end());
+            EXPECT_TRUE(connectStatusMap.find(outputIds[j]) != connectStatusMap.end());
             namespace kd = karabo::data;
             namespace kn = karabo::net;
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                  "Tested j = " + kd::toString(j) += ", connected i = " + kd::toString(i),
-                  (j <= i ? kn::ConnectionStatus::CONNECTED : kn::ConnectionStatus::DISCONNECTED),
-                  connectStatusMap[outputIds[j]]);
+            EXPECT_EQ((j <= i ? kn::ConnectionStatus::CONNECTED : kn::ConnectionStatus::DISCONNECTED),
+                      connectStatusMap[outputIds[j]])
+                  << "Tested j = " << j << ", connected i = " << i;
         }
     } // all connected
 
@@ -246,7 +248,7 @@ void InputOutputChannel_Test::testManyToOne() {
             // Happens very rarely - seen 6 times in 20,000 local test runs.
             std::this_thread::sleep_for(1ms);
         }
-        CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::data::toString(i), registered);
+        EXPECT_TRUE(registered) << "Not yet ready: output " << i;
     }
 
     // Prepare lambda to send data
@@ -274,24 +276,22 @@ void InputOutputChannel_Test::testManyToOne() {
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
     std::this_thread::sleep_for(200ms);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::data::toString(receivedData), 1u,
-                                 static_cast<unsigned int>(nReceivedEos));
+    EXPECT_EQ(1u, static_cast<unsigned int>(nReceivedEos)) << "Data received:\n"
+                                                           << karabo::data::toString(receivedData);
 
     // Proper number and order of data received from each output
     for (size_t i = 0; i < outputIds.size(); ++i) {
         const auto& data = receivedData.get<std::vector<unsigned int>>(outputIds[i]);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              outputIds[i] + " lacks data, all received:\n" + karabo::data::toString(receivedData), numData,
-              data.size());
+        EXPECT_EQ(numData, data.size()) << outputIds[i] << " lacks data, all received:\n"
+                                        << karabo::data::toString(receivedData);
         for (unsigned int iData = 0; iData < data.size(); ++iData) {
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                  "Output " + karabo::data::toString(i) += ", data " + karabo::data::toString(iData), iData,
-                  data[iData]);
+            EXPECT_EQ(iData, data[iData]) << "Output " << i << ", data " << iData;
         }
     }
 }
 
-void InputOutputChannel_Test::testConnectDisconnect() {
+
+TEST_F(TestInputOutputChannel, testConnectDisconnect) {
     // To switch on logging output for debugging, do e.g. the following:
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
@@ -331,15 +331,15 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->write(Hash("key", 42));
     output->update();
     std::this_thread::sleep_for(20ms); // time for call back
-    CPPUNIT_ASSERT_EQUAL(0u, calls);
+    EXPECT_EQ(0u, calls);
     {
         std::lock_guard lock(handlerDataMutex);
-        CPPUNIT_ASSERT_EQUAL(0uL, table.size());
+        EXPECT_EQ(0uL, table.size());
     }
 
     // Connect
     Hash outputInfo(output->getInformation());
-    CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
+    EXPECT_LT(0u, outputInfo.get<unsigned int>("port"));
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
     const size_t n = 50;
@@ -352,39 +352,37 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
         // Not connected yet
         auto connectStatusMap(input->getConnectionStatus());
-        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
-        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(static_cast<int>(connectStatusMap[outputChannelId])),
-                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
+        EXPECT_EQ(1ul, connectStatusMap.size());
+        EXPECT_EQ(outputChannelId, connectStatusMap.begin()->first);
+        EXPECT_TRUE(connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED)
+              << static_cast<int>(connectStatusMap[outputChannelId]);
 
         // initiate connect and block until done (fail test if timeout))
         input->connect(outputInfo, connectHandler);
 
         // Now connecting or - with very weird threading - already connected
         connectStatusMap = input->getConnectionStatus();
-        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
-        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(static_cast<int>(connectStatusMap[outputChannelId])),
-                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTING ||
-                                     connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
+        EXPECT_EQ(1ul, connectStatusMap.size());
+        EXPECT_EQ(outputChannelId, connectStatusMap.begin()->first);
+        EXPECT_TRUE(connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTING ||
+                    connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED)
+              << static_cast<int>(connectStatusMap[outputChannelId]);
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::data::toString(i), std::future_status::ready,
-                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::data::toString(i), connectFuture.get(),
-                                     karabo::net::ErrorCode()); // i.e. no error
+        ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)))
+              << "attempt number " << i;
+        EXPECT_EQ(connectFuture.get(),
+                  karabo::net::ErrorCode()) << "attempt number " << i; // i.e. no error
 
         // We are connected - check that the status tracker received all steps
         // (rely on order of calls to connection tracker (first) and handler (second) at the end of
         // InputChannel::onConnect
-        CPPUNIT_ASSERT(trackedStatus.size() > 0ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTING),
-                             static_cast<int>(trackedStatus[0]));
+        ASSERT_TRUE(trackedStatus.size() > 0ul);
+        EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::CONNECTING), static_cast<int>(trackedStatus[0]));
         // Without waiting for tracker really being called, this test relies on order of calls to connection
         // tracker and handler given to InputChannel::connect(..) (although might succeed most times even otherwise)
-        CPPUNIT_ASSERT(trackedStatus.size() > 1ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
-                             static_cast<int>(trackedStatus[1]));
-        CPPUNIT_ASSERT_EQUAL(2ul, trackedStatus.size()); // i.e. nothing else (yet)!
+        ASSERT_TRUE(trackedStatus.size() > 1ul);
+        EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED), static_cast<int>(trackedStatus[1]));
+        EXPECT_EQ(2ul, trackedStatus.size()); // i.e. nothing else (yet)!
 
         // Now ensure that output channel took note of input registration:
         int trials = 200;
@@ -396,19 +394,19 @@ void InputOutputChannel_Test::testConnectDisconnect() {
             }
         } while (--trials >= 0);
         // No further call back, so no need to lock tableMutex here
-        CPPUNIT_ASSERT_EQUAL(1UL, table.size());
+        ASSERT_EQ(1UL, table.size());
         // ... and check the published connection information
-        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("remoteId"), input->getInstanceId());
-        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
-        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("drop"));
-        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
+        EXPECT_EQ(table[0].get<std::string>("remoteId"), input->getInstanceId());
+        EXPECT_EQ(table[0].get<std::string>("dataDistribution"), std::string("copy"));
+        EXPECT_EQ(table[0].get<std::string>("onSlowness"), std::string("drop"));
+        EXPECT_EQ(table[0].get<std::string>("memoryLocation"), std::string("local"));
 
         // Now we are indeed connected:
         connectStatusMap = input->getConnectionStatus();
-        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
-        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(static_cast<int>(connectStatusMap[outputChannelId])),
-                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
+        ASSERT_EQ(1ul, connectStatusMap.size());
+        EXPECT_EQ(outputChannelId, connectStatusMap.begin()->first);
+        EXPECT_TRUE(connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED)
+              << static_cast<int>(connectStatusMap[outputChannelId]);
 
         // Write data again (twice in one go...) - now input is connected.
         output->write(Hash("key", 43));
@@ -420,15 +418,15 @@ void InputOutputChannel_Test::testConnectDisconnect() {
             if (2u == calls) break;
             std::this_thread::sleep_for(2ms); // time for callback
         }
-        CPPUNIT_ASSERT_EQUAL(2u, calls);
+        EXPECT_EQ(2u, calls);
 
         // Disconnect
         input->disconnect(outputChannelId);
         connectStatusMap = input->getConnectionStatus();
-        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
-        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(static_cast<int>(connectStatusMap[outputChannelId])),
-                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
+        EXPECT_EQ(1ul, connectStatusMap.size());
+        ASSERT_EQ(outputChannelId, connectStatusMap.begin()->first);
+        EXPECT_TRUE(connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED)
+              << static_cast<int>(connectStatusMap[outputChannelId]);
 
         // Some time to travel for message
         trials = 1000; // failed with 200 in https://git.xfel.eu/Karabo/Framework/-/jobs/131075/raw
@@ -439,12 +437,11 @@ void InputOutputChannel_Test::testConnectDisconnect() {
                 break;
             }
         } while (--trials >= 0);
-        CPPUNIT_ASSERT_EQUAL(0uL, table.size());
+        EXPECT_EQ(0uL, table.size());
         // Also the tracker got informed about disconnection:
-        CPPUNIT_ASSERT(trackedStatus.size() > 2ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
-                             static_cast<int>(trackedStatus[2]));
-        CPPUNIT_ASSERT_EQUAL(3ul, trackedStatus.size()); // i.e. nothing else!
+        ASSERT_TRUE(trackedStatus.size() > 2ul);
+        EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED), static_cast<int>(trackedStatus[2]));
+        EXPECT_EQ(3ul, trackedStatus.size()); // i.e. nothing else!
     }
 
     // Write data again - input does not anymore receive data.
@@ -453,7 +450,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // Extended time for callback to be really sure nothing comes.
     std::this_thread::sleep_for(100ms);
     // still 2:
-    CPPUNIT_ASSERT_EQUAL(2u, calls);
+    EXPECT_EQ(2u, calls);
 
     //
     // Now test connection attempts that fail
@@ -482,15 +479,15 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
         input->connect(badOutputInfo, connectHandler);
         // See failure in https: // git.xfel.eu/Karabo/Framework/-/jobs/290206 with 5000 ms wait_for
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Connection handler not called in time for " + toString(badOutputInfo),
-                                     std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_MESSAGE(
-              "Connection did not fail for " + toString(badOutputInfo),
-              connectFuture.get() != karabo::net::ErrorCode()); // not all OK (do not care which problem)
+        ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)))
+              << "Connection handler not called in time for " + toString(badOutputInfo);
+        EXPECT_TRUE(connectFuture.get() != karabo::net::ErrorCode())
+              << "Connection did not fail for " << toString(badOutputInfo); // not all OK (do not care which problem)
     }
 }
 
-void InputOutputChannel_Test::testConcurrentConnect() {
+
+TEST_F(TestInputOutputChannel, testConcurrentConnect) {
     // To switch on logging output for debugging, do e.g. the following:
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
     //                                        // enable timestamps, with ms precision
@@ -511,7 +508,7 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         input->setInstanceId("inputChannel");
 
         Hash outputInfo(output->getInformation());
-        CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+        EXPECT_TRUE(outputInfo.get<unsigned int>("port") > 0) << "OutputChannel keeps port 0!";
 
         outputInfo.set("outputChannelString", outputChannelId);
         outputInfo.set("memoryLocation", "local");
@@ -528,21 +525,21 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
         input->connect(outputInfo, connectHandler1);
         input->connect(outputInfo, connectHandler2);
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture1.wait_for(milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture2.wait_for(milliseconds(connectTimeoutMs)));
+        ASSERT_EQ(std::future_status::ready, connectFuture1.wait_for(milliseconds(connectTimeoutMs)));
+        ASSERT_EQ(std::future_status::ready, connectFuture2.wait_for(milliseconds(connectTimeoutMs)));
 
-        CPPUNIT_ASSERT_EQUAL(karabo::net::ErrorCode(), connectFuture1.get());
+        EXPECT_EQ(karabo::net::ErrorCode(), connectFuture1.get());
         const karabo::net::ErrorCode ec = connectFuture2.get();
         namespace bse = boost::system::errc;
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(ec),
-                               ec == bse::make_error_code(bse::connection_already_in_progress) ||
-                                     ec == bse::make_error_code(bse::already_connected));
+        EXPECT_TRUE(ec == bse::make_error_code(bse::connection_already_in_progress) ||
+                    ec == bse::make_error_code(bse::already_connected))
+              << karabo::data::toString(ec);
 
         input->disconnect(outputInfo);
 
         // Ensure it is disconnected
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
-                             static_cast<int>(input->getConnectionStatus()[outputChannelId]));
+        EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
+                  static_cast<int>(input->getConnectionStatus()[outputChannelId]));
         //
         // Now second scenario: disconnect in between two connect attempts:
         //
@@ -560,8 +557,8 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         input->disconnect(outputInfo);
         input->connect(outputInfo, connectHandler4);
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture3.wait_for(milliseconds(connectTimeoutMs)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture4.wait_for(milliseconds(connectTimeoutMs)));
+        ASSERT_EQ(std::future_status::ready, connectFuture3.wait_for(milliseconds(connectTimeoutMs)));
+        ASSERT_EQ(std::future_status::ready, connectFuture4.wait_for(milliseconds(connectTimeoutMs)));
 
         // Now it is not exactly clear what to expect - depends on timing of threads:
         // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
@@ -570,14 +567,14 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         const karabo::net::ErrorCode ec1 = connectFuture3.get();
         const karabo::net::ErrorCode ec2 = connectFuture4.get();
 
-        CPPUNIT_ASSERT_MESSAGE(
-              "1: " + karabo::data::toString(ec1) += ", 2: " + karabo::data::toString(ec2),
-              (ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode()) ||
-                    (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()));
+        EXPECT_TRUE((ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode()) ||
+                    (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()))
+              << "1: " << karabo::data::toString(ec1) << ", 2: " << karabo::data::toString(ec2);
     }
 }
 
-void InputOutputChannel_Test::testInputHandler() {
+
+TEST_F(TestInputOutputChannel, testInputHandler) {
     // Setup output channel
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
     output->setInstanceIdAndName("outputChannel", "output");
@@ -603,7 +600,7 @@ void InputOutputChannel_Test::testInputHandler() {
         timeout -= 2;
         std::this_thread::sleep_for(2ms);
     }
-    CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
+    EXPECT_LE(0, timeout);
 
     // Send data
     output->write(Hash("data", 42));
@@ -616,8 +613,8 @@ void InputOutputChannel_Test::testInputHandler() {
         timeout -= 2;
         std::this_thread::sleep_for(2ms);
     }
-    CPPUNIT_ASSERT(hashRead->has("data"));
-    CPPUNIT_ASSERT_EQUAL(42, hashRead->get<int>("data"));
+    EXPECT_TRUE(hashRead->has("data"));
+    EXPECT_EQ(42, hashRead->get<int>("data"));
 
     // Hijack test to check sending an empty NDArray (caused serialisation trouble in the past)
     hashRead.reset();
@@ -631,21 +628,20 @@ void InputOutputChannel_Test::testInputHandler() {
         timeout -= 2;
         std::this_thread::sleep_for(2ms);
     }
-    CPPUNIT_ASSERT(hashRead->has("emptyArray"));
-    CPPUNIT_ASSERT_EQUAL(0ul, hashRead->get<NDArray>("emptyArray").size());
-    CPPUNIT_ASSERT_EQUAL(data::Types::INT16, hashRead->get<NDArray>("emptyArray").getType());
+    ASSERT_TRUE(hashRead->has("emptyArray"));
+    EXPECT_EQ(0ul, hashRead->get<NDArray>("emptyArray").size());
+    EXPECT_EQ(data::Types::INT16, hashRead->get<NDArray>("emptyArray").getType());
 }
 
 
-void InputOutputChannel_Test::testOutputPreparation() {
+TEST_F(TestInputOutputChannel, testOutputPreparation) {
     // test an OutputChannel with defaults
     {
         OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
         output->setInstanceIdAndName("outputChannel", "outputWithDefault");
         output->initialize();
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
-        CPPUNIT_ASSERT_MESSAGE(std::string("unexpected channel address: ") + address,
-                               address != std::string("default"));
+        EXPECT_TRUE(address != std::string("default")) << "unexpected channel address: " << address;
     }
     // test an OutputChannel with an unclear hostname. We keep allowing the users to be creative.
     std::vector<std::string> addresses = createTestAddresses();
@@ -659,28 +655,28 @@ void InputOutputChannel_Test::testOutputPreparation() {
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
 
         if (inputAddress == "default") {
-            CPPUNIT_ASSERT_EQUAL(address, boost::asio::ip::host_name());
+            EXPECT_EQ(address, boost::asio::ip::host_name());
         } else {
             // The first address returned is the actual address, the second one is the
             // interface name, and the third one is a range, which OutputChannel turns into the actual address
-            CPPUNIT_ASSERT_EQUAL(address, addresses[0]);
+            EXPECT_EQ(address, addresses[0]);
         }
     }
 
-    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "127.0.0.1"), 0),
-                         karabo::data::LogicException);
+    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "127.0.0.1"), 0),
+                 karabo::data::LogicException);
 
-    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "192.168.0.1"), 0),
-                         karabo::data::LogicException);
+    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "192.168.0.1"), 0),
+                 karabo::data::LogicException);
 
-    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.0/8"), 0),
-                         karabo::data::LogicException);
+    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.0/8"), 0),
+                 karabo::data::LogicException);
 
-    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.1"), 0),
-                         karabo::data::LogicException);
+    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "256.0.0.1"), 0),
+                 karabo::data::LogicException);
 
-    CPPUNIT_ASSERT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "pepe"), 0),
-                         karabo::data::LogicException);
+    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "pepe"), 0),
+                 karabo::data::LogicException);
 
     {
         // get the first valid address
@@ -691,7 +687,7 @@ void InputOutputChannel_Test::testOutputPreparation() {
         boost::regex re("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
         boost::smatch what;
         bool result = boost::regex_search(expectedAddress, what, re);
-        CPPUNIT_ASSERT_MESSAGE(std::string("Could not parse address: ") + expectedAddress, result);
+        EXPECT_TRUE(result) << "Could not parse address: " << expectedAddress;
         std::ostringstream oss;
         oss << what.str(1) << "." << what.str(2) << "." << what.str(3) << ".0/24";
         const std::string inputAddress = oss.str();
@@ -700,11 +696,12 @@ void InputOutputChannel_Test::testOutputPreparation() {
         output->setInstanceIdAndName("outputChannel", "networkSegment");
         output->initialize();
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
-        CPPUNIT_ASSERT_EQUAL(address, expectedAddress);
+        EXPECT_EQ(address, expectedAddress);
     }
 }
 
-void InputOutputChannel_Test::testSchemaValidation() {
+
+TEST_F(TestInputOutputChannel, testSchemaValidation) {
     // A schema to validate against
     Schema schema;
     VECTOR_INT32_ELEMENT(schema).key("v_int32").maxSize(10).readOnly().commit();
@@ -720,35 +717,34 @@ void InputOutputChannel_Test::testSchemaValidation() {
         output->initialize(schema);
 
         // Test extra key
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
-                             karabo::data::ParameterException);
+        EXPECT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                     karabo::data::ParameterException);
 
         // Test missing key
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec)), karabo::data::ParameterException);
+        EXPECT_THROW(output->write(Hash("v_int32", vec)), karabo::data::ParameterException);
 
         // Test wrong type
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", 42)), karabo::data::ParameterException);
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", std::vector<Schema>(1))),
-                             karabo::data::Exception);
+        EXPECT_THROW(output->write(Hash("v_int32", vec, "str", 42)), karabo::data::ParameterException);
+        EXPECT_THROW(output->write(Hash("v_int32", vec, "str", std::vector<Schema>(1))), karabo::data::Exception);
 
         // Test too long vector
         const std::vector<int> longVec(50, 1); // max size is 10
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", longVec, "str", "some", "tooMuch", 0)),
-                             karabo::data::ParameterException);
+        EXPECT_THROW(output->write(Hash("v_int32", longVec, "str", "some", "tooMuch", 0)),
+                     karabo::data::ParameterException);
 
         // Now once proper data - after that even bad data is accepted (by default)
-        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
-        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 1)));
+        EXPECT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        EXPECT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 1)));
 
         // For a new "stream", the first data is validated again
         output->signalEndOfStream();
         // Bad data throws
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
-                             karabo::data::ParameterException);
+        EXPECT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                     karabo::data::ParameterException);
         // First good data validates successfully
-        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        EXPECT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
         // Then no further validation happens
-        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)));
+        EXPECT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)));
     }
 
     // Validate always (default)
@@ -759,16 +755,17 @@ void InputOutputChannel_Test::testSchemaValidation() {
         output->initialize(schema);
 
         // Now, with alidate "always", bad data is discovered even if once good data was written
-        CPPUNIT_ASSERT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
-        CPPUNIT_ASSERT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
-                             karabo::data::ParameterException);
+        EXPECT_NO_THROW(output->write(Hash("v_int32", vec, "str", "some")));
+        EXPECT_THROW(output->write(Hash("v_int32", vec, "str", "some", "tooMuch", 0)),
+                     karabo::data::ParameterException);
 
         const Schema sch(Configurator<OutputChannel>::getSchema("OutputChannel"));
-        CPPUNIT_ASSERT_EQUAL(std::string("always"), sch.getDefaultValue<std::string>("validateSchema"));
+        EXPECT_EQ("always", sch.getDefaultValue<std::string>("validateSchema"));
     }
 }
 
-void InputOutputChannel_Test::testConnectHandler() {
+
+TEST_F(TestInputOutputChannel, testConnectHandler) {
     // Test that handler for InputChannel::onConnect is called even if InputChannel is destructed shortly afterwards
 
     // Setup output channel
@@ -797,12 +794,13 @@ void InputOutputChannel_Test::testConnectHandler() {
         std::this_thread::sleep_for(milliseconds(sleepMs));
         input.reset();
         // Now ensure that handler is called
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + karabo::data::toString(count), std::future_status::ready,
-                                     connectFuture.wait_for(milliseconds(connectTimeoutMs)));
+        EXPECT_EQ(std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)))
+              << "attempt for " << count;
     }
 }
 
-void InputOutputChannel_Test::testWriteUpdateFlags() {
+
+TEST_F(TestInputOutputChannel, testWriteUpdateFlags) {
     // This test checks the behaviour of the raw data pointer behind an NDArray for the different values of the
     // safeNDArray flag that can be passed to OutputChannel::update(..).
     // Since input and output are local here, we can check when data is copied to ensure data consistency (i.e. new
@@ -855,7 +853,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
 
                     // Connect preparations
                     Hash outputInfo(output->getInformation());
-                    CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
+                    EXPECT_LT(0u, outputInfo.get<unsigned int>("port"));
                     outputInfo.set("outputChannelString", outputChannelId);
                     outputInfo.set("memoryLocation", memoryLocation);
                     std::promise<karabo::net::ErrorCode> connectErrorCode;
@@ -866,9 +864,8 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
 
                     // Call connect and block until connection established
                     input->connect(outputInfo, connectHandler);
-                    CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
-                                         connectFuture.wait_for(milliseconds(connectTimeoutMs)));
-                    CPPUNIT_ASSERT_EQUAL(connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
+                    ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(milliseconds(connectTimeoutMs)));
+                    EXPECT_EQ(connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
 
                     // Create data with NDArray and get hands on its pointer
                     karabo::data::Hash data("array", karabo::data::NDArray(karabo::data::Dims(10), 4));
@@ -913,7 +910,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                             timeout -= 2;
                             std::this_thread::sleep_for(2ms);
                         }
-                        CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
+                        EXPECT_LE(0, timeout);
 
                         for (size_t i = 0; i < nData; ++i) {
                             output->write(data);
@@ -921,20 +918,20 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                         }
 
                         // Receive data and check
-                        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                              testFlags, std::future_status::ready,
-                              ptrFuture.wait_for(milliseconds(
-                                    9 * nData * 50))); // * 50 as robustness margin - failed with 20 in one CI
+                        ASSERT_EQ(std::future_status::ready,
+                                  ptrFuture.wait_for(milliseconds(9 * nData * 50)))
+                              << testFlags; // * 50 as robustness margin - failed with 20 in one CI
                         ptrFuture.get();
 
                         for (size_t i = 0; i < nData; ++i) {
                             const std::string testI(testFlags + " " + toString(i));
 
                             if (shouldPtrBeEqual) {
-                                CPPUNIT_ASSERT_EQUAL_MESSAGE(testI, reinterpret_cast<long long>(ptrSent),
-                                                             reinterpret_cast<long long>(ptrsReceived[i]));
+                                EXPECT_EQ(reinterpret_cast<long long>(ptrSent),
+                                          reinterpret_cast<long long>(ptrsReceived[i]))
+                                      << testI;
                             } else {
-                                CPPUNIT_ASSERT_MESSAGE(testI + " " + toString(safeNDArray), ptrSent != ptrsReceived[i]);
+                                EXPECT_TRUE(ptrSent != ptrsReceived[i]) << testI << " " << toString(safeNDArray);
                             }
                         }
                         // When debugging, this may help:  std::clog << "\n" << testFlags << ": OK.";
@@ -945,88 +942,9 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
     }
 }
 
-void InputOutputChannel_Test::testAsyncUpdate1a1() {
-    testAsyncUpdate("drop", "copy", "local", false);
-}
 
-void InputOutputChannel_Test::testAsyncUpdate1a2() {
-    testAsyncUpdate("drop", "copy", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate1b0() {
-    testAsyncUpdate("drop", "copy", "remote", false); // safeNDArray does not matter for 'drop'  && 'remote'
-}
-
-void InputOutputChannel_Test::testAsyncUpdate2a1() {
-    testAsyncUpdate("queueDrop", "copy", "local", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate2a2() {
-    testAsyncUpdate("queueDrop", "copy", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate2b1() {
-    testAsyncUpdate("queueDrop", "copy", "remote", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate2b2() {
-    testAsyncUpdate("queueDrop", "copy", "remote", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate3a1() {
-    testAsyncUpdate("wait", "copy", "local", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate3a2() {
-    testAsyncUpdate("wait", "copy", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate3b0() {
-    testAsyncUpdate("wait", "copy", "remote", false); // safeNDArray does not matter for 'wait' and 'remote'
-}
-
-void InputOutputChannel_Test::testAsyncUpdate4a1() {
-    testAsyncUpdate("drop", "shared", "local", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate4a2() {
-    testAsyncUpdate("drop", "shared", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate4b0() {
-    testAsyncUpdate("drop", "shared", "remote", false); // safeNDArray does not matter for onSlowness = 'drop'
-}
-
-void InputOutputChannel_Test::testAsyncUpdate5a1() {
-    testAsyncUpdate("queueDrop", "shared", "local", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate5a2() {
-    testAsyncUpdate("queueDrop", "shared", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate5b1() {
-    testAsyncUpdate("queueDrop", "shared", "remote", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate5b2() {
-    testAsyncUpdate("queueDrop", "shared", "remote", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate6a1() {
-    testAsyncUpdate("wait", "shared", "local", false);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate6a2() {
-    testAsyncUpdate("wait", "shared", "local", true);
-}
-
-void InputOutputChannel_Test::testAsyncUpdate6b0() {
-    testAsyncUpdate("wait", "shared", "remote", false); // safeNDArray does not matter for 'wait' && 'remote'
-}
-
-void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
-                                              const std::string& memoryLocation, bool safeNDArray) {
+static void testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
+                            const std::string& memoryLocation, bool safeNDArray) {
     // Format a bit the output to get a good overview
     std::clog << " '" << onSlowness << "', ";
     for (size_t i = 0; i < 9ul - onSlowness.size() && i < 50ul; ++i) std::clog << ' '; // 9: len("queueDrop")
@@ -1046,7 +964,7 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     output->setInstanceIdAndName("outputChannel", "output");
     output->initialize(); // required due to additional '0' argument passed to create(..) above
     Hash outputInfo = output->getInformation();
-    CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+    EXPECT_TRUE(outputInfo.get<unsigned int>("port") > 0) << "OutputChannel keeps port 0!";
 
     // Setup input channel
     const std::string outputChannelId(output->getInstanceId() + ":output");
@@ -1079,9 +997,9 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     // initiate connect and block until done (fail test if timeout)
     karabo::net::ErrorCode ec;
     input->connect(outputInfo, connectHandler); // this is async!
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(5000ms));
-    ec = connectFuture.get();                                                 // Can get() only once...
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
+    ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(5000ms));
+    ec = connectFuture.get();                                // Can get() only once...
+    EXPECT_EQ(karabo::net::ErrorCode(), ec) << ec.message(); // i.e. no error
 
     // Currently (2.19.0rc3), the fact that the input channel is connected (as checked above) only
     // means that tcp is established. But the output channel needs to receive and process the
@@ -1096,7 +1014,7 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
         timeout -= 1;
         std::this_thread::sleep_for(1ms);
     }
-    CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
+    EXPECT_LE(0, timeout);
 
     // Send data many times using asyncUpdate
     receivedData.reserve(numToSend);
@@ -1114,17 +1032,16 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
     std::promise<void> eosSentPromise;
     auto eosSentFuture = eosSentPromise.get_future();
     output->asyncSignalEndOfStream([&eosSentPromise]() { eosSentPromise.set_value(); });
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, eosSentFuture.wait_for(5000ms));
-    CPPUNIT_ASSERT_NO_THROW(eosSentFuture.get());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(
-          (receivedData.empty() ? std::string("nothing received") : karabo::data::toString(receivedData.back())),
-          std::future_status::ready, eosReadFuture.wait_for(5000ms));
-    CPPUNIT_ASSERT_NO_THROW(eosReadFuture.get());
+    ASSERT_EQ(std::future_status::ready, eosSentFuture.wait_for(5000ms));
+    EXPECT_NO_THROW(eosSentFuture.get());
+    ASSERT_EQ(std::future_status::ready, eosReadFuture.wait_for(5000ms))
+          << (receivedData.empty() ? std::string("nothing received") : karabo::data::toString(receivedData.back()));
+    EXPECT_NO_THROW(eosReadFuture.get());
 
     // Now investigate data received
     std::clog << ": Sent " << numToSend << " in " << durationSend << " s, received last of " << receivedData.size()
               << " items " << static_cast<double>(Epochstamp() - sentStamp) << " s later.";
-    CPPUNIT_ASSERT(!receivedData.empty());
+    EXPECT_TRUE(!receivedData.empty());
     const bool noLoss = (onSlowness == "wait");
     if (noLoss) {
         std::string msg("str's received: ");
@@ -1133,15 +1050,115 @@ void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, con
                 (msg += h.get<std::string>("str")) += ",";
             }
         }
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, numToSend, receivedData.size());
+        EXPECT_EQ(numToSend, receivedData.size()) << msg;
     }
     for (size_t iSend = 1ul; iSend < receivedData.size(); ++iSend) {
         const auto previous = receivedData[iSend - 1ul].get<std::vector<long long>>("vec").front();
         const auto current = receivedData[iSend].get<std::vector<long long>>("vec").front();
         if (noLoss) {
-            CPPUNIT_ASSERT_EQUAL(previous + 1, current);
+            EXPECT_EQ(previous + 1, current);
         } else {
-            CPPUNIT_ASSERT_GREATER(previous, current);
+            EXPECT_LT(previous, current);
         }
     }
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate1a1) {
+    testAsyncUpdate("drop", "copy", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate1a2) {
+    testAsyncUpdate("drop", "copy", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate1b0) {
+    testAsyncUpdate("drop", "copy", "remote", false); // safeNDArray does not matter for 'drop'  && 'remote'
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate2a1) {
+    testAsyncUpdate("queueDrop", "copy", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate2a2) {
+    testAsyncUpdate("queueDrop", "copy", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate2b1) {
+    testAsyncUpdate("queueDrop", "copy", "remote", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate2b2) {
+    testAsyncUpdate("queueDrop", "copy", "remote", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate3a1) {
+    testAsyncUpdate("wait", "copy", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate3a2) {
+    testAsyncUpdate("wait", "copy", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate3b0) {
+    testAsyncUpdate("wait", "copy", "remote", false); // safeNDArray does not matter for 'wait' and 'remote'
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate4a1) {
+    testAsyncUpdate("drop", "shared", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate4a2) {
+    testAsyncUpdate("drop", "shared", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate4b0) {
+    testAsyncUpdate("drop", "shared", "remote", false); // safeNDArray does not matter for onSlowness = 'drop'
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate5a1) {
+    testAsyncUpdate("queueDrop", "shared", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate5a2) {
+    testAsyncUpdate("queueDrop", "shared", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate5b1) {
+    testAsyncUpdate("queueDrop", "shared", "remote", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate5b2) {
+    testAsyncUpdate("queueDrop", "shared", "remote", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate6a1) {
+    testAsyncUpdate("wait", "shared", "local", false);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate6a2) {
+    testAsyncUpdate("wait", "shared", "local", true);
+}
+
+
+TEST_F(TestInputOutputChannel, testAsyncUpdate6b0) {
+    testAsyncUpdate("wait", "shared", "remote", false); // safeNDArray does not matter for 'wait' && 'remote'
 }
