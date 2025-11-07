@@ -694,6 +694,24 @@ TEST(TestValidator, testPropertyTestValidation) {
     {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
 
+        const int value = 23000042; // on purpose a signed int to check tolerance of validator
+        auto res = validator.validate(schema, data::Hash("uint32Property", value), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        EXPECT_TRUE(res.first) << res.second;
+    }
+    EXPECT_TRUE(validated.size() == 1);
+    ASSERT_TRUE(validated.has("uint32Property")); // better assert to avoid exception in next line
+    EXPECT_EQ(validated.get<unsigned int>("uint32Property"), 23000042);
+
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
         auto res = validator.validate(schema, data::Hash("int64Property", 3200000000LL), validated);
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
