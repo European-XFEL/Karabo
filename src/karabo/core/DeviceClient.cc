@@ -2055,12 +2055,14 @@ namespace karabo {
                                              const std::vector<std::string>& toClear) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Disconnected from signal '" << signal << "' of '" << instanceId << "'.";
             const std::string path("device." + instanceId);
+            bool clearedOne = false;
             for (const std::string& area : toClear) {
                 const std::string fullPath(path + "." + area);
-                if (!eraseFromRuntimeSystemDescription(fullPath)) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Failed to clear " << fullPath << " from system description "
-                                              << "(for signal " << signal << ").";
-                }
+                clearedOne |= eraseFromRuntimeSystemDescription(fullPath);
+            }
+            if (!clearedOne) {
+                KARABO_LOG_FRAMEWORK_WARN << "Failed to clear any of " << toString(toClear) << " from path " << path
+                                          << " of system description (for signal " << signal << ").";
             }
         }
 
