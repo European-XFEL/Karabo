@@ -1297,13 +1297,12 @@ namespace karabo {
         }
 
 
-        void OutputChannel::asyncSignalEndOfStream(std::function<void()>&& readyForNextHandler) {
+        void OutputChannel::asyncSignalEndOfStream(std::function<void()>&& writeDoneHandler) {
             m_dataSchemaValidated = false; // Reset and thus validate next stream
             // If there is still some data in the pipe, put it out
             if (Memory::size(m_channelId, m_chunkId) > 0) {
                 // Lambda for what to do when data is out
-                auto finalSignal = [weakThis{weak_from_this()},
-                                    doneHandler = std::move(readyForNextHandler)]() mutable {
+                auto finalSignal = [weakThis{weak_from_this()}, doneHandler = std::move(writeDoneHandler)]() mutable {
                     auto self(weakThis.lock());
                     if (self) {
                         // Mark next chunk as EOS and send it out
@@ -1316,7 +1315,7 @@ namespace karabo {
                 asyncUpdate(false, std::move(finalSignal)); // safeNDArray false since we do not know what is in
             } else {
                 Memory::setEndOfStream(m_channelId, m_chunkId);
-                asyncUpdate(true, std::move(readyForNextHandler)); // safeNDArray true - there is only EOS
+                asyncUpdate(true, std::move(writeDoneHandler)); // safeNDArray true - there is only EOS
             }
         }
 

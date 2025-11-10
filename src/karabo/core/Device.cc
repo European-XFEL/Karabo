@@ -332,9 +332,8 @@ namespace karabo {
         }
 
 
-        void Device::internalWriteChannel(const std::string& channelName, const karabo::data::Hash& data,
-                                          const karabo::data::Timestamp& timestamp, bool safeNDArray,
-                                          std::function<void()>&& writeDoneHandler) {
+        void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data,
+                                  const karabo::data::Timestamp& timestamp, bool safeNDArray) {
             using namespace karabo::xms;
             OutputChannel::Pointer channel = this->getOutputChannel(channelName);
 
@@ -345,23 +344,10 @@ namespace karabo {
             OutputChannel::MetaData meta((m_instanceId + ":") += channelName, realStamp);
 
             channel->write(data, meta);
-            if (writeDoneHandler) { // async requested
-                channel->asyncUpdate(safeNDArray, std::move(writeDoneHandler));
-            } else {
-                channel->update(safeNDArray);
-            }
-        }
-
-        void Device::writeChannel(const std::string& channelName, const karabo::data::Hash& data,
-                                  const karabo::data::Timestamp& timestamp, bool safeNDArray) {
-            this->internalWriteChannel(channelName, data, timestamp, safeNDArray, std::function<void()>());
-        }
-
-
-        void Device::asyncWriteChannel(const std::string& channelName, const karabo::data::Hash& data,
-                                       const karabo::data::Timestamp& timestamp, bool safeNDArray,
-                                       std::function<void()>&& writeDoneHandler) {
-            this->internalWriteChannel(channelName, data, timestamp, safeNDArray, std::move(writeDoneHandler));
+            // This is semi-asyn, i.e. blocks only if receiver is slow and connection is configured to "wait".
+            // If in other cases this is called again before async TCP sending finished, the update will
+            // be dropped or queued.
+            channel->asyncUpdate(safeNDArray);
         }
 
 

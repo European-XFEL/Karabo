@@ -304,52 +304,12 @@ namespace karabo {
              *                    i.e. when the output channel has to queue or serves inner-process receivers.
              *
              * Thread safety:
-             * The 'asyncWriteChannel(..)', writeChannel(..)' and 'signalEndOfStream(..)' must not be called
-             * concurrently for the same 'channelName'.
+             * The writeChannel(..)' and 'signalEndOfStream(..)' must not be called concurrently
+             * for the same 'channelName'.
              */
             void writeChannel(const std::string& channelName, const karabo::data::Hash& data,
                               const karabo::data::Timestamp& timestamp = karabo::data::Timestamp({0ull, 0ull}, 0ull),
                               bool safeNDArray = false);
-
-            /**
-             * Asynchronously writes a hash to the specified channel. The hash internally must
-             * follow exactly the data schema as defined in the expected parameters.
-             *
-             * In contrast to writeChannel(..), this method usually does not block, but just triggers asynchronous
-             * data transfer. The only exception is if a receiver is slow _and_ the input/output channel connection
-             * is configured to "wait" in that case (i.e. slow down the sender).
-             *
-             * @param channelName The output channel name
-             * @param data Hash with the data
-             * @param timestamp Timestamp of the data if e.g. retrieved from h/w. The default resolves to the actual
-             *                  timestamp when the method is called.
-             * @param safeNDArray Boolean that should be set to 'true' if 'data' contains any 'NDArray' and their data
-             *                    is not changed or re-used after this 'asyncWriteChannel'. Otherwise, data will be
-             *                    copied if needed, i.e. when the output channel has to queue or serves inner-process
-             *                    receivers.
-             * @param writeDoneHandler callback when data (that is not queued) has been sent and thus even NDArray data
-             *                         inside it can be re-used again (except if safeNDArray was set to 'true' in which
-             *                         case its memory may still be used in a queue).
-             *
-             * Thread safety:
-             * The 'asyncWriteChannel(..)', writeChannel(..)' and 'signalEndOfStream(..)' must not be called
-             * concurrently for the same 'channelName'.
-             */
-            void asyncWriteChannel(
-                  const std::string& channelName, const karabo::data::Hash& data,
-                  const karabo::data::Timestamp& timestamp = karabo::data::Timestamp({0ull, 0ull}, 0ull),
-                  bool safeNDArray = false, std::function<void()>&& writeDoneHandler = []() {});
-
-           private:
-            /**
-             * Internal helper for writeChannel and asyncWriteChannel
-             *
-             * If writeDoneHandler is a valid std::function (i.e. 'if (writeDoneHandler) {...}'), uses
-             * 'OutputChannel::asyncUpdate(..)', otherwise the synchronous 'OutputChannel::update(..)'.
-             */
-            void internalWriteChannel(const std::string& channelName, const karabo::data::Hash& data,
-                                      const karabo::data::Timestamp& timestamp, bool safeNDArray,
-                                      std::function<void()>&& writeDoneHandler);
 
            public:
             /**
@@ -358,11 +318,12 @@ namespace karabo {
              * @param channelName: the name of the output channel.
              *
              * Thread safety:
-             * The 'asyncWriteChannel(..)', writeChannel(..)' and 'signalEndOfStream(..)' must not be called
-             * concurrently for the same 'channelName'.
+             * The writeChannel(..)' and 'signalEndOfStream(..)' must not be called concurrently
+             * for the same 'channelName'.
              */
             void signalEndOfStream(const std::string& channelName) {
-                this->getOutputChannel(channelName)->signalEndOfStream();
+                // This is in fact semi-async but safe, see comment in writeChannel:
+                this->getOutputChannel(channelName)->asyncSignalEndOfStream([]() {});
             }
 
             /**
