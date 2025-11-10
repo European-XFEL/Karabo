@@ -384,13 +384,13 @@ namespace karabo {
              * Asynchonously send end-of-stream (EOS) notification to all connected input channels to indicate a
              * logical break in the data stream.
              *
-             * @param readyHandler callback when notification has been sent or queued
+             * @param writeDoneHandler callback when notification has been sent or queued
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
              * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
-            void asyncSignalEndOfStream(std::function<void()>&& readyHandler);
+            void asyncSignalEndOfStream(std::function<void()>&& writeDoneHandler);
 
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
 
