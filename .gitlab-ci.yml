@@ -294,10 +294,9 @@ variables:
       - "src/karabo/core/**/*"
       - "src/karabo/devices/**/*"
       - "src/integrationTests/**/*"
-      - "src/tools/dataLoggerIndex/**/*" # for data logger integration tests
       - "src/pythonKarabo/karabo/integration_tests/**/*"
-      - "src/pythonKarabo/karabo/bound/launcher.py"
-      - "src/pythonKarabo/karabo/bound/device_runner.py"
+      - "src/pythonKarabo/karabo/bound/device.py"
+      - "src/pythonKarabo/karabo/bound/device_server.py"
       - "src/pythonKarabo/karabo/bound_devices/**/*"
       - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
       - "src/pythonKarabo/karabo/influxdb/**/*"
