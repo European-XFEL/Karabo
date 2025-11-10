@@ -668,7 +668,7 @@ class PythonDevice:
         :param channelName: name given to an OUTPUT_CHANNEL in
                             expectedParameters
         :param data: a Hash with keys as described in the Schema of the
-                     channel
+                     channel (if a schema is defined, otherwise any keys)
         :param timestamp: optional timestamp; if none is given, the current
                           timestamp is used
         :param safeNDArray: Boolean that should be set to 'True' if 'data'
@@ -695,7 +695,11 @@ class PythonDevice:
             timestamp = self.getActualTimestamp()
         meta = ChannelMetaData(sourceName, timestamp)
         channel.write(data, meta)
-        channel.update(safeNDArray=safeNDArray)
+        # This is semi-asyn, i.e. blocks only if receiver is slow and
+        # connection is configured to "wait".
+        # If in other cases this is called again before async TCP sending
+        # finished, the update will be dropped or queued.
+        channel.asyncUpdate(safeNDArray=safeNDArray)
 
     def signalEndOfStream(self, channelName):
         """Signal an end-of-stream event
@@ -706,7 +710,9 @@ class PythonDevice:
         The methods 'writeChannel(..)' and 'signalEndOfStream(..)'
         must not be called concurrently.
         """
-        self._sigslot.getOutputChannel(channelName).signalEndOfStream()
+        channel = self._sigslot.getOutputChannel(channelName)
+        # This is in fact semi-async but safe, see comment in writeChannel:
+        channel.asyncSignalEndOfStream()
 
     __marker = object()
 
