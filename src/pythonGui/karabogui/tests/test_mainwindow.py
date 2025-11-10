@@ -133,3 +133,21 @@ def test_mainwindow(gui_app, mocker, subtests):
         click_button(mw.update_gui_extensions)
         assert update_dialog().open.call_count == 1
         assert not mw.update_extensions_action.isVisible()
+
+    with subtests.test("Check for updates"):
+        # Check for update shows a message info from bundled GUI
+        is_bundle = mocker.patch.object(mainwindow, "is_bundled_gui")
+        is_bundle.return_value = True
+        message_box = mocker.patch.object(mainwindow, "messagebox")
+        update_dialog = mocker.patch("karabogui.mainwindow.UpdateDialog")
+        mw.onCheckUpdates()
+        assert message_box.show_information.call_count == 1
+        assert update_dialog().open.call_count == 0
+        message_box.reset_mock()
+        update_dialog.reset_mock()
+
+        # Normal GUI shows the Update dialog
+        is_bundle.return_value = False
+        mw.onCheckUpdates()
+        assert message_box.show_information.call_count == 0
+        assert update_dialog().open.call_count == 1
