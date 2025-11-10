@@ -535,7 +535,8 @@ namespace karabo {
                     } catch (const CastException& e) {
                         report << "Failed to cast the value of parameter \"" << scope << "\" from "
                                << Types::to<ToLiteral>(givenType);
-                        report << " to " << Types::to<ToLiteral>(referenceType) << endl;
+                        report << " to " << Types::to<ToLiteral>(referenceType) << " (value as string: '"
+                               << workNode->getValueAsShortString(5) << "')" << endl;
                         Exception::clearTrace(); // Do not show all the bloody details
                         return;
                     }
