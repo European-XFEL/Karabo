@@ -14,7 +14,10 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import importlib
 import os.path as op
+
+UNDEFINED_VERSION = "Undefined"
 
 
 def get_dialog_ui(ui_name):
@@ -23,3 +26,11 @@ def get_dialog_ui(ui_name):
     assert ui_name.endswith(".ui"), f"{ui_name} is not a `.ui` file"
 
     return op.join(op.abspath(op.dirname(__file__)), "ui", ui_name)
+
+
+def get_pkg_version(name: str) -> str:
+    """Gets the current version of the package"""
+    try:
+        return importlib.metadata.version(name)
+    except Exception:
+        return UNDEFINED_VERSION
