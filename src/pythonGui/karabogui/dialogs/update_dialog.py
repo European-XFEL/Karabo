@@ -14,7 +14,6 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-import importlib
 import re
 import sys
 from argparse import ArgumentParser
@@ -31,7 +30,7 @@ from qtpy.QtWidgets import (
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
-from karabogui.dialogs.utils import get_dialog_ui
+from karabogui.dialogs.utils import get_dialog_ui, get_pkg_version
 from karabogui.singletons.api import get_config
 
 _TIMEOUT = 0.5
@@ -77,14 +76,6 @@ def create_item(name: str) -> QTableWidgetItem:
     flags &= ~ Qt.ItemIsEditable
     item.setFlags(flags)
     return item
-
-
-def get_pkg_version(name: str) -> str:
-    """Gets the current version of the package"""
-    try:
-        return importlib.metadata.version(name)
-    except Exception:
-        return UNDEFINED_VERSION
 
 
 def get_index_list() -> dict:
