@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-find_package(cppunit REQUIRED)
+find_package(GTest REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
@@ -43,7 +43,7 @@ file(GLOB xmsLongTestRunner_FILES CONFIGURE_DEPENDS "xms/*.cc")
 
 foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     add_executable(${testTarget} ${${testTarget}_FILES})
-    add_test(NAME ${testTarget} COMMAND ${testTarget})
+    add_test(NAME ${testTarget} COMMAND ${testTarget} --gtest_output=xml:testresults/${testTarget}.xml)
     target_compile_options(
         ${testTarget}
         PRIVATE
@@ -53,7 +53,7 @@ foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     target_link_libraries(
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
-        cppunit::cppunit
+        GTest::gtest
     )
     message(STATUS "Added long running test executable ${testTarget}")
 

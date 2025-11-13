@@ -896,6 +896,23 @@ namespace karabo {
         }
 
 
+        std::ostream& operator<<(std::ostream& os, const std::vector<Hash>& vhash) {
+            os << "[\n";
+            bool first = true;
+            for (const Hash& hash : vhash) {
+                if (first) first = false;
+                else os << ",\n";
+                try {
+                    hash.toStream(os, hash, 1);
+                } catch (...) {
+                    KARABO_RETHROW;
+                }
+            }
+            os << ']';
+            return os;
+        }
+
+
         void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {
             const std::string fill(depth * 2, ' ');
 
@@ -1049,5 +1066,22 @@ namespace karabo {
                     return 0;
             }
         }
+
+
+        bool fullyEquals(const karabo::data::Hash& lhs, const karabo::data::Hash& rhs, bool orderMatters) {
+            return lhs.fullyEquals(rhs, orderMatters);
+        }
+
+
+        bool fullyEquals(const std::vector<Hash>& vhl, const std::vector<Hash>& vhr, bool orderMatters) {
+            if (vhl.size() != vhr.size()) return false;
+            for (size_t i = 0; i < vhl.size(); ++i) {
+                const Hash& lhs = vhl[i];
+                const Hash& rhs = vhr[i];
+                if (!lhs.fullyEquals(rhs, orderMatters)) return false;
+            }
+            return true;
+        }
+
     } // namespace data
 } // namespace karabo
