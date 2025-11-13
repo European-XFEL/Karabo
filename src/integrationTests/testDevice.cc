@@ -1,5 +1,5 @@
 /*
- * File:   Device_Test.cc
+ * File:   testDevice.cc
  * Author: gero.flucke@xfel.eu
  *
  * This file is part of Karabo.
@@ -20,16 +20,19 @@
  *
  */
 
-#include "Device_Test.hh"
+#include <gtest/gtest.h>
 
 #include <chrono>
+#include <functional>
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/xms/InputChannel.hh>
 #include <karabo/xms/OutputChannel.hh>
 #include <karabo/xms/SignalSlotable.hh>
+#include <thread>
 
-#include "CppUnitMacroExtension.hh"
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
 #include "karabo/data/schema/OverwriteElement.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/TableElement.hh"
@@ -42,9 +45,68 @@
 #include "karabo/data/types/State.hh"
 #include "karabo/data/types/StringTools.hh"
 
-
 #define KRB_TEST_MAX_TIMEOUT \
     10 // larger than the 6 s input channel reconnect interval, for testOutputRecreatesOnSchemaChange
+
+
+class TestDeviceTest : public ::testing::Test {
+   protected:
+    TestDeviceTest();
+    ~TestDeviceTest() override;
+    void SetUp() override;
+    void TearDown() override;
+
+    void testInstanceInfoServer();
+    void testGetTimestampSystemInfo();
+    void testSchemaInjection();
+    void testGetconfigReconfig();
+    void testLockClearLock();
+    void testUpdateState();
+    void testSet();
+    void testSetVectorUpdate();
+    void testSignal();
+    void testBadInit();
+
+    /** Tests that updateSchema resets attributes in the static schema. */
+    void testSchemaWithAttrUpdate();
+
+    /** Tests that appendSchema preserves attributes in the static schema. */
+    void testSchemaWithAttrAppend();
+
+    /** Tests that updateSchema/appendSchema work well for tags, also inside schema of OutputChannel
+     *
+     * @param updateSlot which DeviceExampleTest slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testChangeSchemaOutputChannel(const std::string& updateSlot);
+
+    /** Tests that updateSchema/appendSchema that change schema of output channel will trigger a reconnection
+     *
+     * @param updateSlot which DeviceExampleTest slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testOutputRecreatesOnSchemaChange(const std::string& updateSlot);
+
+    /**
+     * Test that appendSchemaMaxSize properly creates (and destroys) output channels
+     */
+    void testOutputRecreatesOnMaxSizeChange();
+
+    /** Test that updateSchema/appendSchema properly creates (and destroys) input/output channels
+     *
+     * @param updateSlot which DeviceExampleTest slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testInputOutputChannelInjection(const std::string& updateSlot);
+
+    /**
+     * Test calling a slot under a node
+     */
+    void testNodedSlot();
+
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMs);
+
+    karabo::core::DeviceServer::Pointer m_deviceServer;
+    karabo::core::DeviceClient::Pointer m_deviceClient;
+    std::jthread m_eventLoopThread;
+};
 
 
 using karabo::core::DeviceClient;
@@ -70,15 +132,17 @@ using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SignalSlotable;
 using karabo::xms::SLOT_ELEMENT;
 
+
 static void assertChildNodesEmpty(const Hash& h);
 
-const std::string fakeClassVersion("FakePackage-1.2.3");
-class TestDevice : public karabo::core::Device {
+static const std::string fakeClassVersion{"FakePackage-1.2.3"};
+
+
+class DeviceExampleTest : public karabo::core::Device {
    public:
-    KARABO_CLASSINFO(TestDevice, "TestDevice", fakeClassVersion)
+    KARABO_CLASSINFO(DeviceExampleTest, "DeviceExampleTest", fakeClassVersion)
 
     static const int LIMIT_HIGH = 1000.0;
-
 
     static void expectedParameters(karabo::data::Schema& expected) {
         OVERWRITE_ELEMENT(expected).key("state").setNewOptions(State::UNKNOWN, State::NORMAL, State::ERROR).commit();
@@ -117,7 +181,7 @@ class TestDevice : public karabo::core::Device {
               .reconfigurable()
               .assignmentOptional()
               .defaultValue(0.0)
-              .maxExc(TestDevice::LIMIT_HIGH)
+              .maxExc(DeviceExampleTest::LIMIT_HIGH)
               .observerAccess()
               .commit();
 
@@ -194,7 +258,7 @@ class TestDevice : public karabo::core::Device {
     }
 
 
-    TestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {
+    DeviceExampleTest(const karabo::data::Hash& input) : karabo::core::Device(input) {
         // Bind to a slot what now is called from deviceServer:
         KARABO_SLOT(slotTimeTick, unsigned long long /*id*/, unsigned long long /*sec*/, unsigned long long /*frac*/,
                     unsigned long long /*period*/)
@@ -229,7 +293,7 @@ class TestDevice : public karabo::core::Device {
     }
 
 
-    virtual ~TestDevice() {}
+    virtual ~DeviceExampleTest() {}
 
 
     void slotIdOfEpochstamp(unsigned long long sec, unsigned long long frac) {
@@ -345,7 +409,8 @@ class TestDevice : public karabo::core::Device {
     }
 };
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, TestDevice)
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, DeviceExampleTest)
 
 
 // =================================================================================
@@ -420,16 +485,14 @@ class TestDeviceBadInit : public karabo::core::Device {
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, TestDeviceBadInit)
 
-CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
+
+TestDeviceTest::TestDeviceTest() {}
 
 
-Device_Test::Device_Test() {}
+TestDeviceTest::~TestDeviceTest() {}
 
 
-Device_Test::~Device_Test() {}
-
-
-void Device_Test::setUp() {
+void TestDeviceTest::SetUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
@@ -449,7 +512,7 @@ void Device_Test::setUp() {
 }
 
 
-void Device_Test::tearDown() {
+void TestDeviceTest::TearDown() {
     m_deviceServer.reset();
     m_deviceClient.reset();
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -458,10 +521,10 @@ void Device_Test::tearDown() {
 }
 
 
-void Device_Test::appTestRunner() {
+TEST_F(TestDeviceTest, appTestRunner) {
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
-          "testServerDevice", "TestDevice", Hash("deviceId", "TestDevice"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+          "testServerDevice", "DeviceExampleTest", Hash("deviceId", "DeviceExampleTest"), KRB_TEST_MAX_TIMEOUT);
+    ASSERT_TRUE(success.first) << success.second;
 
     // Now all possible individual tests.
     testLockClearLock();
@@ -488,52 +551,50 @@ void Device_Test::appTestRunner() {
     testSignal();
 
     // testBadInit needs its own device, so clean-up before
-    m_deviceClient->killDeviceNoWait("TestDevice");
+    m_deviceClient->killDeviceNoWait("DeviceExampleTest");
     testBadInit();
 }
 
 
-void Device_Test::testLockClearLock() {
+void TestDeviceTest::testLockClearLock() {
     std::clog << "\nTesting lock and slotClearLock of device: " << std::flush;
-    const std::string deviceId("TestDevice");
+    const std::string deviceId("DeviceExampleTest");
     const Hash cfg(m_deviceClient->get(deviceId));
-    m_deviceClient->set("TestDevice", "lockedBy", "Anything");
-    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestDevice", "lockedBy", "Change"), karabo::data::RemoteException);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotClearLock"));
-    m_deviceClient->set("TestDevice", "lockedBy", m_deviceClient->getInstanceId());
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set("TestDevice", "lockedBy", ""));
+    m_deviceClient->set("DeviceExampleTest", "lockedBy", "Anything");
+    ASSERT_THROW(m_deviceClient->set("DeviceExampleTest", "lockedBy", "Change"), karabo::data::RemoteException);
+    ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotClearLock"));
+    m_deviceClient->set("DeviceExampleTest", "lockedBy", m_deviceClient->getInstanceId());
+    ASSERT_NO_THROW(m_deviceClient->set("DeviceExampleTest", "lockedBy", ""));
 
     std::clog << "OK." << std::endl;
 };
 
 
-void Device_Test::testInstanceInfoServer() {
+void TestDeviceTest::testInstanceInfoServer() {
     std::clog << "\nTesting instanceInfo and configuration round trip for deviceServer " << std::flush;
 
     auto sigSlotA = m_deviceServer;
     const int timeOutInMs = 250;
     karabo::data::Hash h;
 
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
-    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
-    CPPUNIT_ASSERT(h.get<int>("serverFlags") == 1ul);
+    ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
+    ASSERT_EQ(h.get<std::string>("log"), "FATAL");
+    ASSERT_TRUE(h.get<int>("serverFlags") == 1ul);
 
-    CPPUNIT_ASSERT(h.get<std::string>("user") != "");
+    ASSERT_TRUE(h.get<std::string>("user") != "");
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("testServerDevice", "slotLoggerLevel", "INFO").timeout(timeOutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
-    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("INFO"));
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("testServerDevice", "slotLoggerLevel", "FATAL").timeout(timeOutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
-    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
+    ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotLoggerLevel", "INFO").timeout(timeOutInMs).receive());
+    ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
+    ASSERT_EQ(h.get<std::string>("log"), "INFO");
+    ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotLoggerLevel", "FATAL").timeout(timeOutInMs).receive());
+    ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", 1).timeout(timeOutInMs).receive(h));
+    ASSERT_EQ(h.get<std::string>("log"), "FATAL");
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testGetTimestampSystemInfo() {
+void TestDeviceTest::testGetTimestampSystemInfo() {
     std::clog << "Testing timeInfo and systemInfo for device: " << std::flush;
 
     // This tests the extrapolations done in Device::getTimestamp(Epochstamp& epoch)
@@ -547,127 +608,127 @@ void Device_Test::testGetTimestampSystemInfo() {
     const unsigned long long periodInAttoSec = periodInMicroSec * 1000000000000ull;
     // Before first received time tick, always return train id 0
     unsigned long long id = 1111ull;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           sigSlotA
-                ->request("TestDevice", "slotIdOfEpochstamp", 1ull, 2ull) // values here should not matter at all
+                ->request("DeviceExampleTest", "slotIdOfEpochstamp", 1ull, 2ull) // values here should not matter at all
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(0ull, id);
+    ASSERT_EQ(0ull, id);
 
     // Also slotGetTime has zero train id
     Epochstamp now;
     Hash timeHash;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
-    CPPUNIT_ASSERT(timeHash.has("time"));
-    CPPUNIT_ASSERT(timeHash.get<bool>("time"));
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
+    ASSERT_TRUE(timeHash.has("time"));
+    ASSERT_TRUE(timeHash.get<bool>("time"));
     const Timestamp stamp(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
-    CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTid());
-    CPPUNIT_ASSERT(stamp.getEpochstamp() > now);
-    CPPUNIT_ASSERT(timeHash.has("reference"));
-    CPPUNIT_ASSERT(timeHash.get<bool>("reference"));
-    CPPUNIT_ASSERT(timeHash.has("timeServerId"));
-    CPPUNIT_ASSERT_EQUAL(std::string("None"), timeHash.get<std::string>("timeServerId"));
+    ASSERT_EQ(0ull, stamp.getTid());
+    ASSERT_TRUE(stamp.getEpochstamp() > now);
+    ASSERT_TRUE(timeHash.has("reference"));
+    ASSERT_TRUE(timeHash.get<bool>("reference"));
+    ASSERT_TRUE(timeHash.has("timeServerId"));
+    ASSERT_EQ("None", timeHash.get<std::string>("timeServerId"));
 
     // Now send a time tick...
     const unsigned long long seconds = 1559600000ull; // About June 3rd, 2019, 10 pm GMT
     const unsigned long long startId = 100ull;
     const unsigned long long fracAttoSecs = 2ull * periodInAttoSec + 1100ull;
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA
-                                  ->request("TestDevice", "slotTimeTick",
-                                            // id,     sec,   frac(attosec), period(microsec)
-                                            startId, seconds, fracAttoSecs, periodInMicroSec)
-                                  .timeout(timeOutInMs)
-                                  .receive());
+    ASSERT_NO_THROW(sigSlotA
+                          ->request("DeviceExampleTest", "slotTimeTick",
+                                    // id,     sec,   frac(attosec), period(microsec)
+                                    startId, seconds, fracAttoSecs, periodInMicroSec)
+                          .timeout(timeOutInMs)
+                          .receive());
 
     timeHash.clear();
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
     const Timestamp stamp2(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
     const Timestamp refStamp(Timestamp::fromHashAttributes(timeHash.getAttributes("reference")));
-    CPPUNIT_ASSERT_GREATEREQUAL(startId, stamp2.getTid());
-    CPPUNIT_ASSERT_EQUAL(startId, refStamp.getTid());
-    CPPUNIT_ASSERT_EQUAL(seconds, refStamp.getSeconds());
-    CPPUNIT_ASSERT_EQUAL(fracAttoSecs, refStamp.getFractionalSeconds());
+    ASSERT_LE(startId, stamp2.getTid());
+    ASSERT_EQ(startId, refStamp.getTid());
+    ASSERT_EQ(seconds, refStamp.getSeconds());
+    ASSERT_EQ(fracAttoSecs, refStamp.getFractionalSeconds());
 
     Hash systemHash;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotGetSystemInfo", Hash()).timeout(timeOutInMs).receive(systemHash));
-    CPPUNIT_ASSERT_EQUAL(systemHash.has("timeInfo"), true);
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotGetSystemInfo", Hash()).timeout(timeOutInMs).receive(systemHash));
+    ASSERT_EQ(systemHash.has("timeInfo"), true);
     timeHash = systemHash.get<Hash>("timeInfo");
-    CPPUNIT_ASSERT_EQUAL(systemHash.has("user"), true);
-    CPPUNIT_ASSERT_EQUAL(systemHash.has("broker"), true);
-    CPPUNIT_ASSERT_EQUAL(timeHash.has("reference"), true);
-    CPPUNIT_ASSERT_EQUAL(timeHash.has("time"), true);
-    CPPUNIT_ASSERT_EQUAL(timeHash.has("timeServerId"), true);
+    ASSERT_EQ(systemHash.has("user"), true);
+    ASSERT_EQ(systemHash.has("broker"), true);
+    ASSERT_EQ(timeHash.has("reference"), true);
+    ASSERT_EQ(timeHash.has("time"), true);
+    ASSERT_EQ(timeHash.has("timeServerId"), true);
 
     // ...and test real calculations of id
     // 1) exact match
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds, 2ull * periodInAttoSec + 1100ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds, 2ull * periodInAttoSec + 1100ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId, id);
+    ASSERT_EQ(startId, id);
 
     // 2) end of id
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds, 3ull * periodInAttoSec + 1099ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds, 3ull * periodInAttoSec + 1099ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId, id);
+    ASSERT_EQ(startId, id);
 
     // 3) multiple of period above - but same second
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds, 5ull * periodInAttoSec + 1100ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds, 5ull * periodInAttoSec + 1100ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId + 3ull, id);
+    ASSERT_EQ(startId + 3ull, id);
 
     // 4) multiple of period plus a bit above - next second
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds + 1ull, 5ull * periodInAttoSec + 1105ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds + 1ull, 5ull * periodInAttoSec + 1105ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId + 13ull, id);
+    ASSERT_EQ(startId + 13ull, id);
 
     // 5) just before
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds, 2ull * periodInAttoSec + 1090ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds, 2ull * periodInAttoSec + 1090ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId - 1ull, id);
+    ASSERT_EQ(startId - 1ull, id);
 
     // 6) several before - but same second
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds, 1ull).timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId - 3ull, id);
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds, 1ull).timeout(timeOutInMs).receive(id));
+    ASSERT_EQ(startId - 3ull, id);
 
     // 7) several before - previous second
     id = 0ull;
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds - 1ull, 5ull * periodInAttoSec + 1110ull)
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds - 1ull, 5ull * periodInAttoSec + 1110ull)
                 .timeout(timeOutInMs)
                 .receive(id));
-    CPPUNIT_ASSERT_EQUAL(startId - 7ull, id);
+    ASSERT_EQ(startId - 7ull, id);
 
     // 8) so much in the past that a negative id would be calculated which leads to zero
     id = 1111ull;
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp", seconds - 100ull, 1110ull)
-                                  .timeout(timeOutInMs)
-                                  .receive(id));
-    CPPUNIT_ASSERT_EQUAL(0ull, id);
+    ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotIdOfEpochstamp", seconds - 100ull, 1110ull)
+                          .timeout(timeOutInMs)
+                          .receive(id));
+    ASSERT_EQ(0ull, id);
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testSchemaInjection() {
+void TestDeviceTest::testSchemaInjection() {
     // Setup a communication helper
     auto sigSlotA = m_deviceServer;
 
@@ -681,38 +742,41 @@ void Device_Test::testSchemaInjection() {
     Schema schema;
     INT32_ELEMENT(schema).key("injectedInt32").assignmentOptional().defaultValue(1).reconfigurable().commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotAppendSchema", schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotAppendSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] { return m_deviceClient->getActiveSchema("TestDevice").has("injectedInt32"); }, cacheUpdateWaitMs));
+    ASSERT_TRUE(
+          waitForCondition([this] { return m_deviceClient->getActiveSchema("DeviceExampleTest").has("injectedInt32"); },
+                           cacheUpdateWaitMs));
 
     int injectedInt32;
-    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
-    CPPUNIT_ASSERT(injectedInt32 == 1);
-    m_deviceClient->set("TestDevice", "injectedInt32", 5);
-    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
-    CPPUNIT_ASSERT(injectedInt32 == 5);
+    m_deviceClient->get("DeviceExampleTest", "injectedInt32", injectedInt32);
+    ASSERT_TRUE(injectedInt32 == 1);
+    m_deviceClient->set("DeviceExampleTest", "injectedInt32", 5);
+    m_deviceClient->get("DeviceExampleTest", "injectedInt32", injectedInt32);
+    ASSERT_TRUE(injectedInt32 == 5);
 
     // Checks that injecting a new attribute keeps the previously set value.
     // ----------
     INT32_ELEMENT(schema).key("injectedInt32").assignmentOptional().defaultValue(2).reconfigurable().minInc(1).commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotAppendSchema", schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotAppendSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] { return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("injectedInt32") == 2; },
+    ASSERT_TRUE(waitForCondition(
+          [this] {
+              return m_deviceClient->getActiveSchema("DeviceExampleTest").getDefaultValue<int>("injectedInt32") == 2;
+          },
           cacheUpdateWaitMs));
 
-    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
-    CPPUNIT_ASSERT(injectedInt32 == 5);
+    m_deviceClient->get("DeviceExampleTest", "injectedInt32", injectedInt32);
+    ASSERT_TRUE(injectedInt32 == 5);
     Schema devFullSchema;
-    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
-    CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 1);
-    CPPUNIT_ASSERT(devFullSchema.getDisplayType("lockedBy") == "lockedBy");
+    devFullSchema = m_deviceClient->getDeviceSchema("DeviceExampleTest");
+    ASSERT_TRUE(devFullSchema.getMinInc<int>("injectedInt32") == 1);
+    ASSERT_TRUE(devFullSchema.getDisplayType("lockedBy") == "lockedBy");
 
     // Checks that doing updateSchema keeps previously set value and preserves the property
     // of type TABLE_ELEMENT in the device's static schema.
@@ -726,68 +790,75 @@ void Device_Test::testSchemaInjection() {
           .maxInc(10)
           .commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this]() { return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("injectedInt32") == 3; },
+    ASSERT_TRUE(waitForCondition(
+          [this]() {
+              return m_deviceClient->getActiveSchema("DeviceExampleTest").getDefaultValue<int>("injectedInt32") == 3;
+          },
           cacheUpdateWaitMs));
 
-    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
-    CPPUNIT_ASSERT(injectedInt32 == 5);
-    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
-    CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 2);
-    CPPUNIT_ASSERT(devFullSchema.getMaxInc<int>("injectedInt32") == 10);
+    m_deviceClient->get("DeviceExampleTest", "injectedInt32", injectedInt32);
+    ASSERT_TRUE(injectedInt32 == 5);
+    devFullSchema = m_deviceClient->getDeviceSchema("DeviceExampleTest");
+    ASSERT_TRUE(devFullSchema.getMinInc<int>("injectedInt32") == 2);
+    ASSERT_TRUE(devFullSchema.getMaxInc<int>("injectedInt32") == 10);
 
-    CPPUNIT_ASSERT(m_deviceClient->getActiveSchema("TestDevice").has("table"));
-    const std::vector<Hash>& tableAfterUpdate = m_deviceClient->get<std::vector<Hash>>("TestDevice", "table");
-    CPPUNIT_ASSERT(tableAfterUpdate.size() == 2);
+    ASSERT_TRUE(m_deviceClient->getActiveSchema("DeviceExampleTest").has("table"));
+    const std::vector<Hash>& tableAfterUpdate = m_deviceClient->get<std::vector<Hash>>("DeviceExampleTest", "table");
+    ASSERT_TRUE(tableAfterUpdate.size() == 2);
     const Hash& firstRowAfterUpdate = tableAfterUpdate[0];
-    CPPUNIT_ASSERT(firstRowAfterUpdate.get<std::string>("name") == "firstLine");
+    ASSERT_TRUE(firstRowAfterUpdate.get<std::string>("name") == "firstLine");
 
     // Checks that doing updateSchema with something else loses injectedInt32.
     // ----------
     Schema sndSchema;
     INT32_ELEMENT(sndSchema).key("somethingElse").assignmentOptional().defaultValue(4).reconfigurable().commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", sndSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", sndSchema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this]() { return m_deviceClient->getActiveSchema("TestDevice").has("somethingElse"); }, cacheUpdateWaitMs));
+    ASSERT_TRUE(waitForCondition(
+          [this]() { return m_deviceClient->getActiveSchema("DeviceExampleTest").has("somethingElse"); },
+          cacheUpdateWaitMs));
 
-    std::vector<std::string> propertiesPaths = m_deviceClient->getProperties("TestDevice");
+    std::vector<std::string> propertiesPaths = m_deviceClient->getProperties("DeviceExampleTest");
     int freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "injectedInt32");
-    CPPUNIT_ASSERT(freq == 0);
+    ASSERT_TRUE(freq == 0);
     freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "somethingElse");
-    CPPUNIT_ASSERT(freq == 1);
+    ASSERT_TRUE(freq == 1);
 
     // Checks that updateSchema for a parameter three times keeps the original value.
     // This verifies that the schema parsing check is correct.
     // ----------
-    m_deviceClient->set<int>("TestDevice", "somethingElse", 42);
+    m_deviceClient->set<int>("DeviceExampleTest", "somethingElse", 42);
     Schema trdSchema;
     INT32_ELEMENT(trdSchema).key("somethingElse").assignmentOptional().defaultValue(5).reconfigurable().commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", trdSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", trdSchema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] { return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 5; },
+    ASSERT_TRUE(waitForCondition(
+          [this] {
+              return m_deviceClient->getActiveSchema("DeviceExampleTest").getDefaultValue<int>("somethingElse") == 5;
+          },
           cacheUpdateWaitMs));
 
     Schema forthSchema;
     INT32_ELEMENT(forthSchema).key("somethingElse").assignmentOptional().defaultValue(6).reconfigurable().commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", forthSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", forthSchema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] { return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 6; },
+    ASSERT_TRUE(waitForCondition(
+          [this] {
+              return m_deviceClient->getActiveSchema("DeviceExampleTest").getDefaultValue<int>("somethingElse") == 6;
+          },
           cacheUpdateWaitMs));
 
     Schema fifthSchema;
@@ -800,34 +871,37 @@ void Device_Test::testSchemaInjection() {
           .reconfigurable()
           .commit();
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", fifthSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", fifthSchema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient
-    CPPUNIT_ASSERT(waitForCondition(
-          [this] { return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 7; },
+    ASSERT_TRUE(waitForCondition(
+          [this] {
+              return m_deviceClient->getActiveSchema("DeviceExampleTest").getDefaultValue<int>("somethingElse") == 7;
+          },
           cacheUpdateWaitMs));
 
-    CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", "somethingElse") == 42);
+    ASSERT_TRUE(m_deviceClient->get<int>("DeviceExampleTest", "somethingElse") == 42);
 
     // Checks that doing updateSchema with an empty schema resets the device to its
     // base schema.
     // ----------
     Schema emptySchema;
 
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", emptySchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", emptySchema).timeout(requestTimeoutMs).receive());
 
     // Waits for the updated schema to be available from the DeviceClient.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this]() { return !m_deviceClient->getActiveSchema("TestDevice").has("somethingElse"); }, cacheUpdateWaitMs));
+    ASSERT_TRUE(waitForCondition(
+          [this]() { return !m_deviceClient->getActiveSchema("DeviceExampleTest").has("somethingElse"); },
+          cacheUpdateWaitMs));
 
-    propertiesPaths = m_deviceClient->getProperties("TestDevice");
+    propertiesPaths = m_deviceClient->getProperties("DeviceExampleTest");
     freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "somethingElse");
-    CPPUNIT_ASSERT(freq == 0);
-    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
-    Schema devStaticSchema = m_deviceClient->getClassSchema("testServerDevice", "TestDevice");
-    CPPUNIT_ASSERT(karabo::data::similar(devFullSchema, devStaticSchema));
+    ASSERT_TRUE(freq == 0);
+    devFullSchema = m_deviceClient->getDeviceSchema("DeviceExampleTest");
+    Schema devStaticSchema = m_deviceClient->getClassSchema("testServerDevice", "DeviceExampleTest");
+    ASSERT_TRUE(karabo::data::similar(devFullSchema, devStaticSchema));
 
     // Checks that appending several times in a row, quickly, sets all values.
     // ----------
@@ -842,40 +916,43 @@ void Device_Test::testSchemaInjection() {
               .reconfigurable()
               .commit();
 
-        CPPUNIT_ASSERT_NO_THROW(
-              sigSlotA->request("TestDevice", "slotAppendSchema", schemaIdx).timeout(requestTimeoutMs).receive());
+        ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotAppendSchema", schemaIdx)
+                              .timeout(requestTimeoutMs)
+                              .receive());
     }
 
     // Waits for the updated schema to be available from the DeviceClient.
-    CPPUNIT_ASSERT(waitForCondition(
-          [this, &propertyStr]() { return m_deviceClient->getDeviceSchema("TestDevice").has(propertyStr + "9"); },
+    ASSERT_TRUE(waitForCondition(
+          [this, &propertyStr]() {
+              return m_deviceClient->getDeviceSchema("DeviceExampleTest").has(propertyStr + "9");
+          },
           cacheUpdateWaitMs));
 
-    propertiesPaths = m_deviceClient->getProperties("TestDevice");
-    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    propertiesPaths = m_deviceClient->getProperties("DeviceExampleTest");
+    devFullSchema = m_deviceClient->getDeviceSchema("DeviceExampleTest");
     for (int i = 0; i < 10; i++) {
         std::string keyStr = propertyStr + std::to_string(i);
         freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), keyStr);
-        CPPUNIT_ASSERT(freq == 1);
-        CPPUNIT_ASSERT(devFullSchema.has(keyStr));
-        CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", keyStr) == i);
+        ASSERT_TRUE(freq == 1);
+        ASSERT_TRUE(devFullSchema.has(keyStr));
+        ASSERT_TRUE(m_deviceClient->get<int>("DeviceExampleTest", keyStr) == i);
     }
 
     // Asserts that all the appendSchema calls from the latest changes preserved the
     // TABLE_ELEMENT in the device's static schema.
-    CPPUNIT_ASSERT(m_deviceClient->getDeviceSchema("TestDevice").has("table"));
-    const std::vector<Hash>& tableAfterInsert = m_deviceClient->get<std::vector<Hash>>("TestDevice", "table");
-    CPPUNIT_ASSERT(tableAfterInsert.size() == 2);
+    ASSERT_TRUE(m_deviceClient->getDeviceSchema("DeviceExampleTest").has("table"));
+    const std::vector<Hash>& tableAfterInsert = m_deviceClient->get<std::vector<Hash>>("DeviceExampleTest", "table");
+    ASSERT_TRUE(tableAfterInsert.size() == 2);
     const Hash& firstRowAfterInsert = tableAfterInsert[0];
-    CPPUNIT_ASSERT(firstRowAfterInsert.get<std::string>("name") == "firstLine");
+    ASSERT_TRUE(firstRowAfterInsert.get<std::string>("name") == "firstLine");
 
     // Reset to static Schema for next test
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
 }
 
 
-void Device_Test::testSchemaWithAttrUpdate() {
+void TestDeviceTest::testSchemaWithAttrUpdate() {
     // Setup a communication helper
     auto sigSlotA = m_deviceServer;
 
@@ -886,7 +963,7 @@ void Device_Test::testSchemaWithAttrUpdate() {
 
     // Updates 'maxExc'
     Schema schema;
-    double maxHighValue = 2.0 * TestDevice::LIMIT_HIGH;
+    double maxHighValue = 2.0 * DeviceExampleTest::LIMIT_HIGH;
     DOUBLE_ELEMENT(schema)
           .key("valueWithExc")
           .assignmentOptional()
@@ -894,36 +971,38 @@ void Device_Test::testSchemaWithAttrUpdate() {
           .reconfigurable()
           .maxExc(maxHighValue)
           .commit();
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Checks that the updated attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
+    ASSERT_TRUE(waitForCondition(
           [this, maxHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
+              return m_deviceClient->getDeviceSchema("DeviceExampleTest").getMaxExc<double>("valueWithExc") ==
+                     maxHighValue;
           },
           cacheUpdateWaitMs));
 
     // Tests that doing updateSchema with something new resets the maxExc.
     Schema someNewSchema;
     INT32_ELEMENT(someNewSchema).key("somethingNew").assignmentOptional().defaultValue(4).reconfigurable().commit();
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", someNewSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", someNewSchema)
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Checks that the reset attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
+    ASSERT_TRUE(waitForCondition(
           [this] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") ==
-                     TestDevice::LIMIT_HIGH;
+              return m_deviceClient->getDeviceSchema("DeviceExampleTest").getMaxExc<double>("valueWithExc") ==
+                     DeviceExampleTest::LIMIT_HIGH;
           },
           cacheUpdateWaitMs));
 
     // Reset to static Schema for next test
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
 }
 
 
-void Device_Test::testSchemaWithAttrAppend() {
+void TestDeviceTest::testSchemaWithAttrAppend() {
     // Setup a communication helper
     auto sigSlotA = m_deviceServer;
 
@@ -934,7 +1013,7 @@ void Device_Test::testSchemaWithAttrAppend() {
 
     // Updates 'maxExc'
     Schema schema;
-    double maxHighValue = 2.0 * TestDevice::LIMIT_HIGH;
+    double maxHighValue = 2.0 * DeviceExampleTest::LIMIT_HIGH;
     DOUBLE_ELEMENT(schema)
           .key("valueWithExc") //
           .assignmentOptional()
@@ -942,55 +1021,58 @@ void Device_Test::testSchemaWithAttrAppend() {
           .reconfigurable()
           .maxExc(maxHighValue)
           .commit();
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", schema).timeout(requestTimeoutMs).receive());
 
     // Checks that the updated attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
+    ASSERT_TRUE(waitForCondition(
           [this, maxHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
+              return m_deviceClient->getDeviceSchema("DeviceExampleTest").getMaxExc<double>("valueWithExc") ==
+                     maxHighValue;
           },
           cacheUpdateWaitMs));
 
     // Tests that doing appendSchema with something new keeps the maxExc.
     Schema someNewSchema;
     INT32_ELEMENT(someNewSchema).key("somethingNew").assignmentOptional().defaultValue(4).reconfigurable().commit();
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotAppendSchema", someNewSchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotAppendSchema", someNewSchema)
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Checks that the reset attribute will be available within an interval.
-    CPPUNIT_ASSERT(waitForCondition(
+    ASSERT_TRUE(waitForCondition(
           [this, maxHighValue] {
-              return m_deviceClient->getDeviceSchema("TestDevice").getMaxExc<double>("valueWithExc") == maxHighValue;
+              return m_deviceClient->getDeviceSchema("DeviceExampleTest").getMaxExc<double>("valueWithExc") ==
+                     maxHighValue;
           },
           cacheUpdateWaitMs));
 
     // Reset to static Schema for next test
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlotA->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
 }
 
 
-void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
+void TestDeviceTest::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     std::clog << "Start testChangeSchemaOutputChannel for " << updateSlot << ": " << std::flush;
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
 
 
-    // Not using m_deviceClient->getDeviceSchema("TestDevice") since its cache might not be up-to-date yet
+    // Not using m_deviceClient->getDeviceSchema("DeviceExampleTest") since its cache might not be up-to-date yet
     // from schema "erasure" at the end of the previous run of this method with another 'updateSlot' value.
     // Our order guarantee does not apply since the m_deviceServer requested the update and not the m_device client...
     Schema deviceSchema;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetSchema", false)
-                                  .timeout(requestTimeoutMs)
-                                  .receive(deviceSchema));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("INTENSITY.TD"),
-                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.intensityTD"),
-                                 deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("UNTAGGED"),
-                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.untagged"),
-                                 deviceSchema.getKeyFromAlias<std::string>("UNTAGGED"));
+    ASSERT_NO_THROW(m_deviceServer->request("DeviceExampleTest", "slotGetSchema", false)
+                          .timeout(requestTimeoutMs)
+                          .receive(deviceSchema));
+    ASSERT_EQ("INTENSITY.TD", deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("output.schema.data.intensityTD", deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("UNTAGGED", deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("output.schema.data.untagged", deviceSchema.getKeyFromAlias<std::string>("UNTAGGED"))
+          << karabo::data::toString(deviceSchema);
 
     // Now inject more things with tags:
     // * as normal property (taggedProperty)
@@ -1042,51 +1124,50 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
         OUTPUT_CHANNEL(schema).key("output").dataSchema(dataSchema).commit();
     }
 
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request("TestDevice", updateSlot, schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          m_deviceServer->request("DeviceExampleTest", updateSlot, schema).timeout(requestTimeoutMs).receive());
 
     // Check aliases
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetSchema", false)
-                                  .timeout(requestTimeoutMs)
-                                  .receive(deviceSchema));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("UNTAGGED.CHANGED"),
-                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.untagged"),
-                                 deviceSchema.getKeyFromAlias<std::string>("UNTAGGED.CHANGED"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("INTENSITY.TD2"),
-                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD2"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.intensityTD2"),
-                                 deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD2"));
+    ASSERT_NO_THROW(m_deviceServer->request("DeviceExampleTest", "slotGetSchema", false)
+                          .timeout(requestTimeoutMs)
+                          .receive(deviceSchema));
+    ASSERT_EQ("UNTAGGED.CHANGED", deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("output.schema.data.untagged", deviceSchema.getKeyFromAlias<std::string>("UNTAGGED.CHANGED"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("INTENSITY.TD2", deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD2"))
+          << karabo::data::toString(deviceSchema);
+    ASSERT_EQ("output.schema.data.intensityTD2", deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD2"))
+          << karabo::data::toString(deviceSchema);
 
     // Reset to static Schema for next test
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(m_deviceServer->request("DeviceExampleTest", "slotUpdateSchema", Schema())
+                          .timeout(requestTimeoutMs)
+                          .receive());
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlot) {
+void TestDeviceTest::testOutputRecreatesOnSchemaChange(const std::string& updateSlot) {
     std::clog << "Start testOutputRecreatesOnSchemaChange for " << updateSlot << ": " << std::flush;
 
-    const std::string& senderId("TestDevice");
+    const std::string& senderId("DeviceExampleTest");
     const std::string& receiverId("receiver");
 
     // Setup receiver device that should connect.
     std::pair<bool, std::string> success =
-          m_deviceClient->instantiate("testServerDevice", "TestDevice",
+          m_deviceClient->instantiate("testServerDevice", "DeviceExampleTest",
                                       Hash("deviceId", receiverId, "input.connectedOutputChannels",
                                            std::vector<std::string>({senderId + ":output"})),
                                       KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
     // Test connection is setup
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get(receiverId)),
-                           waitForCondition(
-                                 [this, receiverId]() {
-                                     return m_deviceClient
-                                           ->get<std::vector<std::string>>(receiverId, "input.missingConnections")
-                                           .empty();
-                                 },
-                                 KRB_TEST_MAX_TIMEOUT * 1000));
+    ASSERT_TRUE(waitForCondition(
+          [this, receiverId]() {
+              return m_deviceClient->get<std::vector<std::string>>(receiverId, "input.missingConnections").empty();
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000))
+          << karabo::data::toString(m_deviceClient->get(receiverId));
 
     // Tell server (as helper) to listen for updates of "input.missingConnections"
     // Note: Since we cannot remove the slot from the server again, we choose a test run dependent slot name
@@ -1104,7 +1185,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     const std::string slotConnectionChanged("slotConnectionChanged_" + updateSlot);
     m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
     const bool connected = m_deviceServer->connect(receiverId, "signalChanged", slotConnectionChanged);
-    CPPUNIT_ASSERT(connected);
+    ASSERT_TRUE(connected);
 
     // Create several schema injections that should trigger output channel reconnection (or not).
     // The Boolean tells whether "output" channel is recreated (and thus reconnection happens)
@@ -1130,9 +1211,9 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     for (const std::tuple<Schema, bool>& schemaAndDisconnect : schemasToInject) {
         const Schema& schemaToInject = std::get<0>(schemaAndDisconnect);
         const bool triggerReconnect = std::get<1>(schemaAndDisconnect);
-        CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, updateSlot, schemaToInject)
-                                      .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
-                                      .receive());
+        ASSERT_NO_THROW(m_deviceServer->request(senderId, updateSlot, schemaToInject)
+                              .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                              .receive());
 
         // If output channel schema changed, we expect that the channel was recreated and thus the
         // InputChannel of the receiver was disconnected and reconnected. Both should trigger a change of the
@@ -1147,17 +1228,17 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
               KRB_TEST_MAX_TIMEOUT * 1000);
         {
             std::lock_guard<std::mutex> lock(connectionChangesMutex);
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), triggerReconnect, changed);
+            ASSERT_EQ(triggerReconnect, changed) << karabo::data::toString(connectionChanges);
             if (triggerReconnect) {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 2ul, connectionChanges.size());
-                CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
-                CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[1]);
+                ASSERT_EQ(2ul, connectionChanges.size()) << karabo::data::toString(connectionChanges);
+                ASSERT_EQ(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
+                ASSERT_EQ(std::vector<std::string>(), connectionChanges[1]);
             }
         }
         // Remove schema changes again:
-        CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotUpdateSchema", Schema())
-                                      .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
-                                      .receive());
+        ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotUpdateSchema", Schema())
+                              .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                              .receive());
         if (triggerReconnect) {
             // If schema changed in the first place, it changes back now and thus has to reconnect
             const bool changed = waitForCondition(
@@ -1167,10 +1248,10 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
                   },
                   KRB_TEST_MAX_TIMEOUT * 2000); // Factor two: reconnection cycle is included!
             std::lock_guard<std::mutex> lock(connectionChangesMutex);
-            CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(connectionChanges), changed);
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 4ul, connectionChanges.size());
-            CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[2]);
-            CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[3]);
+            ASSERT_TRUE(changed) << karabo::data::toString(connectionChanges);
+            ASSERT_EQ(4ul, connectionChanges.size()) << karabo::data::toString(connectionChanges);
+            ASSERT_EQ(std::vector<std::string>({senderId + ":output"}), connectionChanges[2]);
+            ASSERT_EQ(std::vector<std::string>(), connectionChanges[3]);
         }
         // Clean-up for next round
         std::lock_guard<std::mutex> lock(connectionChangesMutex);
@@ -1181,42 +1262,40 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
     m_deviceServer->disconnect(receiverId, "signalChanged", slotConnectionChanged);
     // Cannot remove slotConnectionChanged...
     success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testOutputRecreatesOnMaxSizeChange() {
+void TestDeviceTest::testOutputRecreatesOnMaxSizeChange() {
     std::clog << "Start testOutputRecreatesOnMaxSizeChange:" << std::flush;
 
     // This tests that Device::appendSchemaMaxSize recreates output channels with the proper schema for validation
     // and that sending of data that does not comply with schema fails
 
-    const std::string& senderId("TestDevice");
+    const std::string& senderId("DeviceExampleTest");
     const std::string& receiverId("receiver");
     constexpr int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
 
     // Setup receiver device that should connect.
     std::pair<bool, std::string> success =
-          m_deviceClient->instantiate("testServerDevice", "TestDevice",
+          m_deviceClient->instantiate("testServerDevice", "DeviceExampleTest",
                                       Hash("deviceId", receiverId, "input.connectedOutputChannels",
                                            std::vector<std::string>({senderId + ":output"})),
                                       KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     // This registers handlers for "input":
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_deviceServer->request(receiverId, "slotRegisterOnDataInputEos", "input").timeout(timeoutMs).receive());
 
     // Test that connection is setup
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get(receiverId)),
-                           waitForCondition(
-                                 [this, receiverId]() {
-                                     return m_deviceClient
-                                           ->get<std::vector<std::string>>(receiverId, "input.missingConnections")
-                                           .empty();
-                                 },
-                                 timeoutMs));
+    ASSERT_TRUE(waitForCondition(
+          [this, receiverId]() {
+              return m_deviceClient->get<std::vector<std::string>>(receiverId, "input.missingConnections").empty();
+          },
+          timeoutMs))
+          << karabo::data::toString(m_deviceClient->get(receiverId));
 
 
     // Tell server (as helper) to listen for updates of "input.missingConnections"
@@ -1233,10 +1312,10 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
     const std::string slotConnectionChanged("slotConnectionChanged_slotAppendSchemaMultiMaxSize");
     m_deviceServer->registerSlot<karabo::data::Hash, std::string>(changedHandler, slotConnectionChanged);
     const bool connected = m_deviceServer->connect(receiverId, "signalChanged", slotConnectionChanged);
-    CPPUNIT_ASSERT(connected);
+    ASSERT_TRUE(connected);
 
     const unsigned int maxSize = 10;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_deviceServer->request(senderId, "slotAppendSchemaMultiMaxSize", maxSize).timeout(timeoutMs).receive());
 
     // The output channel schema changed, so we expect that the channel was recreated and thus the
@@ -1251,42 +1330,42 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
           timeoutMs);
     {
         std::lock_guard<std::mutex> lock(connectionChangesMutex);
-        CPPUNIT_ASSERT_MESSAGE(karabo::data::toString(connectionChanges), changed);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(connectionChanges), 2ul, connectionChanges.size());
-        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
-        CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[1]);
+        ASSERT_TRUE(changed) << karabo::data::toString(connectionChanges);
+        ASSERT_EQ(2ul, connectionChanges.size()) << karabo::data::toString(connectionChanges);
+        ASSERT_EQ(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
+        ASSERT_EQ(std::vector<std::string>(), connectionChanges[1]);
         connectionChanges.clear(); // for next usage
     }
     // Make sure that "intInOnData" is not what it shall be later, after sending data
-    CPPUNIT_ASSERT(42 != m_deviceClient->get<int>(receiverId, "intInOnData"));
+    ASSERT_TRUE(42 != m_deviceClient->get<int>(receiverId, "intInOnData"));
 
     // Sending data succeeds since vectors fit into maxSize
     Hash dataToSend("int", 42, "data",
                     Hash("untagged", 4.2, "intensityTD", std::vector<float>(maxSize, 3.7f), "vecInt32",
                          std::vector<int>(maxSize, 1)));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
-                                  .timeout(timeoutMs)
-                                  .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
+                          .timeout(timeoutMs)
+                          .receive());
     // Check that data arrived and onData handler is called
     waitForCondition([this, receiverId]() { return (42 == m_deviceClient->get<int>(receiverId, "intInOnData")); },
                      timeoutMs);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(m_deviceClient->get(receiverId)), 42,
-                                 m_deviceClient->get<int>(receiverId, "intInOnData"));
+    ASSERT_EQ(42, m_deviceClient->get<int>(receiverId, "intInOnData"))
+          << karabo::data::toString(m_deviceClient->get(receiverId));
 
     // Make vecInt32 longer than limit - writing to output channel will fail
     dataToSend.get<std::vector<int>>("data.vecInt32").push_back(22);
     try {
         m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend).timeout(timeoutMs).receive();
-        CPPUNIT_FAIL("No exception");
+        FAIL() << "No exception";
     } catch (karabo::data::RemoteException& e) {
         const std::string& msg = e.userFriendlyMsg();
-        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("schema mismatch") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("Number of elements (11)") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("greater than upper bound (10)") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(msg, msg.find("\"data.vecInt32\"") != std::string::npos);
+        ASSERT_TRUE(msg.find("schema mismatch") != std::string::npos) << msg;
+        ASSERT_TRUE(msg.find("Number of elements (11)") != std::string::npos) << msg;
+        ASSERT_TRUE(msg.find("greater than upper bound (10)") != std::string::npos) << msg;
+        ASSERT_TRUE(msg.find("\"data.vecInt32\"") != std::string::npos) << msg;
     }
     // Enlarge the allowed vector size
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_deviceServer->request(senderId, "slotAppendSchemaMultiMaxSize", maxSize + 1).timeout(timeoutMs).receive());
     // Wait until connected again
     waitForCondition(
@@ -1297,29 +1376,28 @@ void Device_Test::testOutputRecreatesOnMaxSizeChange() {
           timeoutMs);
     // Now the data to send complies with the schema and can be sent
     dataToSend.set("int", 77);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
-                                  .timeout(timeoutMs)
-                                  .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotSendToOutputChannel", "output", dataToSend)
+                          .timeout(timeoutMs)
+                          .receive());
     // Check that data arrived and onData handler is called
     waitForCondition([this, receiverId]() { return (77 == m_deviceClient->get<int>(receiverId, "intInOnData")); },
                      timeoutMs);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::data::toString(m_deviceClient->get(receiverId)), 77,
-                                 m_deviceClient->get<int>(receiverId, "intInOnData"));
+    ASSERT_EQ(77, m_deviceClient->get<int>(receiverId, "intInOnData"))
+          << karabo::data::toString(m_deviceClient->get(receiverId));
 
 
     // Clean up
     m_deviceServer->disconnect(receiverId, "signalChanged", slotConnectionChanged);
     // Cannot remove slotConnectionChanged...
     // Remove schema changes again:
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(senderId, "slotUpdateSchema", Schema()).timeout(timeoutMs).receive());
+    ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotUpdateSchema", Schema()).timeout(timeoutMs).receive());
     success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     std::clog << "OK." << std::endl;
 }
 
-void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot) {
+void TestDeviceTest::testInputOutputChannelInjection(const std::string& updateSlot) {
     std::clog << "Start testInputOutputChannelInjection for " << updateSlot << ": " << std::flush;
 
     // Setup a communication helper
@@ -1332,11 +1410,11 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
 
     // At the beginning, only the static channel is there:
     std::vector<std::string> outputChannels;
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
-                                  .timeout(requestTimeoutMs)
-                                  .receive(outputChannels));
-    CPPUNIT_ASSERT_EQUAL(1ul, outputChannels.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("output"), outputChannels[0]);
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotGetOutputChannelNames")
+                          .timeout(requestTimeoutMs)
+                          .receive(outputChannels));
+    ASSERT_EQ(1ul, outputChannels.size());
+    ASSERT_EQ(std::string("output"), outputChannels[0]);
 
     // Checks that updateSlot creates injected input and output channels
     // ----------
@@ -1347,34 +1425,35 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     INPUT_CHANNEL(schema).key("injectedInput").commit();
     OVERWRITE_ELEMENT(schema)
           .key("injectedInput.connectedOutputChannels")
-          .setNewDefaultValue<std::vector<std::string>>({"TestDevice:injectedOutput", "TestDevice:output"})
+          .setNewDefaultValue<std::vector<std::string>>(
+                {"DeviceExampleTest:injectedOutput", "DeviceExampleTest:output"})
           .commit();
     NODE_ELEMENT(schema)
           .key("emptyNode") // Already in static schema - but without leaves
           .commit();
     INT32_ELEMENT(schema).key("emptyNode.anInt32").readOnly().initialValue(42).commit();
 
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", updateSlot, schema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", updateSlot, schema).timeout(requestTimeoutMs).receive());
 
     // Now, also the injectedOutput is there:
     outputChannels.clear();
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
-                                  .timeout(requestTimeoutMs)
-                                  .receive(outputChannels));
-    CPPUNIT_ASSERT_EQUAL(2ul, outputChannels.size());
-    CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "output") != outputChannels.end());
-    CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "injectedOutput") != outputChannels.end());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotGetOutputChannelNames")
+                          .timeout(requestTimeoutMs)
+                          .receive(outputChannels));
+    ASSERT_EQ(2ul, outputChannels.size());
+    ASSERT_TRUE(std::find(outputChannels.begin(), outputChannels.end(), "output") != outputChannels.end());
+    ASSERT_TRUE(std::find(outputChannels.begin(), outputChannels.end(), "injectedOutput") != outputChannels.end());
 
     // Check that, after some time, the injected input is connected to both, the injected and the static output
     auto inputsConnected = [this]() {
-        const Hash cfg(m_deviceClient->get("TestDevice"));
+        const Hash cfg(m_deviceClient->get("DeviceExampleTest"));
         if (cfg.has("output.connections") && cfg.has("injectedOutput.connections")) {
             std::vector<Hash> tableStatic, tableInjected;
             cfg.get("output.connections", tableStatic);
             cfg.get("injectedOutput.connections", tableInjected);
             if (tableStatic.size() == 1ul && tableInjected.size() == 1ul &&
-                tableStatic[0].get<std::string>("remoteId") == "TestDevice:injectedInput" &&
-                tableInjected[0].get<std::string>("remoteId") == "TestDevice:injectedInput"
+                tableStatic[0].get<std::string>("remoteId") == "DeviceExampleTest:injectedInput" &&
+                tableInjected[0].get<std::string>("remoteId") == "DeviceExampleTest:injectedInput"
                 // Also ensure the injected property is there
                 && cfg.has("emptyNode.anInt32")) {
                 return true;
@@ -1386,156 +1465,154 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
           inputsConnected,
           cacheUpdateWaitMs * 20); // longer timeout: automatic connection tries happen only every 5 seconds
 
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
+    ASSERT_TRUE(ok) << karabo::data::toString(m_deviceClient->get("DeviceExampleTest"));
 
     // Now START test that re-injecting an input channel keeps handlers registered with KARABO_ON_DATA.
     // Register data handler for "injectedInput" channel
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotRegisterOnDataInputEos", "injectedInput")
-                                  .timeout(requestTimeoutMs)
-                                  .receive());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotRegisterOnDataInputEos", "injectedInput")
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Check that initially "intInOnData" is not one, i.e. ensure that following actions will make it one.
     // (It is either zero [initial value] or -2 [from previous run of this test with other updateSlot].)
-    CPPUNIT_ASSERT(1 != m_deviceClient->get<int>("TestDevice", "intInOnData"));
-    const int countEosCalls = m_deviceClient->get<int>("TestDevice", "numCallsOnInput");
+    ASSERT_TRUE(1 != m_deviceClient->get<int>("DeviceExampleTest", "intInOnData"));
+    const int countEosCalls = m_deviceClient->get<int>("DeviceExampleTest", "numCallsOnInput");
 
     // Request data to be sent from "output" to "injectedInput" channel
     Hash dataToSend(
           "int", 1, "data",
           Hash("untagged", 4.2, "intensityTD", std::vector<float>(10, 3.7f), "vecInt32", std::vector<int>(5, 1)));
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", dataToSend)
-                                  .timeout(requestTimeoutMs)
-                                  .receive());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotSendToOutputChannel", "output", dataToSend)
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Check that data arrived and onData/onInput handlers called
     waitForCondition(
           [this, countEosCalls]() {
-              return (1 == m_deviceClient->get<int>("TestDevice", "intInOnData") &&
-                      countEosCalls + 1 == m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+              return (1 == m_deviceClient->get<int>("DeviceExampleTest", "intInOnData") &&
+                      countEosCalls + 1 == m_deviceClient->get<int>("DeviceExampleTest", "numCallsOnInput"));
           },
           cacheUpdateWaitMs);
-    CPPUNIT_ASSERT_EQUAL(1, m_deviceClient->get<int>("TestDevice", "intInOnData"));
-    CPPUNIT_ASSERT_EQUAL(countEosCalls + 1, m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+    ASSERT_EQ(1, m_deviceClient->get<int>("DeviceExampleTest", "intInOnData"));
+    ASSERT_EQ(countEosCalls + 1, m_deviceClient->get<int>("DeviceExampleTest", "numCallsOnInput"));
 
     // Request EOS to be sent to "injectedInput" channel.
     // All outputs an input is connected to have to send EOS to get the eos handler called...
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
+    ASSERT_NO_THROW(
+          sigSlot->request("DeviceExampleTest", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
                 .timeout(requestTimeoutMs)
                 .receive());
     // Check that EOS arrived and flipped sign
-    waitForCondition([this]() { return (-1 == m_deviceClient->get<int>("TestDevice", "intInOnData")); },
+    waitForCondition([this]() { return (-1 == m_deviceClient->get<int>("DeviceExampleTest", "intInOnData")); },
                      cacheUpdateWaitMs);
-    CPPUNIT_ASSERT_EQUAL(-1, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    ASSERT_EQ(-1, m_deviceClient->get<int>("DeviceExampleTest", "intInOnData"));
 
     // Re-inject input - channel will be recreated and onData handler should be passed to new incarnation
     Schema inputOnlySchema;
     INPUT_CHANNEL(inputOnlySchema).key("injectedInput").commit();
     // Note that here we need to use "slotAppendSchema" and not updateSlot since "slotUpdateSchema" would erase
     // "injectedInput".
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotAppendSchema", inputOnlySchema).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotAppendSchema", inputOnlySchema)
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Wait for connection being re-established
     // HACK: Without sleep might be fooled, i.e. traces of connection of previous input channel not yet erased...
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ok = waitForCondition(inputsConnected, cacheUpdateWaitMs * 20); // longer timeout again, see above
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
+    ASSERT_TRUE(ok) << karabo::data::toString(m_deviceClient->get("DeviceExampleTest"));
     // Request again data to be sent from "output" to "injectedInput" channel
     dataToSend.set("int", 2);
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", dataToSend)
-                                  .timeout(requestTimeoutMs)
-                                  .receive());
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotSendToOutputChannel", "output", dataToSend)
+                          .timeout(requestTimeoutMs)
+                          .receive());
     // Check that new data arrived
     waitForCondition(
           [this, countEosCalls]() {
-              return (2 == m_deviceClient->get<int>("TestDevice", "intInOnData") &&
-                      countEosCalls + 2 == m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+              return (2 == m_deviceClient->get<int>("DeviceExampleTest", "intInOnData") &&
+                      countEosCalls + 2 == m_deviceClient->get<int>("DeviceExampleTest", "numCallsOnInput"));
           },
           cacheUpdateWaitMs);
-    CPPUNIT_ASSERT_EQUAL(2, m_deviceClient->get<int>("TestDevice", "intInOnData"));
-    CPPUNIT_ASSERT_EQUAL(countEosCalls + 2, m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+    ASSERT_EQ(2, m_deviceClient->get<int>("DeviceExampleTest", "intInOnData"));
+    ASSERT_EQ(countEosCalls + 2, m_deviceClient->get<int>("DeviceExampleTest", "numCallsOnInput"));
     // Request EOS to be sent again
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
+    ASSERT_NO_THROW(
+          sigSlot->request("DeviceExampleTest", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
                 .timeout(requestTimeoutMs)
                 .receive());
     // Check that EOS arrived and flipped sign again
-    waitForCondition([this]() { return (-2 == m_deviceClient->get<int>("TestDevice", "intInOnData")); },
+    waitForCondition([this]() { return (-2 == m_deviceClient->get<int>("DeviceExampleTest", "intInOnData")); },
                      cacheUpdateWaitMs);
-    CPPUNIT_ASSERT_EQUAL(-2, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    ASSERT_EQ(-2, m_deviceClient->get<int>("DeviceExampleTest", "intInOnData"));
     //
     // END test that re-injecting input channels keeps handlers registered with KARABO_ON_DATA/KARABO_ON_EOS!
 
     // Remove the channels again:
-    CPPUNIT_ASSERT_NO_THROW(
-          sigSlot->request("TestDevice", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
+    ASSERT_NO_THROW(
+          sigSlot->request("DeviceExampleTest", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
     // Now only the static OutputChannel is kept
     outputChannels.clear();
-    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
-                                  .timeout(requestTimeoutMs)
-                                  .receive(outputChannels));
-    CPPUNIT_ASSERT_EQUAL(1ul, outputChannels.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("output"), outputChannels[0]);
+    ASSERT_NO_THROW(sigSlot->request("DeviceExampleTest", "slotGetOutputChannelNames")
+                          .timeout(requestTimeoutMs)
+                          .receive(outputChannels));
+    ASSERT_EQ(1ul, outputChannels.size());
+    ASSERT_EQ("output", outputChannels[0]);
 
-    // TODO: We directly call slotGetConfiguration instead of using m_deviceClient->get("TestDevice"):
+    // TODO: We directly call slotGetConfiguration instead of using m_deviceClient->get("DeviceExampleTest"):
     //       Looks like the client cache will not erase removed properties.
     Hash cfg;
     std::string dummy;
-    sigSlot->request("TestDevice", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedOutput"));
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedInput"));
+    sigSlot->request("DeviceExampleTest", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
+    ASSERT_TRUE(!cfg.has("injectedOutput")) << karabo::data::toString(cfg);
+    ASSERT_TRUE(!cfg.has("injectedInput")) << karabo::data::toString(cfg);
     // Not channel related - 'emptyNode' kept, but injected anInt32 not:
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("emptyNode.anInt32"));
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), cfg.has("emptyNode"));
+    ASSERT_TRUE(!cfg.has("emptyNode.anInt32")) << karabo::data::toString(cfg);
+    ASSERT_TRUE(cfg.has("emptyNode")) << karabo::data::toString(cfg);
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testNodedSlot() {
+void TestDeviceTest::testNodedSlot() {
     std::clog << "Start testNodedSlot: " << std::flush;
     // Note that calling "node_slot" would work as well... :-|
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestDevice", "node.slot", KRB_TEST_MAX_TIMEOUT));
+    ASSERT_NO_THROW(m_deviceClient->execute("DeviceExampleTest", "node.slot", KRB_TEST_MAX_TIMEOUT));
 
     // Check also that slot is properly recorded as lastCommand
-    CPPUNIT_ASSERT_EQUAL(std::string("node.slot <- ") += m_deviceClient->getInstanceId(),
-                         m_deviceClient->get<std::string>("TestDevice", "lastCommand"));
+    ASSERT_EQ(std::string("node.slot <- ") += m_deviceClient->getInstanceId(),
+              m_deviceClient->get<std::string>("DeviceExampleTest", "lastCommand"));
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testGetconfigReconfig() {
+void TestDeviceTest::testGetconfigReconfig() {
     std::clog << "Start testGetconfigReconfig: " << std::flush;
 
     const int timeoutInMs = 10000;
-    const std::string deviceId("TestDevice");
+    const std::string deviceId("DeviceExampleTest");
 
     // Check device properties
     Hash cfgHash;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
-    CPPUNIT_ASSERT_EQUAL(deviceId, cfgHash.get<std::string>("deviceId"));
-    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), cfgHash.get<std::string>("classId"));
-    CPPUNIT_ASSERT_EQUAL(fakeClassVersion, cfgHash.get<std::string>("classVersion"));
-    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), cfgHash.get<std::string>("karaboVersion"));
-    CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), cfgHash.get<std::string>("serverId"));
-    CPPUNIT_ASSERT_EQUAL(::getpid(), cfgHash.get<int>("pid"));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    ASSERT_EQ(deviceId, cfgHash.get<std::string>("deviceId"));
+    ASSERT_EQ("DeviceExampleTest", cfgHash.get<std::string>("classId"));
+    ASSERT_EQ(fakeClassVersion, cfgHash.get<std::string>("classVersion"));
+    ASSERT_EQ(karabo::util::Version::getVersion(), cfgHash.get<std::string>("karaboVersion"));
+    ASSERT_EQ("testServerDevice", cfgHash.get<std::string>("serverId"));
+    ASSERT_EQ(::getpid(), cfgHash.get<int>("pid"));
 
     // test pipeline channel schema is an empty node or has empty nodes under it.
     assertChildNodesEmpty(cfgHash.get<Hash>("output.schema"));
 
     // But we can set the performance statistics
     cfgHash.clear();
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotReconfigure", Hash("performanceStatistics.enable", true))
-                .timeout(timeoutInMs)
-                .receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
-    CPPUNIT_ASSERT_EQUAL(true, cfgHash.get<bool>("performanceStatistics.enable"));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("performanceStatistics.enable", true))
+                          .timeout(timeoutInMs)
+                          .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    ASSERT_EQ(true, cfgHash.get<bool>("performanceStatistics.enable"));
 
     // Test the lastCommand for slotReconfigure
-    CPPUNIT_ASSERT_EQUAL(std::string("slotReconfigure <- ") += m_deviceServer->getInstanceId(),
-                         cfgHash.get<std::string>("lastCommand"));
+    ASSERT_EQ(std::string("slotReconfigure <- ") += m_deviceServer->getInstanceId(),
+              cfgHash.get<std::string>("lastCommand"));
 
     // Now try to set performanceStatistics again, but with an old timestamp - that should not be taken!
     const Timestamp enableTimestamp(
@@ -1549,23 +1626,20 @@ void Device_Test::testGetconfigReconfig() {
     pastTimestamp.toHashAttributes(attrs);
     cfgHash.clear();
     const Timestamp beforeSetStamp;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotReconfigure", hToSet).timeout(timeoutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", hToSet).timeout(timeoutInMs).receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
 
     const Timestamp receivedStamp(Timestamp::fromHashAttributes(cfgHash.getAttributes("performanceStatistics.enable")));
-    CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + pastTimestamp.toIso8601Ext(),
-                           receivedStamp != pastTimestamp);
-    CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + beforeSetStamp.toIso8601Ext(),
-                           receivedStamp.getEpochstamp() > beforeSetStamp.getEpochstamp()); // cannot compare Timestamps
+    ASSERT_TRUE(receivedStamp != pastTimestamp) << receivedStamp.toIso8601Ext() << " " << pastTimestamp.toIso8601Ext();
+    ASSERT_TRUE(receivedStamp.getEpochstamp() > beforeSetStamp.getEpochstamp())
+          << receivedStamp.toIso8601Ext() << " " << beforeSetStamp.toIso8601Ext(); // cannot compare Timestamps
 
     // Now test slotGetConfigurationSlice
     const std::vector<std::string> selectedPaths({"performanceStatistics.enable", "vecString", "table"});
     Hash arg("paths", selectedPaths);
     const Hash slice =
           m_deviceClient->execute1<Hash, Hash>(deviceId, "slotGetConfigurationSlice", timeoutInMs / 1000, arg);
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3u), slice.size());
+    ASSERT_EQ(static_cast<size_t>(3u), slice.size());
 
     // Remove all non-selected paths from full config ('cfgHash') and then check full equality, i.e. values and
     // attributes (e.g. timestamp).
@@ -1578,8 +1652,8 @@ void Device_Test::testGetconfigReconfig() {
         }
         cfgHash.erasePath(path);
     }
-    CPPUNIT_ASSERT_MESSAGE(toString(cfgHash) + " vs\n" + toString(slice),
-                           slice.fullyEquals(cfgHash, false)); // false: order does not matter
+    ASSERT_TRUE(slice.fullyEquals(cfgHash, false)) << karabo::data::toString(cfgHash) << " vs\n"
+                                                   << karabo::data::toString(slice); // false: order does not matter
 
     // Request for a non-existing path fails with remote exception that originates from a ParameterException
     bool exceptionCaught = false;
@@ -1589,29 +1663,29 @@ void Device_Test::testGetconfigReconfig() {
     } catch (const karabo::data::RemoteException& e) {
         exceptionCaught = true;
         const std::string& det = e.details();
-        CPPUNIT_ASSERT_MESSAGE(det, det.find("Exception Type....:  Parameter Exception") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(det, det.find("Key 'not_a_property' does not exist") != std::string::npos);
+        ASSERT_TRUE(det.find("Exception Type....:  Parameter Exception") != std::string::npos) << det;
+        ASSERT_TRUE(det.find("Key 'not_a_property' does not exist") != std::string::npos) << det;
     } catch (...) {
     };
-    CPPUNIT_ASSERT(exceptionCaught);
+    ASSERT_TRUE(exceptionCaught);
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testUpdateState() {
-    const std::string deviceId("TestDevice");
+void TestDeviceTest::testUpdateState() {
+    const std::string deviceId("DeviceExampleTest");
 
     // Check initial state of test device
     const State state(m_deviceClient->get<State>(deviceId, "state"));
-    CPPUNIT_ASSERT_MESSAGE("State is " + state.name(), state == State::UNKNOWN);
-    CPPUNIT_ASSERT_EQUAL(0u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
-    CPPUNIT_ASSERT(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithExc")) > 1.e-7);
+    ASSERT_TRUE(state == State::UNKNOWN) << "State is " << state.name();
+    ASSERT_EQ(0u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
+    ASSERT_TRUE(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithExc")) > 1.e-7);
 
     const int timeOutInMs = 1000 * KRB_TEST_MAX_TIMEOUT;
     Hash hash;
     m_deviceServer->request(deviceId, "slotPing", 1).timeout(timeOutInMs).receive(hash);
-    CPPUNIT_ASSERT_EQUAL(std::string("unknown"), hash.get<std::string>("status"));
+    ASSERT_EQ("unknown", hash.get<std::string>("status"));
 
     // Prepare Hash argument to slotToggleState with two different time stamps
     const Epochstamp stampToggle(1575296000ull, 1111ull);
@@ -1624,43 +1698,40 @@ void Device_Test::testUpdateState() {
     // Send state update request and...
     // ... test its (implicit) reply value,
     std::string reply;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
-    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
+    ASSERT_EQ("NORMAL", reply);
     m_deviceServer->request(deviceId, "slotPing", 1).timeout(timeOutInMs).receive(hash);
-    CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
+    ASSERT_EQ("ok", hash.get<std::string>("status"));
 
     // ... test that the state was switched,
     const State state1(m_deviceClient->get<State>(deviceId, "state"));
-    CPPUNIT_ASSERT_MESSAGE("State is " + state1.name(), state1 == State::NORMAL);
+    ASSERT_TRUE(state1 == State::NORMAL) << "State is " << state1.name();
 
     // ... test that other values updated as well,
-    CPPUNIT_ASSERT_EQUAL(1u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1., m_deviceClient->get<double>(deviceId, "valueWithExc"), 1.e-7);
+    ASSERT_EQ(1u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
+    ASSERT_NEAR(-1., m_deviceClient->get<double>(deviceId, "valueWithExc"), 1.e-7);
 
     reply = "";
     msg.set("state", "ERROR");
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
-    CPPUNIT_ASSERT_EQUAL(std::string("ERROR"), reply);
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
+    ASSERT_EQ("ERROR", reply);
     m_deviceServer->request(deviceId, "slotPing", 1).timeout(timeOutInMs).receive(hash);
-    CPPUNIT_ASSERT_EQUAL(std::string("error"), hash.get<std::string>("status"));
+    ASSERT_EQ("error", hash.get<std::string>("status"));
 
     // ... test that the state was switched,
     const State state2 = m_deviceClient->get<State>(deviceId, "state");
-    CPPUNIT_ASSERT_MESSAGE("State is " + state2.name(), state2 == State::ERROR);
+    ASSERT_TRUE(state2 == State::ERROR) << "State is " << state2.name();
 
     reply = "";
     msg.set("state", "NORMAL");
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
-    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
+    ASSERT_EQ("NORMAL", reply);
     m_deviceServer->request(deviceId, "slotPing", 1).timeout(timeOutInMs).receive(hash);
-    CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
+    ASSERT_EQ("ok", hash.get<std::string>("status"));
 
     // ... test that the state was switched,
     const State state3 = m_deviceClient->get<State>(deviceId, "state");
-    CPPUNIT_ASSERT_MESSAGE("State is " + state3.name(), state3 == State::NORMAL);
+    ASSERT_TRUE(state3 == State::NORMAL) << "State is " << state3.name();
 
     // ... and finally test the desired timestamps:
     //     * state and valueWithExc get the same as given explicitly to updateState
@@ -1668,136 +1739,124 @@ void Device_Test::testUpdateState() {
     const auto atto = karabo::data::TIME_UNITS::ATTOSEC;
     const Hash cfg(m_deviceClient->get(deviceId));
     const Epochstamp stampStateNew(Epochstamp::fromHashAttributes(cfg.getAttributes("state")));
-    CPPUNIT_ASSERT_MESSAGE(stampStateNew.toIso8601(atto) += " != " + stampState.toIso8601(atto),
-                           stampStateNew == stampState);
+    ASSERT_TRUE(stampStateNew == stampState) << stampStateNew.toIso8601(atto) << " != " << stampState.toIso8601(atto);
 
     const Epochstamp stampValue(Epochstamp::fromHashAttributes(cfg.getAttributes("valueWithExc")));
-    CPPUNIT_ASSERT_MESSAGE(stampValue.toIso8601(atto) += " != " + stampState.toIso8601(atto), stampValue == stampState);
+    ASSERT_TRUE(stampValue == stampState) << stampValue.toIso8601(atto) << " != " << stampState.toIso8601(atto);
 
     const Epochstamp stampToggleNew(Epochstamp::fromHashAttributes(cfg.getAttributes("countStateToggles")));
-    CPPUNIT_ASSERT_MESSAGE(stampToggleNew.toIso8601(atto) += " != " + stampToggle.toIso8601(atto),
-                           stampToggleNew == stampToggle);
+    ASSERT_TRUE(stampToggleNew == stampToggle)
+          << stampToggleNew.toIso8601(atto) << " != " << stampToggle.toIso8601(atto);
 }
 
 
-void Device_Test::testSet() {
+void TestDeviceTest::testSet() {
     std::clog << "Start testSet: " << std::flush;
     const int timeoutInMs = KRB_TEST_MAX_TIMEOUT * 1000;
-    const std::string deviceId("TestDevice");
+    const std::string deviceId("DeviceExampleTest");
 
     // Setting a non-existing value throws
-    CPPUNIT_ASSERT_THROW(
-          m_deviceServer->request(deviceId, "slotSet", Hash("nonExistParam", 0)).timeout(timeoutInMs).receive(),
-          karabo::data::RemoteException);
+    ASSERT_THROW(m_deviceServer->request(deviceId, "slotSet", Hash("nonExistParam", 0)).timeout(timeoutInMs).receive(),
+                 karabo::data::RemoteException);
 
     // Setting a reconfigurable property outside its validation limits throws
     // (and even other valid changes in the same set(..) are ignored).
     Hash hash;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(0, hash.get<int>("valueWithLimit"));
-    CPPUNIT_ASSERT_EQUAL(0, hash.get<int>("valueOther"));
-    CPPUNIT_ASSERT_THROW(m_deviceServer
-                               ->request(deviceId, "slotSet",
-                                         Hash("valueWithLimit", 1000, // hit slimit
-                                              "valueOther", 2000))    // would be OK
-                               .timeout(timeoutInMs)
-                               .receive(),
-                         karabo::data::RemoteException);
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(0, hash.get<int>("valueWithLimit"));
+    ASSERT_EQ(0, hash.get<int>("valueOther"));
+    ASSERT_THROW(m_deviceServer
+                       ->request(deviceId, "slotSet",
+                                 Hash("valueWithLimit", 1000, // hit slimit
+                                      "valueOther", 2000))    // would be OK
+                       .timeout(timeoutInMs)
+                       .receive(),
+                 karabo::data::RemoteException);
     Hash hash2;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
-    CPPUNIT_ASSERT(hash2.fullyEquals(hash)); // Also valueOther did not change
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
+    ASSERT_TRUE(hash2.fullyEquals(hash)); // Also valueOther did not change
 
 
     // Other settings work
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotSet", Hash("valueWithLimit", 999, "valueOther", 2000))
-                .timeout(timeoutInMs)
-                .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotSet", Hash("valueWithLimit", 999, "valueOther", 2000))
+                          .timeout(timeoutInMs)
+                          .receive());
     hash2.clear();
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
-    CPPUNIT_ASSERT_EQUAL(999, hash2.get<int>("valueWithLimit"));
-    CPPUNIT_ASSERT_EQUAL(2000, hash2.get<int>("valueOther"));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
+    ASSERT_EQ(999, hash2.get<int>("valueWithLimit"));
+    ASSERT_EQ(2000, hash2.get<int>("valueOther"));
 
     std::clog << "OK." << std::endl;
 }
 
-void Device_Test::testSetVectorUpdate() {
+void TestDeviceTest::testSetVectorUpdate() {
     std::clog << "Start testSetVectorUpdate: " << std::flush;
     const int timeoutInMs = 10000;
-    const std::string deviceId("TestDevice");
+    const std::string deviceId("DeviceExampleTest");
 
     using VectorUpdate = karabo::core::Device::VectorUpdate;
 
     Hash hash;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three"}),
-                         hash.get<std::vector<std::string>>("vecString"));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(std::vector<std::string>({"one", "two", "three"}), hash.get<std::vector<std::string>>("vecString"));
 
     // Test adding
     // The "three"s will all added times (although it is already in)!
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer
-                                  ->request(deviceId, "slotUpdateVecString",
-                                            std::vector<std::string>({"three", "three", "one"}),
-                                            static_cast<int>(VectorUpdate::add))
-                                  .timeout(timeoutInMs)
-                                  .receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three", "three", "three", "one"}),
-                         hash.get<std::vector<std::string>>("vecString"));
+    ASSERT_NO_THROW(m_deviceServer
+                          ->request(deviceId, "slotUpdateVecString",
+                                    std::vector<std::string>({"three", "three", "one"}),
+                                    static_cast<int>(VectorUpdate::add))
+                          .timeout(timeoutInMs)
+                          .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(std::vector<std::string>({"one", "two", "three", "three", "three", "one"}),
+              hash.get<std::vector<std::string>>("vecString"));
 
     // Test addIfNotIn
     // Since "one" is already in, it will not be added again
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer
-                                  ->request(deviceId, "slotUpdateVecString", std::vector<std::string>({"one", "seven"}),
-                                            static_cast<int>(VectorUpdate::addIfNotIn))
-                                  .timeout(timeoutInMs)
-                                  .receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three", "three", "three", "one", "seven"}),
-                         hash.get<std::vector<std::string>>("vecString"));
+    ASSERT_NO_THROW(m_deviceServer
+                          ->request(deviceId, "slotUpdateVecString", std::vector<std::string>({"one", "seven"}),
+                                    static_cast<int>(VectorUpdate::addIfNotIn))
+                          .timeout(timeoutInMs)
+                          .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(std::vector<std::string>({"one", "two", "three", "three", "three", "one", "seven"}),
+              hash.get<std::vector<std::string>>("vecString"));
 
     // Test removeOne
     // Only first "one" and first "three" will be removed, "notIn" is ignored
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer
-                                  ->request(deviceId, "slotUpdateVecString",
-                                            std::vector<std::string>({"three", "one", "notIn"}),
-                                            static_cast<int>(VectorUpdate::removeOne))
-                                  .timeout(timeoutInMs)
-                                  .receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"two", "three", "three", "one", "seven"}),
-                         hash.get<std::vector<std::string>>("vecString"));
+    ASSERT_NO_THROW(m_deviceServer
+                          ->request(deviceId, "slotUpdateVecString",
+                                    std::vector<std::string>({"three", "one", "notIn"}),
+                                    static_cast<int>(VectorUpdate::removeOne))
+                          .timeout(timeoutInMs)
+                          .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(std::vector<std::string>({"two", "three", "three", "one", "seven"}),
+              hash.get<std::vector<std::string>>("vecString"));
 
     // Test removeAll
     // all "three"s and the "two" will be removed, "notIn" is ignored
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer
-                                  ->request(deviceId, "slotUpdateVecString",
-                                            std::vector<std::string>({"two", "notIn", "three"}),
-                                            static_cast<int>(VectorUpdate::removeAll))
-                                  .timeout(timeoutInMs)
-                                  .receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "seven"}), hash.get<std::vector<std::string>>("vecString"));
+    ASSERT_NO_THROW(m_deviceServer
+                          ->request(deviceId, "slotUpdateVecString",
+                                    std::vector<std::string>({"two", "notIn", "three"}),
+                                    static_cast<int>(VectorUpdate::removeAll))
+                          .timeout(timeoutInMs)
+                          .receive());
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    ASSERT_EQ(std::vector<std::string>({"one", "seven"}), hash.get<std::vector<std::string>>("vecString"));
 
     // Finally test invalid updateType
-    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString", std::vector<std::string>(), 0)
-                               .timeout(timeoutInMs)
-                               .receive(),
-                         karabo::data::RemoteException);
+    ASSERT_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString", std::vector<std::string>(), 0)
+                       .timeout(timeoutInMs)
+                       .receive(),
+                 karabo::data::RemoteException);
 
     std::clog << "OK." << std::endl;
 }
 
 
-void Device_Test::testSignal() {
+void TestDeviceTest::testSignal() {
     // Test that signals registered in constructor of devices inheriting from Device carry the signalInstanceId in
     // header (in 2.10.0 the SignalSlotable::init method is called after the constructor, so no id yet when
     // registering).
@@ -1814,20 +1873,20 @@ void Device_Test::testSignal() {
         }
     };
     m_deviceServer->registerSlot(slot, "slotForSignalA");
-    CPPUNIT_ASSERT(m_deviceServer->connect("TestDevice", "signalA", "slotForSignalA"));
+    ASSERT_TRUE(m_deviceServer->connect("DeviceExampleTest", "signalA", "slotForSignalA"));
     // If request returns, we can be sure that the signal has been received.
     // That order would be undefined if instead of 'm_deviceServer->request' we would use
     // 'm_deviceClient->execute' since signal is emitted to m_deviceServer.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotEmitSignalA").timeout(5000).receive());
+    ASSERT_NO_THROW(m_deviceServer->request("DeviceExampleTest", "slotEmitSignalA").timeout(5000).receive());
 
-    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), signalInstanceId);
+    ASSERT_EQ("DeviceExampleTest", signalInstanceId);
 
     // Clean up
-    m_deviceServer->disconnect("TestDevice", "signalA", "slotForSignalA");
+    m_deviceServer->disconnect("DeviceExampleTest", "signalA", "slotForSignalA");
     // m_deviceServer->removeSlot("slotForSignalA"); private, but who cares here...
 }
 
-void Device_Test::testBadInit() {
+void TestDeviceTest::testBadInit() {
     // HACK against topology caching in DeviceClient:
     // If we do not call getDevices() here, but run this as the last test within appTestRunner() (if it is the first,
     // it's fine!!!), the getDevices("<serverId>") below in the test case 3 waiting condition is fooled and returns an
@@ -1852,8 +1911,8 @@ void Device_Test::testBadInit() {
     // Although initialization sleeps delayInSec, no timeout within the 2 seconds we allow for that
     bool ok = false;
     std::string dummy;
-    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
-    CPPUNIT_ASSERT(ok);
+    ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    ASSERT_TRUE(ok);
 
     // After instantiation, state switches to INIT, as soon as initialisation method runs.
     State devState(State::UNKNOWN);
@@ -1863,7 +1922,7 @@ void Device_Test::testBadInit() {
               return (devState == State::INIT);
           },
           2000);
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
+    ASSERT_TRUE(waitOk) << devState.name();
 
     // At end of initialization, state changes to NORMAL - wait for it...
     waitOk = waitForCondition(
@@ -1872,7 +1931,7 @@ void Device_Test::testBadInit() {
               return (devState == State::NORMAL);
           },
           (delayInSec + 2) * 1000); // wait longer than delaying sleep
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
+    ASSERT_TRUE(waitOk) << devState.name();
 
     m_deviceClient->killDeviceNoWait(devId);
 
@@ -1896,12 +1955,12 @@ void Device_Test::testBadInit() {
                       .timeout(2000); // starting a device takes at least one second...
     // Despite the failing initialization, the device replies successfully, no timeout:
     ok = false;
-    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
-    CPPUNIT_ASSERT(ok);
+    ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    ASSERT_TRUE(ok);
 
     const bool newAndGone = waitForCondition(
           [&instanceNewCalled, &instanceGoneCalled]() { return (instanceNewCalled && instanceGoneCalled); }, 5000);
-    CPPUNIT_ASSERT(newAndGone);
+    ASSERT_TRUE(newAndGone);
     // Reset handlers that use references to local variables
     m_deviceClient->registerInstanceNewMonitor([](const karabo::data::Hash&) {});
     m_deviceClient->registerInstanceGoneMonitor([](const std::string&, const karabo::data::Hash&) {});
@@ -1919,8 +1978,8 @@ void Device_Test::testBadInit() {
                       .timeout(2000); // starting a device takes at least one second...
     // Although initialization sleeps 'delayInSec', no timeout within the 2 seconds we allow for that
     ok = false;
-    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
-    CPPUNIT_ASSERT(ok);
+    ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    ASSERT_TRUE(ok);
 
     auto onPreDestructionCalled = std::make_shared<bool>(false); // shared_ptr, avoids lifetime issues after test
     m_deviceServer->registerSlot([onPreDestructionCalled]() { *onPreDestructionCalled = true; }, "onPredestruction");
@@ -1933,17 +1992,17 @@ void Device_Test::testBadInit() {
           },
           2000);
     const Epochstamp initStartedTime;
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
+    ASSERT_TRUE(waitOk) << devState.name();
 
     // We kill the device that is still initializing: It will not die immediately (only once initialization is done),
     // but preDestruction is called.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotKillDevice"));
+    ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotKillDevice"));
 
     // Now we see from our handler that onPreDestruction was called
     waitOk = waitForCondition([onPreDestructionCalled]() { return (*onPreDestructionCalled); },
                               // wait long enough that initialization is done (though should come earlier)
                               (delayInSec + 2) * 1000);
-    CPPUNIT_ASSERT(*onPreDestructionCalled);
+    ASSERT_TRUE(*onPreDestructionCalled);
 
     // Now wait until device is gone - will take until initialize method has finished!
     std::vector<std::string> devs;
@@ -1956,17 +2015,18 @@ void Device_Test::testBadInit() {
     const karabo::data::TimeDuration duration(initStartedTime.elapsed());
     // Verify that device gone
     using karabo::data::toString;
-    CPPUNIT_ASSERT_MESSAGE(toString(devs), waitOk);
+    ASSERT_TRUE(waitOk) << karabo::data::toString(devs);
 
     // The initialization (that blocked device going down) should have lasted about delayInSec seconds.
     // We allow for some contingency:
     const karabo::data::TimeDuration testDuration(delayInSec * 3. / 4., 0ull); // implicit conversions happening....
     std::stringstream sstr;
     sstr << duration << " " << testDuration;
-    CPPUNIT_ASSERT_MESSAGE(sstr.str(), duration > testDuration);
+    ASSERT_TRUE(duration > testDuration) << sstr.str();
 }
 
-bool Device_Test::waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis) {
+
+bool TestDeviceTest::waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
     const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
@@ -1976,6 +2036,7 @@ bool Device_Test::waitForCondition(std::function<bool()> checker, unsigned int t
     }
     return (numOfWaits < maxNumOfWaits);
 }
+
 
 void assertChildNodesEmpty(const Hash& h) {
     if (h.empty()) {
@@ -1987,8 +2048,8 @@ void assertChildNodesEmpty(const Hash& h) {
     h.getKeys(keys);
 
     // We expect only one element (and this has to be a hash)
-    CPPUNIT_ASSERT(keys.size() == 1);
-    CPPUNIT_ASSERT_NO_THROW(child = h.get<Hash>(keys[0]));
+    ASSERT_TRUE(keys.size() == 1);
+    ASSERT_NO_THROW(child = h.get<Hash>(keys[0]));
 
     // process child node all the way till we hit an empty child.
     assertChildNodesEmpty(child);

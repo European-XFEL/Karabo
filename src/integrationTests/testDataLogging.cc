@@ -16,18 +16,12 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   DataLogging_Test.cc
+ * File:   tesstDataLogging.cc
  * Author: silenzi
  *
  * Created on Nov 12, 2018, 6:07:07 PM
  */
-
-#include "DataLogging_Test.hh"
-#define NO_VECTOR_HASH_ASSERTION_TRAITS
-// Various CppUnit test helpers, but no special treatment for vector<Hash>.
-// That needs even more special treatment below
-#include "CppUnitMacroExtension.hh"
-#undef NO_VECTOR_HASH_ASSERTION_TRAITS
+#include <gtest/gtest.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -42,6 +36,150 @@
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/StringTools.hh"
+#include "karabo/karabo.hpp"
+
+
+class TestDataLogging : public ::testing::Test {
+   protected:
+    TestDataLogging();
+    ~TestDataLogging() override;
+    void SetUp() override;
+    void TearDown() override;
+
+    static int KRB_TEST_MAX_TIMEOUT;
+    static int SLOT_REQUEST_TIMEOUT_MILLIS;
+    static int FLUSH_REQUEST_TIMEOUT_MILLIS;
+    static int FLUSH_INTERVAL_SEC;
+    static int NUM_RETRY;
+    static int PAUSE_BEFORE_RETRY_MILLIS;
+    static int WAIT_WRITES;
+    static const char* DEFAULT_TEST_LOG_PRIORITY;
+
+    void testLoggerMapProperty();
+    // void influxAllTestRunner();
+
+    void testAllInstantiated(bool waitForLoggerReady = true);
+
+    void testInt(bool testPastConf = true);
+    void testUInt64(bool testPastConf = false);
+    void testFloat(bool testPastConf = false);
+    void testString(bool testPastConf = false);
+    void testVectorString(bool testPastConf = false);
+    void testVectorChar(bool testPastConf = false);
+    void testVectorSignedChar(bool testPastConf = false);
+    void testVectorUnsignedChar(bool testPastConf = false);
+    void testVectorShort(bool testPastConf = false);
+    void testVectorUnsignedShort(bool testPastConf = false);
+    void testVectorInt(bool testPastConf = false);
+    void testVectorUnsignedInt(bool testPastConf = false);
+    void testVectorLongLong(bool testPastConf = false);
+    void testVectorUnsignedLongLong(bool testPastConf = false);
+
+    void testVectorBool(bool testPastConf = false);
+    void testTable(bool testPastConf = false);
+    void testChar(bool testPastConf = true);
+
+    void testLastKnownConfiguration();
+    void testCfgFromPastRestart(bool pastStampStaysPast);
+
+    /**
+     * Checks that the DataLoggers handle NaN floats and doubles.
+     */
+    void testNans();
+
+    template <class T>
+    void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
+
+    std::pair<bool, std::string> startDataLoggerManager(
+          const std::string& loggerType, bool useInvalidInfluxUrl = false, bool useInvalidDbName = false,
+          unsigned int maxPerDevicePropLogRate = 5 * 1024, unsigned int propLogRatePeriod = 5,
+          unsigned int maxSchemaLogRate = 15 * 1024, unsigned int schemaLogRatePeriod = 5,
+          unsigned int maxStringLength = karabo::util::MAX_INFLUX_VALUE_LENGTH, double safeSchemaRetentionPeriod = 2.0);
+
+    /**
+     * Checks that slotGetPropertyHistory logging works when a
+     * Schema evolution changes the device schema at some timepoint
+     * within the requested history interval.
+     */
+    void testSchemaEvolution();
+
+    /**
+     * Checks that the InfluxLogReader doesn't accept out of range
+     * values for the 'maxNumData' parameter in calls to
+     * 'slotGetPropertyHistory'.
+     */
+    void testMaxNumDataRange();
+
+    /**
+     * Checks that the InfluxLogReader is properly enforcing the
+     * 'maxNumData' parameter in calls to 'slotGetPropertyHistory'.
+     * Histories with up to 'maxNumData' entries should return
+     * 'maxNumData' property values as they were written. Histories
+     * with more than 'maxNumData' entries should return 'maxNumData'
+     * property values samples.
+     */
+    void testMaxNumDataHistory();
+
+    /**
+     * Checks that the InfluxLogger is properly dropping values
+     * too far ahead in the future.
+     */
+    void testDropBadData();
+
+    /**
+     * Sets PropertyTestDevice Schema
+     *
+     * circumvent min/max limits and vector size specification
+     */
+    void setPropertyTestSchema();
+
+    /**
+     * @brief Checks that getConfigurationFromPast does not retrieve properties
+     * with no default value that have not been set during the instantiation
+     * of the device that is closest to the requested timepoint.
+     *
+     * "Instantiation of the device that is closest to the requested timepoint"
+     * means either the last instantiation of the device before the requested
+     * timepoint, if the device was not active at the timepoint, or the
+     * instantiation of the device that was active at the timepoint.
+     */
+    void testUnchangedNoDefaultProperties();
+
+    /**
+     * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent
+     *
+     * Requires that a loggermap.xml is present from previous manager
+     */
+    void testFailingManager();
+
+
+    std::string getDeviceIdPrefix();
+
+    bool waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis,
+                          unsigned int sleepIntervalMillis = 5u);
+
+    /**
+     * Waits until logger has started to log device, assert otherwise.
+     * Timeout is TestDataLogging::KRB_TEST_MAX_TIMEOUT)
+     *
+     * @param deviceId device that should be logged
+     * @param textForFailure string prepended to assertion failure message if not logged
+     */
+    void waitUntilLogged(const std::string& deviceId, const std::string& textForFailure);
+
+
+    const std::string m_server;
+    const std::string m_deviceId;
+
+    karabo::core::DeviceServer::Pointer m_deviceServer;
+    std::jthread m_eventLoopThread;
+    karabo::xms::SignalSlotable::Pointer m_sigSlot;
+    karabo::core::DeviceClient::Pointer m_deviceClient;
+
+    bool m_changedPath;
+    std::string m_oldPath;
+};
+
 
 using namespace std::chrono;
 using namespace std::literals::chrono_literals;
@@ -56,14 +194,14 @@ using karabo::xms::SLOT_ELEMENT;
 using std::string;
 using std::vector;
 
-int DataLogging_Test::KRB_TEST_MAX_TIMEOUT = 10; // in seconds
-int DataLogging_Test::SLOT_REQUEST_TIMEOUT_MILLIS = 10'000;
-int DataLogging_Test::FLUSH_REQUEST_TIMEOUT_MILLIS = 60'000;
-int DataLogging_Test::PAUSE_BEFORE_RETRY_MILLIS = 300;
-int DataLogging_Test::NUM_RETRY = 400;
-int DataLogging_Test::FLUSH_INTERVAL_SEC = 1;
-int DataLogging_Test::WAIT_WRITES = 4'000;
-const char* DataLogging_Test::DEFAULT_TEST_LOG_PRIORITY = "ERROR";
+int TestDataLogging::KRB_TEST_MAX_TIMEOUT = 10; // in seconds
+int TestDataLogging::SLOT_REQUEST_TIMEOUT_MILLIS = 10'000;
+int TestDataLogging::FLUSH_REQUEST_TIMEOUT_MILLIS = 60'000;
+int TestDataLogging::PAUSE_BEFORE_RETRY_MILLIS = 300;
+int TestDataLogging::NUM_RETRY = 400;
+int TestDataLogging::FLUSH_INTERVAL_SEC = 1;
+int TestDataLogging::WAIT_WRITES = 4'000;
+const char* TestDataLogging::DEFAULT_TEST_LOG_PRIORITY = "ERROR";
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3, 0, 0, 0, 0);
 
@@ -123,7 +261,6 @@ class DataLogTestDevice : public karabo::core::Device {
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
-
     virtual ~DataLogTestDevice() {}
 
    private:
@@ -148,6 +285,7 @@ class DataLogTestDevice : public karabo::core::Device {
         updateSchema(sch);
     }
 };
+
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, DataLogTestDevice)
 
 
@@ -177,9 +315,7 @@ class NanTestDevice : public karabo::core::Device {
         DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly").readOnly().initialValue(3.1415967773331).commit();
     }
 
-
     NanTestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {}
-
 
     void preReconfigure(Hash& incomingReconfiguration) {
         if (incomingReconfiguration.has("doubleProperty")) {
@@ -191,57 +327,7 @@ class NanTestDevice : public karabo::core::Device {
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, NanTestDevice)
 
 
-// Very special vector<Hash> treatment for CppUnit, ignoring differences in attributes.
-// Add here what has been excluded from CppUnitMacroExtension.hh by '#define NO_VECTOR_HASH_ASSERTION_TRAITS' above.
-// Note: Removing this code here would still compile, but then vector<Hash> comparison would fall back to the
-//       vector<T> template in CppUnitMacroExtension.hh, i.e. using Hash::operator==(Hash) which unfortunately only
-//       checks similarity (i.e. checks only for same paths).
-namespace CppUnit {
-
-    template <>
-    struct assertion_traits<std::vector<karabo::data::Hash>> {
-        static bool equal(const std::vector<karabo::data::Hash>& a, const std::vector<karabo::data::Hash>& b) {
-            // using karabo::data::similar() here is not OK. the attributes of the hashes are dropped in one
-            // of the serialization steps
-            if (a.size() != b.size()) {
-                return false;
-            }
-            for (size_t i = 0; i < a.size(); i++) {
-                const karabo::data::Hash& a_i = a[i];
-                const karabo::data::Hash& b_i = b[i];
-                if (b_i.size() != a_i.size()) {
-                    return false;
-                }
-                std::vector<std::string> paths;
-                a_i.getPaths(paths);
-                for (const std::string& path : paths) {
-                    // most of the saving is serialized into text, this is why this helper
-                    // checks the equality between values only passed as strings.
-                    if (a_i.getAs<string>(path) != b_i.getAs<string>(path)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-
-        static std::string toString(const std::vector<karabo::data::Hash>& p) {
-            std::ostringstream o;
-            o << "(" << std::endl;
-            for (const karabo::data::Hash& e : p) {
-                o << e << "," << std::endl;
-            }
-            o << ")";
-            return o.str();
-        }
-    };
-} // namespace CppUnit
-
-
-CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
-
-void DataLogging_Test::testLoggerMapProperty() {
+void TestDataLogging::testLoggerMapProperty() {
     std::clog << "Testing table of data loggers... " << std::flush;
 
     const auto& devices = m_deviceClient->getDevices();
@@ -249,26 +335,26 @@ void DataLogging_Test::testLoggerMapProperty() {
     // We make sure all the devices in the system have an entry in the loggerMap table, and
     // that they have the same data logger
     const auto mapEntries = m_deviceClient->get<std::vector<karabo::data::Hash>>("loggerManager", "loggerMap");
-    CPPUNIT_ASSERT_GREATER(0ULL, static_cast<unsigned long long>(mapEntries.size()));
+    ASSERT_LT(0ULL, static_cast<unsigned long long>(mapEntries.size()));
 
     const auto& data_logger = mapEntries[0].get<std::string>("dataLogger");
 
     for (const Hash& entry : mapEntries) {
-        CPPUNIT_ASSERT_EQUAL(data_logger, entry.get<std::string>("dataLogger"));
+        ASSERT_EQ(data_logger, entry.get<std::string>("dataLogger"));
     }
 
     for (const auto& device : devices) {
         auto found = std::find_if(mapEntries.begin(), mapEntries.end(),
                                   [device](const Hash& entry) { return device == entry.get<std::string>("device"); });
 
-        CPPUNIT_ASSERT_MESSAGE((device + " not in loggers map"), found != mapEntries.end());
+        ASSERT_TRUE(found != mapEntries.end()) << device << " not in loggers map";
     }
 
     std::clog << "OK" << std::endl;
 }
 
 
-DataLogging_Test::DataLogging_Test()
+TestDataLogging::TestDataLogging()
     : m_server("DataLoggingTestServer"),
       // Use platform-dependent name for the device: concurrent tests in CI operate
       // on the same InfluxDB database ...
@@ -277,17 +363,20 @@ DataLogging_Test::DataLogging_Test()
       m_oldPath() {}
 
 
-std::string DataLogging_Test::getDeviceIdPrefix() {
+TestDataLogging::~TestDataLogging() {}
+
+
+std::string TestDataLogging::getDeviceIdPrefix() {
     // Avoid test collision on CI by specifying a unique prefix.
     return !getenv("KARABO_BROKER_TOPIC") ? "" : getenv("KARABO_BROKER_TOPIC");
 }
 
 
-void DataLogging_Test::setUp() {
+void TestDataLogging::SetUp() {
     // There are indications for rare hanging between tests, see
     // https://git.xfel.eu/Karabo/Framework/-/jobs/101484 So debug print when this happens.
     const Epochstamp start;
-    std::clog << "\nStart setUp " << start.toIso8601Ext() << std::endl;
+    std::clog << "\nStart SetUp " << start.toIso8601Ext() << std::endl;
 
     // Uncomment to run with a local broker:
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
@@ -319,14 +408,14 @@ void DataLogging_Test::setUp() {
     // There are indications for rare hanging between tests, see
     // https://git.xfel.eu/Karabo/Framework/-/jobs/101484 So debug print when this happens.
     const Epochstamp stop;
-    std::clog << "End setUp " << stop.toIso8601Ext() << std::endl;
+    std::clog << "End SetUp " << stop.toIso8601Ext() << std::endl;
 }
 
 
-void DataLogging_Test::tearDown() {
+void TestDataLogging::TearDown() {
     // So debug print for in between tests, see setUp()
     const Epochstamp start;
-    std::clog << "Start tearDown " << start.toIso8601Ext() << std::endl;
+    std::clog << "Start TearDown " << start.toIso8601Ext() << std::endl;
 
     m_sigSlot.reset();
     m_deviceClient.reset();
@@ -348,12 +437,12 @@ void DataLogging_Test::tearDown() {
 
     // So debug print for in between tests, see setUp()
     const Epochstamp stop;
-    std::clog << "End tearDown " << stop.toIso8601Ext() << std::endl;
+    std::clog << "End TearDown " << stop.toIso8601Ext() << std::endl;
 }
 
 
-bool DataLogging_Test::waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis,
-                                        unsigned int sleepIntervalMillis) {
+bool TestDataLogging::waitForCondition(std::function<bool()> checker, unsigned int timeoutMillis,
+                                       unsigned int sleepIntervalMillis) {
     unsigned int numOfWaits = 0;
     const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
@@ -364,7 +453,7 @@ bool DataLogging_Test::waitForCondition(std::function<bool()> checker, unsigned 
 }
 
 
-void DataLogging_Test::waitUntilLogged(const std::string& deviceId, const std::string& textForFailure) {
+void TestDataLogging::waitUntilLogged(const std::string& deviceId, const std::string& textForFailure) {
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     const bool isLogged = waitForCondition(
           [this, &loggerId, &deviceId]() {
@@ -381,18 +470,17 @@ void DataLogging_Test::waitUntilLogged(const std::string& deviceId, const std::s
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
-    CPPUNIT_ASSERT_MESSAGE(
-          textForFailure + ": '" + deviceId + "' not logged, loggerCfg: " + toString(m_deviceClient->get(loggerId)),
-          isLogged);
+    ASSERT_TRUE(isLogged) << textForFailure << ": '" << deviceId
+                          << "' not logged, loggerCfg: " << toString(m_deviceClient->get(loggerId));
 }
 
-void DataLogging_Test::setPropertyTestSchema() {
+void TestDataLogging::setPropertyTestSchema() {
     Hash response;
     m_sigSlot->request(m_deviceId, "useLoggingTestSchema").timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(response);
-    CPPUNIT_ASSERT_MESSAGE("Could not update schema", response.get<bool>("success"));
+    ASSERT_TRUE(response.get<bool>("success")) << "Could not update schema";
 }
 
-std::pair<bool, std::string> DataLogging_Test::startDataLoggerManager(
+std::pair<bool, std::string> TestDataLogging::startDataLoggerManager(
       const std::string& loggerType, bool useInvalidInfluxUrl, bool useInvalidDbName,
       unsigned int maxPerDevicePropLogRate, unsigned int propLogRatePeriod, unsigned int maxSchemaLogRate,
       unsigned int schemaLogRatePeriod, unsigned int maxStringLength, double safeSchemaRetentionPeriod) {
@@ -445,7 +533,7 @@ std::pair<bool, std::string> DataLogging_Test::startDataLoggerManager(
         manager_conf.set("influxDataLogger.safeSchemaRetentionPeriod", safeSchemaRetentionPeriod);
 
     } else {
-        CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
+        return std::make_pair<bool, std::string>(false, "Unknown logger type '" + loggerType + "'");
     }
 
     // std::clog << "\n***** DataLoggerManager configuration *****\n" << manager_conf << std::endl;
@@ -453,7 +541,7 @@ std::pair<bool, std::string> DataLogging_Test::startDataLoggerManager(
 }
 
 
-void DataLogging_Test::testMaxNumDataRange() {
+void TestDataLogging::testMaxNumDataRange() {
     std::clog << "Check if InfluxLogReader is validating range for 'maxNumData' for slot 'getPropertyHistory' ... ";
 
     const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
@@ -481,10 +569,10 @@ void DataLogging_Test::testMaxNumDataRange() {
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::data::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
-        CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg1) != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(outOfRangeErrMsg2) != std::string::npos);
+        ASSERT_TRUE(errMsg.find(outOfRangeErrMsg1) != std::string::npos) << errMsg;
+        ASSERT_TRUE(errMsg.find(outOfRangeErrMsg2) != std::string::npos) << errMsg;
     } catch (const std::exception& e) {
-        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
+        ASSERT_TRUE(false) << "Unexpected exception: " << e.what();
     }
 
     // Negative values must be rejected.
@@ -496,29 +584,29 @@ void DataLogging_Test::testMaxNumDataRange() {
         throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::data::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
-        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg1) != std::string::npos);
-        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg2) != std::string::npos);
+        ASSERT_TRUE(errMsg.find(outOfRangeErrMsg1) != std::string::npos);
+        ASSERT_TRUE(errMsg.find(outOfRangeErrMsg2) != std::string::npos);
     } catch (const std::exception& e) {
-        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
+        ASSERT_TRUE(false) << "Unexpected exception: " << e.what();
     }
 
     // 0 must be accepted - it as if InfluxLogReader::maxHistorySize has been used.
     params.set<int>("maxNumData", 0);
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(replyDevice, replyProperty, history));
+    ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(replyDevice, replyProperty, history));
 
     // InfluxLogReader::maxHistorySize must be accepted.
     params.set<int>("maxNumData", readerMaxHistSize);
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(replyDevice, replyProperty, history));
+    ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", dlReader, "url", params)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(replyDevice, replyProperty, history));
 
     std::clog << "OK" << std::endl;
 }
 
 
-void DataLogging_Test::testMaxNumDataHistory() {
+void TestDataLogging::testMaxNumDataHistory() {
     std::clog << "Check if InfluxLogReader is properly enforcing the 'maxNumData' parameter for slot "
                  "'getPropertyHistory' ..."
               << std::endl;
@@ -528,7 +616,7 @@ void DataLogging_Test::testMaxNumDataHistory() {
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     const auto res =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE("Failed to instantiate testing device '" + deviceId + "':" + res.second, res.first);
+    ASSERT_TRUE(res.first) << "Failed to instantiate testing device '" << deviceId << "':" << res.second;
 
     waitUntilLogged(deviceId, "testMaxNumDataHistory");
 
@@ -536,7 +624,7 @@ void DataLogging_Test::testMaxNumDataHistory() {
     Epochstamp beforeWrites;
     const int numOfWrites = 40;
     for (int i = 0; i < numOfWrites; i++) {
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<int>(deviceId, "int32Property", i));
+        ASSERT_NO_THROW(m_deviceClient->set<int>(deviceId, "int32Property", i));
         std::this_thread::sleep_for(10ms);
     }
     // Captures the timepoint after the writes.
@@ -544,7 +632,7 @@ void DataLogging_Test::testMaxNumDataHistory() {
     Epochstamp afterWrites;
 
     // Makes sure all the writes are done before retrieval.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     // Full history retrieval - must retrieve all values exactly as they were
     // written.
@@ -580,12 +668,10 @@ void DataLogging_Test::testMaxNumDataHistory() {
 
     waitForCondition(historyChecker, 90'000u, 1'000u);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size for full history different from expected.", static_cast<size_t>(maxNumDataFull),
-                                 history.size());
+    ASSERT_EQ(static_cast<size_t>(maxNumDataFull), history.size()) << "Size for full history different from expected.";
     for (int i = 0; i < maxNumDataFull; i++) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              "Value at history entry #" + karabo::data::toString(i) + " different from expected.", i,
-              history[i].get<int>("v"));
+        ASSERT_EQ(i, history[i].get<int>("v"))
+              << "Value at history entry #" << karabo::data::toString(i) << " different from expected.";
     }
 
     // Sampled history retrieval - must retrieve all values sampled.
@@ -617,37 +703,34 @@ void DataLogging_Test::testMaxNumDataHistory() {
     bool succeeded = waitForCondition(sampleHistoryChecker, 96'000u, 1'000u);
 
     size_t historySize = history.size();
-    CPPUNIT_ASSERT_MESSAGE("Timeout on requesting history", succeeded);
-    CPPUNIT_ASSERT_MESSAGE("Size of the down-sampled history larger than request sample",
-                           historySize <= static_cast<size_t>(maxNumDataSampled));
-    CPPUNIT_ASSERT_MESSAGE(
-          "Size of the down-sampled history smaller than minimum expected (at least half in this case)",
-          historySize >= (maxNumDataSampled / 2ul));
+    ASSERT_TRUE(succeeded) << "Timeout on requesting history";
+    ASSERT_TRUE(historySize <= static_cast<size_t>(maxNumDataSampled))
+          << "Size of the down-sampled history larger than request sample";
+    ASSERT_TRUE(historySize >= (maxNumDataSampled / 2ul))
+          << "Size of the down-sampled history smaller than minimum expected (at least half in this case)";
     // Makes sure that the maxNumDataSampled values retrieved are distributed across the
     // whole set of maxNumDataFull values. A deviation margin is tolerated to accomodate
     // different timings involved in the writing sequence phase.
     const int deviationMargin = 8;
     Hash& lastHistoryEntry = history[historySize - 1];
-    CPPUNIT_ASSERT_MESSAGE("Value at history entry #0 is outside the expected range: should be between 0 and " +
-                                 karabo::data::toString(deviationMargin) + ", got " +
-                                 karabo::data::toString(history[0].get<int>("v")) + ".",
-                           history[0].get<int>("v") >= 0 && history[0].get<int>("v") <= deviationMargin);
-    CPPUNIT_ASSERT_MESSAGE(
-          "Value at history entry #" + karabo::data::toString(lastHistoryEntry) +
-                " is outside the expected range: should be between " + karabo::data::toString(40 - deviationMargin) +
-                " and 40, got " + karabo::data::toString(lastHistoryEntry.get<int>("v")) + ".",
-          lastHistoryEntry.get<int>("v") >= 40 - deviationMargin && lastHistoryEntry.get<int>("v") <= 40);
+    ASSERT_TRUE(history[0].get<int>("v") >= 0 && history[0].get<int>("v") <= deviationMargin)
+          << "Value at history entry #0 is outside the expected range: should be between 0 and " << deviationMargin
+          << ", got " << history[0].get<int>("v") << ".";
+    ASSERT_TRUE(lastHistoryEntry.get<int>("v") >= 40 - deviationMargin && lastHistoryEntry.get<int>("v") <= 40)
+          << "Value at history entry #" << toString(lastHistoryEntry)
+          << " is outside the expected range: should be between " << (40 - deviationMargin) << " and 40, got "
+          << lastHistoryEntry.get<int>("v") << ".";
     std::clog << "... OK" << std::endl;
 }
 
-void DataLogging_Test::testDropBadData() {
+void TestDataLogging::testDropBadData() {
     std::clog << "Testing that the logger drops bad data ... " << std::flush;
 
     const std::string deviceId(getDeviceIdPrefix() + "deviceWithFutureStamp");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testDropBadData");
 
@@ -660,10 +743,10 @@ void DataLogging_Test::testDropBadData() {
     // Getting original timestamp of 'value' to compare with later
     // We first change the property once - otherwise, what we get back from influx is the start of logging time
     // and not the timestamp on device
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
+    ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
     Hash cfg;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
-    CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
+    ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+    ASSERT_TRUE(cfg.has("value")) << "'value' is missing from the configuration";
     const Epochstamp originalEpoch = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
     const int originalValue = cfg.get<int>("value");
 
@@ -672,23 +755,21 @@ void DataLogging_Test::testDropBadData() {
         const Timestamp muchLater(inAlmostAFortnite, TimeId());
         muchLater.toHashAttributes(update.getAttributes("value"));
         // Call slotUpdateConfigGeneric from m_deviceClient so that m_deviceClient->get is in sync for sure
-        CPPUNIT_ASSERT_NO_THROW(
-              m_deviceClient->execute(deviceId, "slotUpdateConfigGeneric", KRB_TEST_MAX_TIMEOUT, update));
+        ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotUpdateConfigGeneric", KRB_TEST_MAX_TIMEOUT, update));
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of
         // "value"
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
-        CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
-        CPPUNIT_ASSERT_MESSAGE("'vector' is missing from the configuration", cfg.has("vector"));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(i) + 10000, cfg.get<int>("value"));
-        CPPUNIT_ASSERT_EQUAL(std::vector<int>(), cfg.get<vector<int>>("vector"));
+        ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+        ASSERT_TRUE(cfg.has("value")) << "'value' is missing from the configuration";
+        ASSERT_TRUE(cfg.has("vector")) << "'vector' is missing from the configuration";
+        ASSERT_EQ(static_cast<int>(i) + 10000, cfg.get<int>("value"));
+        ASSERT_EQ(std::vector<int>(), cfg.get<vector<int>>("vector"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
 
-        CPPUNIT_ASSERT_MESSAGE(
-              "'value' has wrong time stamp: " + stamp.toIso8601() + " instead of " + inAlmostAFortnite.toIso8601(),
-              stamp == inAlmostAFortnite);
+        ASSERT_TRUE(stamp == inAlmostAFortnite) << "'value' has wrong time stamp: " << stamp.toIso8601()
+                                                << " instead of " << inAlmostAFortnite.toIso8601();
 
         // Flush Data
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+        ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
         // Get config back - but it may take a while till data is store, so try a few times
         // (some CI failed with fixed 250 ms of sleep)
@@ -700,20 +781,19 @@ void DataLogging_Test::testDropBadData() {
         do {
             std::this_thread::sleep_for(50ms);
             maxTime -= 50;
-            CPPUNIT_ASSERT_NO_THROW(
+            ASSERT_NO_THROW(
                   m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, inAFortnite.toIso8601())
                         .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                         .receive(cfg, schema, configAtTimepoint, configTimepoint));
         } while (!cfg.has("value") && maxTime >= 0);
-        CPPUNIT_ASSERT_MESSAGE("'value' is missing from configuration: " + toString(cfg), cfg.has("value"));
+        ASSERT_TRUE(cfg.has("value")) << "'value' is missing from configuration: " << toString(cfg);
         const Epochstamp received = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
         // the data is stored in the influxDB and has lower resolution (microsecond) what Epochstamp offers
         // (attosecond). We therefore compare the time difference. TimeDuration will always be positive (sic).
         const double dt = received - originalEpoch;
-        CPPUNIT_ASSERT_MESSAGE(
-              "'value' has wrong time stamp: " + received.toIso8601() + " - difference is : " + toString(dt),
-              dt < 1e-6);
-        CPPUNIT_ASSERT_EQUAL(cfg.get<int>("value"), originalValue);
+        ASSERT_TRUE(dt < 1e-6) << "'value' has wrong time stamp: " << received.toIso8601()
+                               << " - difference is : " << dt;
+        ASSERT_EQ(cfg.get<int>("value"), originalValue);
     }
 
     // Now check that we can get back info about bad data - but first add other bad data items,
@@ -722,20 +802,20 @@ void DataLogging_Test::testDropBadData() {
     Hash updates("vector", std::vector<int>(vectorSize, 42)); // one longer than logger tolerates
     Timestamp vectorUpdateTime1;
     vectorUpdateTime1.toHashAttributes(updates.getAttributes("vector")); // Add stamp to test full cycle
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     // second (i.e. mixed) update
     Timestamp vectorUpdateTime2;
     vectorUpdateTime2.toHashAttributes(updates.getAttributes("vector")); // Overwrite with new stamp
     Hash::Node& valueNode = updates.set("value", 42);
     Timestamp(inAlmostAFortnite, TimeId()).toHashAttributes(valueNode.getAttributes());
     updates.set("oldValue", -42); // no timestamp from here, will get injected automatically in device
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     // Get back bad data
     // vectorUpdateTime2 is to early, future data gets timestamp after it, using inAFortnite might create
@@ -746,119 +826,116 @@ void DataLogging_Test::testDropBadData() {
     while (maxTime >= 0) {
         std::this_thread::sleep_for(100ms);
         maxTime -= 100;
-        CPPUNIT_ASSERT_NO_THROW(
-              m_sigSlot
-                    ->request(dlReader, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
-                    //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
-                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                    .receive(badDataAllDevices));
+        ASSERT_NO_THROW(m_sigSlot
+                              ->request(dlReader, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
+                              //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
+                              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                              .receive(badDataAllDevices));
         if (badDataAllDevices.has(deviceId) &&
             badDataAllDevices.get<std::vector<Hash>>(deviceId).size() == numCycles + 3ul) {
             break;
         }
     }
 
-    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size()); // Just our test device is a bad guy...
-    CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
+    ASSERT_EQ(1ul, badDataAllDevices.size()); // Just our test device is a bad guy...
+    ASSERT_TRUE(badDataAllDevices.has(deviceId));
     const std::vector<Hash>& badData = badDataAllDevices.get<std::vector<Hash>>(deviceId);
     // numCycles plus 3: 1st vector and then "2nd vector and future value" split into two due to different
     // timestamps
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), numCycles + 3ul, badData.size());
+    ASSERT_EQ(numCycles + 3ul, badData.size()) << toString(badDataAllDevices);
 
     // Test the bad data from far future
     Epochstamp last = before;
     for (size_t i = 0; i < numCycles; ++i) {
         const Hash& futureHash = badData[i];
-        CPPUNIT_ASSERT(futureHash.has("info"));
+        ASSERT_TRUE(futureHash.has("info"));
         const std::string& info = futureHash.get<std::string>("info");
-        CPPUNIT_ASSERT_MESSAGE(info, info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(info, info.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
-                                           std::string::npos);
-        CPPUNIT_ASSERT(futureHash.has("time"));
+        ASSERT_TRUE(info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos) << info;
+        ASSERT_TRUE(info.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
+                    std::string::npos)
+              << info;
+        ASSERT_TRUE(futureHash.has("time"));
         const std::string& timeStr = futureHash.get<std::string>("time");
         const Epochstamp timeEpoch = Epochstamp::fromHashAttributes(futureHash.getAttributes("time"));
-        CPPUNIT_ASSERT_EQUAL(timeStr, timeEpoch.toIso8601Ext());
+        ASSERT_EQ(timeStr, timeEpoch.toIso8601Ext());
         // Timestamp is defined inside logger (since not 'believing' the far future one),
         // so we cannot be exactly sure for when this is logged (but in order)
-        CPPUNIT_ASSERT(last < timeEpoch);
-        CPPUNIT_ASSERT(Epochstamp() > timeEpoch);
+        ASSERT_TRUE(last < timeEpoch);
+        ASSERT_TRUE(Epochstamp() > timeEpoch);
         last = timeEpoch;
     }
     // Test the bad data from 1st too long vector
     const Hash& vectorHash = badData[badData.size() - 3];
-    CPPUNIT_ASSERT(vectorHash.has("info"));
+    ASSERT_TRUE(vectorHash.has("info"));
     const std::string& info = vectorHash.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info, info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(info,
-                           info.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos);
-    CPPUNIT_ASSERT(vectorHash.has("time"));
+    ASSERT_TRUE(info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos) << info;
+    ASSERT_TRUE(info.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos) << info;
+    ASSERT_TRUE(vectorHash.has("time"));
     const std::string& timeStr = vectorHash.get<std::string>("time");
     const Epochstamp timeEpoch = Epochstamp::fromHashAttributes(vectorHash.getAttributes("time"));
-    CPPUNIT_ASSERT_EQUAL(timeStr, timeEpoch.toIso8601Ext());
+    ASSERT_EQ(timeStr, timeEpoch.toIso8601Ext());
     const double dt2 = timeEpoch - vectorUpdateTime1.getEpochstamp();
-    CPPUNIT_ASSERT_LESSEQUAL(1.e-6, dt2); // we store only microsecond precision in DB
+    ASSERT_GE(1.e-6, dt2); // we store only microsecond precision in DB
 
     // Test the bad data from mixture of too long vector, future data and OK data
     // First of these comes vector
     const Hash& mixtureHash1 = badData[badData.size() - 2];
-    CPPUNIT_ASSERT(mixtureHash1.has("info"));
+    ASSERT_TRUE(mixtureHash1.has("info"));
     const std::string& info2 = mixtureHash1.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info2, info2.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(info2,
-                           info2.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos);
-    CPPUNIT_ASSERT(mixtureHash1.has("time"));
+    ASSERT_TRUE(info2.find("log metric(s) for device '" + deviceId + "'") != std::string::npos) << info2;
+    ASSERT_TRUE(info2.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos) << info2;
+    ASSERT_TRUE(mixtureHash1.has("time"));
     const std::string& timeStr2 = mixtureHash1.get<std::string>("time");
     const Epochstamp timeEpoch2 = Epochstamp::fromHashAttributes(mixtureHash1.getAttributes("time"));
-    CPPUNIT_ASSERT_EQUAL(timeStr2, timeEpoch2.toIso8601Ext());
+    ASSERT_EQ(timeStr2, timeEpoch2.toIso8601Ext());
     const double dt3 = timeEpoch2 - vectorUpdateTime2.getEpochstamp();
-    CPPUNIT_ASSERT_LESSEQUAL(1.e-6, dt3); // only microsecond precision in DB
+    ASSERT_GE(1.e-6, dt3); // only microsecond precision in DB
 
     // Finally future data from mixture
     const Hash& mixtureHash2 = badData[badData.size() - 1];
-    CPPUNIT_ASSERT(mixtureHash2.has("info"));
+    ASSERT_TRUE(mixtureHash2.has("info"));
     const std::string& info3 = mixtureHash2.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
-                                        std::string::npos);
-    CPPUNIT_ASSERT(mixtureHash2.has("time"));
+    ASSERT_TRUE(info3.find("log metric(s) for device '" + deviceId + "'") != std::string::npos) << info3;
+    ASSERT_TRUE(info3.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") != std::string::npos)
+          << info3;
+    ASSERT_TRUE(mixtureHash2.has("time"));
     const std::string& timeStr3 = mixtureHash2.get<std::string>("time");
     const Epochstamp timeEpoch3 = Epochstamp::fromHashAttributes(mixtureHash2.getAttributes("time"));
-    CPPUNIT_ASSERT_EQUAL(timeStr3, timeEpoch3.toIso8601Ext());
+    ASSERT_EQ(timeStr3, timeEpoch3.toIso8601Ext());
     // Timestamp is defined in logger since future stamp seen as unreliable:
     // between "before setting the data mixture" and "now"
-    CPPUNIT_ASSERT(vectorUpdateTime2.getEpochstamp() < timeEpoch3);
-    CPPUNIT_ASSERT(Epochstamp() > timeEpoch3);
+    ASSERT_TRUE(vectorUpdateTime2.getEpochstamp() < timeEpoch3);
+    ASSERT_TRUE(Epochstamp() > timeEpoch3);
 
     // Check that the "decent" data from same "signalChanged" as long vector and future value is properly logged
     bool configAtTimepoint = false;
     cfg.clear();
     Schema dummySchema;
     std::string dummyConfigTimepoint;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, Timestamp().toIso8601())
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                .receive(cfg, dummySchema, configAtTimepoint, dummyConfigTimepoint));
-    CPPUNIT_ASSERT(configAtTimepoint);
-    CPPUNIT_ASSERT(cfg.has("oldValue"));
-    CPPUNIT_ASSERT_EQUAL(-42, cfg.get<int>("oldValue"));
+    ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, Timestamp().toIso8601())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(cfg, dummySchema, configAtTimepoint, dummyConfigTimepoint));
+    ASSERT_TRUE(configAtTimepoint);
+    ASSERT_TRUE(cfg.has("oldValue"));
+    ASSERT_EQ(-42, cfg.get<int>("oldValue"));
     const Epochstamp oldValueStamp(Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue")));
     // This timestamp is defined by device when setting it,
     // but again this is between "before setting the data mixture" and "now"
-    CPPUNIT_ASSERT(vectorUpdateTime2.getEpochstamp() < oldValueStamp);
-    CPPUNIT_ASSERT(Epochstamp() > oldValueStamp);
+    ASSERT_TRUE(vectorUpdateTime2.getEpochstamp() < oldValueStamp);
+    ASSERT_TRUE(Epochstamp() > oldValueStamp);
 
     // Now test that slotGetBadData correctly returns nothing for a decent period (here: future)
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(dlReader, "slotGetBadData", inAFortnite.toIso8601Ext(),
-                                            (inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_MESSAGE(toString(badDataAllDevices), badDataAllDevices.empty());
+    ASSERT_NO_THROW(m_sigSlot
+                          ->request(dlReader, "slotGetBadData", inAFortnite.toIso8601Ext(),
+                                    (inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(badDataAllDevices));
+    ASSERT_TRUE(badDataAllDevices.empty()) << toString(badDataAllDevices);
 
     std::clog << "... OK" << std::endl;
 }
 
-void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
+void TestDataLogging::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing logger and readers instantiations ... " << std::flush;
 
     const vector<string> devices(
@@ -898,9 +975,8 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
             std::clog << device << ": " << (isThere ? "online" : "offline") << std::endl;
         }
     }
-    CPPUNIT_ASSERT_MESSAGE(
-          "Timeout looking for logger and readers instances. Up are only " + toString(m_deviceClient->getDevices()),
-          succeeded);
+    ASSERT_TRUE(succeeded) << "Timeout looking for logger and readers instances. Up are only "
+                           << toString(m_deviceClient->getDevices());
 
     if (waitForLoggerReady) {
         // Makes sure that the DataLogger has reached ON state before proceeding.
@@ -908,7 +984,7 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         // For the Influx Logger case, this initialization time can be quite long - if the db does not exist
         // yet, the DataLogger must create it before reaching the ON state.
 
-        karabo::data::State loggerState = karabo::data::State::UNKNOWN;
+        State loggerState = State::UNKNOWN;
         const std::string& dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
 
         waitForCondition(
@@ -918,15 +994,15 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
               },
               60 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ON state.",
-                                     karabo::data::State::ON, loggerState);
+        ASSERT_EQ(State::ON, loggerState)
+              << "Timeout while waiting for DataLogger '" << dataLoggerId << "' to reach ON state.";
     }
 
     std::clog << "Ok" << std::endl;
 }
 
 
-void DataLogging_Test::testLastKnownConfiguration() {
+void TestDataLogging::testLastKnownConfiguration() {
     // Timestamp for test start - used to print test duration at the end.
     Epochstamp testCaseStart;
 
@@ -955,14 +1031,14 @@ void DataLogging_Test::testLastKnownConfiguration() {
         const std::string fileLoggerMsg(
               "Requested time point for device configuration is earlier than anything logged");
         const std::string influxLoggerMsg("No active schema could be found for device at (or before) timepoint.");
-        CPPUNIT_ASSERT_MESSAGE("Exception message: " + re.detailedMsg(),
-                               (re.detailedMsg().find(fileLoggerMsg) != string::npos ||
-                                re.detailedMsg().find(influxLoggerMsg) != string::npos));
+        ASSERT_TRUE((re.detailedMsg().find(fileLoggerMsg) != string::npos ||
+                     re.detailedMsg().find(influxLoggerMsg) != string::npos))
+              << "Exception message: " << re.detailedMsg();
         remoteExcept = true;
     } catch (const std::exception& e) {
-        CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
+        ASSERT_TRUE(false) << "Unexpected exception: " << e.what();
     }
-    CPPUNIT_ASSERT_MESSAGE("Expected exception, received " + toString(conf), remoteExcept);
+    ASSERT_TRUE(remoteExcept) << "Expected exception, received " << toString(conf);
 
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
@@ -970,26 +1046,26 @@ void DataLogging_Test::testLastKnownConfiguration() {
     std::clog << "... right before killing device being logged (at " << rightBeforeDeviceGone.toIso8601() << ") ...";
     // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set
     // in the  previous test cases for the 'int32Property' - even after the device being logged is gone.
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, rightBeforeDeviceGone.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(conf, schema, configAtTimepoint, configTimepoint));
 
-    CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("int32Property"));
+    ASSERT_EQ(99, conf.get<int>("int32Property"));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("with\nnewline99"), conf.get<std::string>("stringProperty"));
+    ASSERT_EQ("with\nnewline99", conf.get<std::string>("stringProperty"));
 
-    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"abc99", "xy|z99", "A\nB99"}),
-                         conf.get<std::vector<std::string>>("vectors.stringProperty"));
-    CPPUNIT_ASSERT_EQUAL(
+    ASSERT_EQ(std::vector<std::string>({"abc99", "xy|z99", "A\nB99"}),
+              conf.get<std::vector<std::string>>("vectors.stringProperty"));
+    ASSERT_EQ(
           std::vector<Hash>({Hash("e1", "ab\nc99", "e2", false, "e3", 12 * 99, "e4", 0.9837F * 99, "e5", 1.2345 * 99),
                              Hash("e1", "xy|z99", "e2", true, "e3", 42 * 99, "e4", 2.33333F * 99, "e5", 7.77777 * 99)}),
           conf.get<std::vector<Hash>>("table"));
     std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', 'stringProperty', "
               << "'vectors.stringProperty', and 'table')." << std::endl;
 
-    CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
-    CPPUNIT_ASSERT_EQUAL(true, configAtTimepoint);
+    ASSERT_EQ(kLastValueSet, conf.get<int>("int32Property"));
+    ASSERT_EQ(true, configAtTimepoint);
 
     std::vector<std::string> confKeys;
     conf.getKeys(confKeys);
@@ -1005,21 +1081,21 @@ void DataLogging_Test::testLastKnownConfiguration() {
             }
         }
     }
-    CPPUNIT_ASSERT_EQUAL(latestTimestamp.toIso8601Ext(), configTimepoint);
+    ASSERT_EQ(latestTimestamp.toIso8601Ext(), configTimepoint);
     std::clog << "\n... "
               << "Ok (retrieved configuration with last known value for 'int32Property' while the device was being "
                  "logged)."
               << std::endl;
 
     // killDevice waits for the device to be killed (or throws an exception in case of failure).
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT));
+    ASSERT_NO_THROW(m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT));
 
     // Assures that the logger in charge of the device is not logging it anymore by testing that m_deviceId is not
     // among the rows of the "lastUpdatesUtc" property of the logger. The "flush" slot guarantees that the property
     // "lastUpdatesUtc" is in sync with devices being logged.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     const auto lastUpdates =
           m_deviceClient->get<std::vector<Hash>>(karabo::util::DATALOGGER_PREFIX + m_server, "lastUpdatesUtc");
     bool deviceIdFound = false;
@@ -1029,7 +1105,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
             break;
         }
     }
-    CPPUNIT_ASSERT_EQUAL(false, deviceIdFound);
+    ASSERT_EQ(false, deviceIdFound);
 
     // There is an interval between the device being killed and the event that it is gone reaching the logger.
     // But we need to be sure that the timepoint used in the request for configuration from past is after the
@@ -1052,7 +1128,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
 
         // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set
         // in the previous test cases for the 'int32Property' - even after the device being logged is gone.
-        CPPUNIT_ASSERT_NO_THROW(
+        ASSERT_NO_THROW(
               m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", m_deviceId, afterDeviceGone.toIso8601())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(conf, schema, configAtTimepoint, configTimepoint));
@@ -1061,12 +1137,12 @@ void DataLogging_Test::testLastKnownConfiguration() {
     const std::string msg("Failed after " + toString(numChecks) + " attempts\nconf: " + toString(conf) +=
                           "\nconfigAtTimePoint: " + toString(configAtTimepoint) +=
                           "\nconfigTimepoint: " + configTimepoint);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, kLastValueSet, conf.get<int>("int32Property"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, false, configAtTimepoint);
+    ASSERT_EQ(kLastValueSet, conf.get<int>("int32Property")) << msg;
+    ASSERT_EQ(false, configAtTimepoint) << msg;
     karabo::data::Epochstamp configStamp(configTimepoint);
     // if data migration happened the data is younger than the file based logging data
-    CPPUNIT_ASSERT_MESSAGE(msg, configStamp > beforeAnything);
-    CPPUNIT_ASSERT_MESSAGE(msg, configStamp < afterDeviceGone);
+    ASSERT_TRUE(configStamp > beforeAnything) << msg;
+    ASSERT_TRUE(configStamp < afterDeviceGone) << msg;
     std::clog << "\n... " << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
               << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being "
                  "logged)."
@@ -1083,7 +1159,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
 }
 
 
-void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
+void TestDataLogging::testCfgFromPastRestart(bool pastConfigStaysPast) {
     std::clog << "Testing past configuration retrieval with stamp older than device..." << std::endl;
 
     Epochstamp testCaseStart;
@@ -1095,7 +1171,7 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testCfgFromPastRestart");
 
@@ -1107,46 +1183,45 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     const Epochstamp oldStamp = threeDaysBack;
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
+        ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
         std::this_thread::sleep_for(1ms); // ensure timestamp is after setting
         stampsAfter.push_back(Epochstamp());
 
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of
         // "value"
         Hash cfg;
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(i) + 1, cfg.get<int>("value"));
+        ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+        ASSERT_EQ(static_cast<int>(i) + 1, cfg.get<int>("value"));
 
-        CPPUNIT_ASSERT_EQUAL(99, cfg.get<int>("oldValue"));
+        ASSERT_EQ(99, cfg.get<int>("oldValue"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue"));
-        CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stamp.toIso8601(), stamp == oldStamp);
+        ASSERT_TRUE(stamp == oldStamp) << "'oldValue' has wrong time stamp: " << stamp.toIso8601();
         valueStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("value")));
 
         // Stop logging our device and check that it is not logged anymore.
         // Sleep needed before flush to ensure that - for file logger - the output stream has actually seen the data
         std::this_thread::sleep_for(250ms); // locally 100 was always enough
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                      .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                      .receive());
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId)
-                                      .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
-                                      .receive());
-        CPPUNIT_ASSERT_MESSAGE(
-              "Test device still present in 'devicesToBeLogged' :" +
-                    toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
-              waitForCondition(
-                    [this, &loggerId, &deviceId]() {
-                        auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-                        // NOT in there anymore
-                        return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) == loggedIds.end());
-                    },
-                    KRB_TEST_MAX_TIMEOUT * 1000));
+        ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                              .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                              .receive());
+        ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId)
+                              .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                              .receive());
+        ASSERT_TRUE(waitForCondition(
+              [this, &loggerId, &deviceId]() {
+                  auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
+                  // NOT in there anymore
+                  return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) == loggedIds.end());
+              },
+              KRB_TEST_MAX_TIMEOUT * 1000))
+              << "Test device still present in 'devicesToBeLogged' :"
+              << toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged"));
 
         // Restart again (and validate it is logging) - file based logger will gather the complete config again on
         // disk
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotAddDevicesToBeLogged", vector<string>(1, deviceId))
-                                      .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
-                                      .receive());
+        ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotAddDevicesToBeLogged", vector<string>(1, deviceId))
+                              .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                              .receive());
 
         waitUntilLogged(deviceId, "testCfgFromPastRestart, cycle " + toString(numCycles));
 
@@ -1156,9 +1231,9 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     // Again flush - at the end of the last cycle we started logging again and archive_index.txt and archive_<N>.txt
     // might be out of sync otherwise - nevertheless for file based logging we need the repeated retries below for
     // the same reason as the sleeps above. :-(
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     std::this_thread::sleep_for(250ms);
 
@@ -1197,9 +1272,9 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                       "Requested time point for device configuration is earlier than anything logged");
                 const std::string influxLoggerMsg( // see InfluxLogReader::onLastSchemaDigestBeforeTime
                       "No active schema could be found for device");
-                CPPUNIT_ASSERT_MESSAGE("Unexpected RemoteException received: " + std::string(re.what()),
-                                       (re.detailedMsg().find(fileLoggerMsg) != std::string::npos ||
-                                        re.detailedMsg().find(influxLoggerMsg) != std::string::npos));
+                ASSERT_TRUE((re.detailedMsg().find(fileLoggerMsg) != std::string::npos ||
+                             re.detailedMsg().find(influxLoggerMsg) != std::string::npos))
+                      << "Unexpected RemoteException received: " << re.what();
             } catch (const TimeoutException& te) {
                 // Also timeouts are allowed...
                 karabo::data::Exception::clearTrace();
@@ -1220,8 +1295,8 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                   "'. The timepoint used by getConfigurationFromPast is '" + stampAfter.toIso8601() + "'.\n";
         }
 
-        CPPUNIT_ASSERT_MESSAGE(msg, conf.size() > 0);
-        CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
+        ASSERT_TRUE(conf.size() > 0) << msg;
+        ASSERT_EQ(99, conf.get<int>("oldValue"));
 
         if (conf.get<int>("value") != static_cast<int>(i + 1)) {
             std::clog << msg << std::endl;
@@ -1232,27 +1307,27 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         // Check received stamps: For "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
-        CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
-                               (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
+        ASSERT_TRUE((stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull)
+              << stampValueFromPast.toIso8601() << " vs " << valueStamps[i].toIso8601();
         // The stamp for "oldValue" differs bewteen backends
         const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
         std::string oldFromPastStr = stampOldFromPast.toIso8601(); // convert to microsecond precision
         if (pastConfigStaysPast) {
             // The stamp of "oldValue" is always the same
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("'oldValue' from past has wrong time stamp", oldStamp.toIso8601(),
-                                         oldFromPastStr);
+            ASSERT_EQ(oldStamp.toIso8601(), oldFromPastStr) << "'oldValue' from past has wrong time stamp";
         } else {
             // Timestamps older than start of device logging are stored as stamp "start of device logging".
             // Stamp stampsAfterRestart[i] is after we are sure that logging runs again, so that is after
             // "start of device logging" - but we cannot really be sure how far.
-            CPPUNIT_ASSERT_MESSAGE("received '" + stampOldFromPast.toIso8601() +=
-                                   "', after restart '" + stampsAfterRestart[i].toIso8601(),
-                                   stampOldFromPast < stampsAfterRestart[i]);
+            ASSERT_TRUE(stampOldFromPast < stampsAfterRestart[i])
+                  << "received '" << stampOldFromPast.toIso8601() << "', after restart '"
+                  << stampsAfterRestart[i].toIso8601();
             const double dt =
                   stampOldFromPast - stampsAfterRestart[i]; // Has no sign due to the intermediate TimeDuration object
-            CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stampOldFromPast.toIso8601() +=
-                                   " - difference is : " + toString(dt),
-                                   dt < 10.); // seen 2.95 (!) in https://git.xfel.eu/Karabo/Framework/-/jobs/290211
+            ASSERT_TRUE(dt < 10.) << "'oldValue' has wrong time stamp: " << stampOldFromPast.toIso8601()
+                                  << " - difference is : "
+                                  << toString(
+                                           dt); // seen 2.95 (!) in https://git.xfel.eu/Karabo/Framework/-/jobs/290211
         }
     }
 
@@ -1269,9 +1344,9 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         params.set("maxNumData", static_cast<int>(numCycles * 2));
         vector<Hash> history;
         std::string histDevice, histProperty;
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "value", params)
-                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                      .receive(histDevice, histProperty, history));
+        ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetPropertyHistory", deviceId, "value", params)
+                              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                              .receive(histDevice, histProperty, history));
         for (const Hash& histEntry : history) {
             valueHist << Epochstamp::fromHashAttributes(histEntry.getAttributes("v")).toIso8601Ext() << " - "
                       << histEntry.get<int>("v") << "\n";
@@ -1279,9 +1354,7 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         valueHist << "\n";
     }
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(
-          toString(failedCycles) + " out of " + toString(numCycles) + " cycles failed!\n" + valueHist.str(), 0,
-          failedCycles);
+    ASSERT_EQ(0, failedCycles) << failedCycles << " out of " << numCycles << " cycles failed!\n" << valueHist.str();
 
     const karabo::data::TimeDuration testDuration = testCaseStart.elapsed();
 
@@ -1293,7 +1366,7 @@ void DataLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
 }
 
 
-void DataLogging_Test::testUnchangedNoDefaultProperties() {
+void TestDataLogging::testUnchangedNoDefaultProperties() {
     using namespace std;
     clog << "Testing past config retrieval of properties with no default value ..." << flush;
 
@@ -1307,12 +1380,12 @@ void DataLogging_Test::testUnchangedNoDefaultProperties() {
     const string logId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testUnchangedNoDefaultProperties");
 
     // Set the value of the test device's property with no default value.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, noDefaultProp, 12));
+    ASSERT_NO_THROW(m_deviceClient->set(deviceId, noDefaultProp, 12));
     std::this_thread::sleep_for(100ms);
 
     // Save this instant as a iso string
@@ -1321,9 +1394,9 @@ void DataLogging_Test::testUnchangedNoDefaultProperties() {
 
     // Flushes the datalogger to guarantee that setting of the property will be
     // in the log.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     std::this_thread::sleep_for(150ms);
 
     // Assert that getConfigurationFromPast retrieves the non default value
@@ -1343,34 +1416,33 @@ void DataLogging_Test::testUnchangedNoDefaultProperties() {
             const std::string errMsg = e.detailedMsg();
             // Tolerate only exception with following text that may come if file logger's disk IO is pretty slow
             auto errExpect = "Requested time point for device configuration is earlier than anything logged.";
-            CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(errExpect) != std::string::npos);
+            ASSERT_TRUE(errMsg.find(errExpect) != std::string::npos) << errMsg;
             std::this_thread::sleep_for(milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
             m_sigSlot->call(karabo::util::DATALOGGER_PREFIX + m_server, "flush");
             --nTries;
         } catch (const std::exception& e) {
-            CPPUNIT_ASSERT_MESSAGE(e.what(), false); // do not tolerate any other exception
+            ASSERT_TRUE(false) << e.what(); // do not tolerate any other exception
         }
     }
-    CPPUNIT_ASSERT_MESSAGE(toString(conf), conf.has(noDefaultProp));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value for '" + noDefaultProp + "' differs from expected.", 12,
-                                 conf.get<int>(noDefaultProp));
+    ASSERT_TRUE(conf.has(noDefaultProp)) << toString(conf);
+    ASSERT_EQ(12, conf.get<int>(noDefaultProp)) << "Value for '" << noDefaultProp << "' differs from expected.";
 
     // Shutdown the PropertyTest device
     success = m_deviceClient->killDevice(deviceId);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     // Reinstantiate the PropertyTest device, but this time do not set its
     // no default value property.
     success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testUnchangedNoDefaultProperties_2");
 
     // Flush the data logger to make sure there's no logging pendency
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     // Wait some time for the data just flushed to be available for reading.
     std::this_thread::sleep_for(150ms);
 
@@ -1381,15 +1453,15 @@ void DataLogging_Test::testUnchangedNoDefaultProperties() {
     // Assert that getConfigurationFromPast for a timepoint after the second
     // instantiation of the PropertyTest device does not have the no default
     // value property.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, afterDeviceReinst)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(conf, schema, configAtTimepoint, configTimepoint));
-    CPPUNIT_ASSERT_MESSAGE("Property '" + noDefaultProp + "' should not be in retrieved configuration.",
-                           !conf.has(noDefaultProp));
+    ASSERT_NO_THROW(m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, afterDeviceReinst)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(conf, schema, configAtTimepoint, configTimepoint));
+    ASSERT_TRUE(!conf.has(noDefaultProp))
+          << "Property '" << noDefaultProp << "' should not be in retrieved configuration.";
 
     // Shutdown the testing device.
     success = m_deviceClient->killDevice(deviceId);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     clog << "OK" << endl;
 }
@@ -1398,44 +1470,40 @@ void DataLogging_Test::testUnchangedNoDefaultProperties() {
 template <class T>
 void isEqualMessage(const std::string& message, const T& expected, const T& actual,
                     const std::vector<karabo::data::Hash>& fullHistory) {
-    std::string msg(message);
-    if (expected != actual) {
-        (msg += ": ") += toString(fullHistory);
-    }
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
+    ASSERT_EQ(expected, actual) << message << ":\n" << fullHistory;
 }
 
 
 template <>
-void isEqualMessage(const std::string& message, const std::vector<bool>& expected, const std::vector<bool>& actual,
-                    const std::vector<karabo::data::Hash>& fullHistory) {
-    std::string msg(message);
-    if (expected != actual) {
-        (msg += ": ") += toString(fullHistory);
-    }
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, toString(expected), toString(actual));
+void isEqualMessage(const std::string& message, const std::vector<karabo::data::Hash>& expected,
+                    const std::vector<karabo::data::Hash>& actual, const std::vector<karabo::data::Hash>& fullHistory) {
+    ASSERT_TRUE(karabo::data::fullyEquals(expected, actual)) << message << ":\n" << fullHistory;
 }
+
+
+template <>
+void isEqualMessage(const std::string& message, const karabo::data::Hash& expected, const karabo::data::Hash& actual,
+                    const std::vector<karabo::data::Hash>& fullHistory) {
+    ASSERT_TRUE(expected.fullyEquals(actual, true)) << message << ":\n" << fullHistory;
+}
+
 
 template <>
 void isEqualMessage(const std::string& message, const float& expected, const float& actual,
                     const std::vector<karabo::data::Hash>& fullHistory) {
-    std::string msg(message);
-    if (expected != actual) {
-        (msg += ": ") += toString(fullHistory);
-    }
-    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(msg, expected, actual, expected * 1.e-6);
+    ASSERT_NEAR(expected, actual, expected * 1.e-6) << message << ":\n" << fullHistory;
 }
 
 
 template <class T>
-void DataLogging_Test::testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf) {
+void TestDataLogging::testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf) {
     const std::string dlReader = karabo::util::DATALOGREADER_PREFIX + m_server;
     const int max_set = 100;
     std::clog << "Testing Property History retrieval for '" << key << "'... " << std::flush;
 
     // get configuration for later checks
     Hash beforeWritesCfg;
-    CPPUNIT_ASSERT_NO_THROW((m_deviceClient->get(m_deviceId, beforeWritesCfg)));
+    ASSERT_NO_THROW((m_deviceClient->get(m_deviceId, beforeWritesCfg)));
 
     std::this_thread::sleep_for(150ms);
 
@@ -1445,20 +1513,20 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 
     // write a bunch of times
     for (int i = 0; i < max_set; i++) {
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<T>(m_deviceId, key, f(i)));
+        ASSERT_NO_THROW(m_deviceClient->set<T>(m_deviceId, key, f(i)));
         std::this_thread::sleep_for(10ms);
     }
 
     Hash afterWritesCfg;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(m_deviceId, afterWritesCfg));
+    ASSERT_NO_THROW(m_deviceClient->get(m_deviceId, afterWritesCfg));
 
     // save this instant as a iso string
     Epochstamp es_afterWrites;
     std::string afterWrites = es_afterWrites.toIso8601();
 
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     // place holders, could be skipped but they are here for future expansions of the tests
     std::string device;
@@ -1498,26 +1566,24 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         nTries--;
     }
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(
-          "History size different than expected after " + toString(numChecks) + " checks:\n\tdeviceId: " + m_deviceId +
-                "\n\tkey: " + key + "\n\tparam.from: " + beforeWrites + "\n\tparam.to: " + afterWrites +
-                "\n\tparam.maxNumData: " + toString(max_set * 2) + "\n\thistory.size(): " + toString(history.size()) +
-                "\n\tNumber of Exceptions: " + toString(numExceptions) + "\n\tExceptions:\n" +
-                boost::algorithm::join(exceptionsMsgs, "\n") + "\nhistory\t" + toString(history),
-          static_cast<size_t>(max_set), history.size());
+    ASSERT_EQ(static_cast<size_t>(max_set), history.size())
+          << "History size different than expected after " << numChecks << " checks:\n\tdeviceId: " << m_deviceId
+          << "\n\tkey: " << key << "\n\tparam.from: " << beforeWrites << "\n\tparam.to: " << afterWrites
+          << "\n\tparam.maxNumData: " << (max_set * 2) << "\n\thistory.size(): " << history.size()
+          << "\n\tNumber of Exceptions: " << toString(numExceptions) << "\n\tExceptions:\n"
+          << boost::algorithm::join(exceptionsMsgs, "\n") << "\nhistory\t" << toString(history);
 
-    CPPUNIT_ASSERT_EQUAL(numGetPropHist + numChecks,
-                         m_deviceClient->get<unsigned int>(dlReader, "numGetPropertyHistory"));
+    ASSERT_EQ(numGetPropHist + numChecks, m_deviceClient->get<unsigned int>(dlReader, "numGetPropertyHistory"));
 
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
         isEqualMessage("Wrong value in history " + toString(i), f(i), history[i].get<T>("v"), history);
         Epochstamp current = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
-        CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_afterWrites);
-        CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current >= es_beforeWrites);
+        ASSERT_TRUE(current <= es_afterWrites) << "Timestamp later than the requested window";
+        ASSERT_TRUE(current >= es_beforeWrites) << "Timestamp earlier than the requested window";
         if (i > 0) {
             Epochstamp previous = Epochstamp::fromHashAttributes(history[i - 1].getAttributes("v"));
-            CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current > previous);
+            ASSERT_TRUE(current > previous) << "Timestamp earlier than the requested window";
         }
     }
     std::clog << "Ok" << std::endl;
@@ -1529,9 +1595,9 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 
     exceptionsMsgs.clear();
 
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     const unsigned int numGetCfgFromPast = m_deviceClient->get<unsigned int>(dlReader, "numGetConfigurationFromPast");
     nTries = NUM_RETRY;
@@ -1540,7 +1606,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     // place holder schema, could be checked in future tests
     Schema schema;
     Hash conf;
-    while (nTries >= 0) { // '&& !conf.empty()' check not needed as in DataLogging_Test::testCfgFromPastRestart:
+    while (nTries >= 0) { // '&& !conf.empty()' check not needed as in TestDataLogging::testCfgFromPastRestart:
         //                   The 'history.size() != max_set' check in the loop above already ensures that all data
         //                   available
 
@@ -1567,14 +1633,13 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         nTries--;
     }
 
-    CPPUNIT_ASSERT_MESSAGE("Configuration size from slotGetConfigurationFromPast still 0 after " + toString(numChecks) +
-                                 " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + beforeWrites +
-                                 "\n\tconf.size(): " + toString(conf.size()) +
-                                 "\n\tNumber of Exceptions: " + toString(numExceptions) + "\n\tExceptions:\n" +
-                                 boost::algorithm::join(exceptionsMsgs, "\n"),
-                           conf.size() > 0);
-    CPPUNIT_ASSERT_EQUAL(numGetCfgFromPast + numChecks,
-                         m_deviceClient->get<unsigned int>(dlReader, "numGetConfigurationFromPast"));
+    ASSERT_TRUE(conf.size() > 0) << "Configuration size from slotGetConfigurationFromPast still 0 after " << numChecks
+                                 << " checks.\n\tdeviceId: " << m_deviceId << "\n\tparam.before: " << beforeWrites
+                                 << "\n\tconf.size(): " << conf.size() << "\n\tNumber of Exceptions: " << numExceptions
+                                 << "\n\tExceptions:\n"
+                                 << boost::algorithm::join(exceptionsMsgs, "\n");
+    ASSERT_EQ(numGetCfgFromPast + numChecks,
+              m_deviceClient->get<unsigned int>(dlReader, "numGetConfigurationFromPast"));
 
     // One needs to check only the content here, therefore only the leaves are examined
     std::vector<std::string> leaves;
@@ -1586,8 +1651,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         if (std::find(confLeaves.begin(), confLeaves.end(), leaf) != confLeaves.end()) {
             // Leaf is in the configuration retrieved from past - check its value against the
             // one in the configuration snapshot obtained directly from the device.
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong configuration from past (before writes) for key :" + leaf,
-                                         beforeWritesCfg.getAs<std::string>(leaf), conf.getAs<std::string>(leaf));
+            ASSERT_EQ(beforeWritesCfg.getAs<std::string>(leaf), conf.getAs<std::string>(leaf))
+                  << "Wrong configuration from past (before writes) for key :" << leaf;
         } else {
             // Configuration from past is only allowed to miss non-archived leaves. Checks that the
             // missing leaf has NO_ARCHIVING set for its ARCHIVE_POLICY attribute.
@@ -1598,8 +1663,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     }
 
     // Check that all keys are logged.
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missing keys in configuration from past (before writes):\n" + missingKeysFromPast,
-                                 0ul, missingKeysFromPast.size());
+    ASSERT_EQ(0ul, missingKeysFromPast.size()) << "Missing keys in configuration from past (before writes):\n"
+                                               << missingKeysFromPast;
 
     nTries = NUM_RETRY;
     numExceptions = 0;
@@ -1629,12 +1694,11 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         nTries--;
     }
 
-    CPPUNIT_ASSERT_MESSAGE("Configuration still not retrieved after  " + toString(numChecks) +
-                                 " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + beforeWrites +
-                                 "\n\tconf.size(): " + toString(conf.size()) +
-                                 "\n\tNumber of Exceptions: " + toString(numExceptions) + "\n\tRemote Errors:\n" +
-                                 boost::algorithm::join(exceptionsMsgs, "\n"),
-                           conf.size() > 0);
+    ASSERT_TRUE(conf.size() > 0) << "Configuration still not retrieved after  " << numChecks
+                                 << " checks.\n\tdeviceId: " << m_deviceId << "\n\tparam.before: " << beforeWrites
+                                 << "\n\tconf.size(): " << conf.size() << "\n\tNumber of Exceptions: " << numExceptions
+                                 << "\n\tRemote Errors:\n"
+                                 << boost::algorithm::join(exceptionsMsgs, "\n");
     // One needs to check only the content here, therefore only the leaves are examined.
     leaves.clear();
     getLeaves(afterWritesCfg, schema, leaves, '.');
@@ -1645,8 +1709,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         if (std::find(confLeaves.begin(), confLeaves.end(), leaf) != confLeaves.end()) {
             // Leaf is in the configuration retrieved from past - check its value against the
             // one in the configuration snapshot obtained directly from the device.
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong configuration from past (after writes) for key :" + leaf,
-                                         afterWritesCfg.getAs<std::string>(leaf), conf.getAs<std::string>(leaf));
+            ASSERT_EQ(afterWritesCfg.getAs<std::string>(leaf), conf.getAs<std::string>(leaf))
+                  << "Wrong configuration from past (after writes) for key :" << leaf;
         } else {
             // Configuration from past is only allowed to miss non-archived leaves. Checks that the
             // missing leaf has NO_ARCHIVING set for its ARCHIVE_POLICY attribute.
@@ -1658,9 +1722,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 
     // TODO: Uncomment the following assert as soon as all the missing keys cases are fixed.
     /*
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missing keys in configuration from past (after writes):\n" + missingKeysFromPast,
-                                 0ul,
-                                 missingKeysFromPast.size());
+    ASSERT_EQ(0ul, missingKeysFromPast.size())
+          << "Missing keys in configuration from past (after writes):\n" << missingKeysFromPast;
      */
     // TODO: Remove the following conditional logging once the assert above is activated.
     if (!missingKeysFromPast.empty()) {
@@ -1671,25 +1734,25 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 }
 
 
-void DataLogging_Test::testInt(bool testPastConf) {
+void TestDataLogging::testInt(bool testPastConf) {
     auto lambda = [](int i) -> int { return i; };
     testHistory<int>("int32Property", lambda, testPastConf);
 }
 
 
-void DataLogging_Test::testUInt64(bool testPastConf) {
+void TestDataLogging::testUInt64(bool testPastConf) {
     auto lambda = [](int i) -> unsigned long long { return (unsigned long long)i - 1; };
     testHistory<unsigned long long>("uint64Property", lambda, testPastConf);
 }
 
 
-void DataLogging_Test::testFloat(bool testPastConf) {
+void TestDataLogging::testFloat(bool testPastConf) {
     auto lambda = [](int i) -> float { return 2.5e-8f * i; };
     testHistory<float>("floatProperty", lambda, testPastConf);
 }
 
 
-void DataLogging_Test::testString(bool testPastConf) {
+void TestDataLogging::testString(bool testPastConf) {
     auto lambda = [](int i) -> string { return ((i % 2) ? string() : "(1|2|" + karabo::data::toString(i)) + ")"; };
     testHistory<string>("stringProperty", lambda, testPastConf);
 
@@ -1699,7 +1762,7 @@ void DataLogging_Test::testString(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorString(bool testPastConf) {
+void TestDataLogging::testVectorString(bool testPastConf) {
     auto lambdaMixed = [](int i) -> vector<string> {
         vector<string> v = {"abc" + toString(i), "xy|z" + toString(i), string(), "A\nB" + toString(i)};
         // rotate the vector to check all positions for the empty string
@@ -1717,7 +1780,7 @@ void DataLogging_Test::testVectorString(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorChar(bool testPastConf) {
+void TestDataLogging::testVectorChar(bool testPastConf) {
     auto lambda = [](int i) -> vector<char> {
         const char c = static_cast<char>(i & 0xFF);
         return {c, c, c, c, c, 0};
@@ -1726,7 +1789,7 @@ void DataLogging_Test::testVectorChar(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorSignedChar(bool testPastConf) {
+void TestDataLogging::testVectorSignedChar(bool testPastConf) {
     auto lambda = [](int i) -> vector<signed char> {
         std::vector<signed char> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1740,7 +1803,7 @@ void DataLogging_Test::testVectorSignedChar(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorUnsignedChar(bool testPastConf) {
+void TestDataLogging::testVectorUnsignedChar(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned char> {
         std::vector<unsigned char> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1754,7 +1817,7 @@ void DataLogging_Test::testVectorUnsignedChar(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorBool(bool testPastConf) {
+void TestDataLogging::testVectorBool(bool testPastConf) {
     auto lambda = [](int i) -> vector<bool> {
         if (i % 13 == 0) {
             return vector<bool>();
@@ -1768,7 +1831,7 @@ void DataLogging_Test::testVectorBool(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorShort(bool testPastConf) {
+void TestDataLogging::testVectorShort(bool testPastConf) {
     auto lambda = [](int i) -> vector<short> {
         std::vector<short> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1782,7 +1845,7 @@ void DataLogging_Test::testVectorShort(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorUnsignedShort(bool testPastConf) {
+void TestDataLogging::testVectorUnsignedShort(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned short> {
         std::vector<unsigned short> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1796,7 +1859,7 @@ void DataLogging_Test::testVectorUnsignedShort(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorInt(bool testPastConf) {
+void TestDataLogging::testVectorInt(bool testPastConf) {
     auto lambda = [](int i) -> vector<int> {
         std::vector<int> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1810,7 +1873,7 @@ void DataLogging_Test::testVectorInt(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorUnsignedInt(bool testPastConf) {
+void TestDataLogging::testVectorUnsignedInt(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned int> {
         std::vector<unsigned int> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1824,7 +1887,7 @@ void DataLogging_Test::testVectorUnsignedInt(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorLongLong(bool testPastConf) {
+void TestDataLogging::testVectorLongLong(bool testPastConf) {
     auto lambda = [](int i) -> vector<long long> {
         std::vector<long long> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1838,7 +1901,7 @@ void DataLogging_Test::testVectorLongLong(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testVectorUnsignedLongLong(bool testPastConf) {
+void TestDataLogging::testVectorUnsignedLongLong(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned long long> {
         std::vector<unsigned long long> result;
         if ((i % 3) != 0) { // every third is empty
@@ -1852,7 +1915,7 @@ void DataLogging_Test::testVectorUnsignedLongLong(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testTable(bool testPastConf) {
+void TestDataLogging::testTable(bool testPastConf) {
     auto lambda = [](int i) -> vector<Hash> {
         vector<Hash> t = {// For strings, test also pipe '|' (the separator in our text files) and newline '\n'.
                           Hash("e1", "ab\nc" + karabo::data::toString(i), "e2", ((i % 2) == 0), "e3", 12 * i, "e4",
@@ -1865,13 +1928,13 @@ void DataLogging_Test::testTable(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testChar(bool testPastConf) {
+void TestDataLogging::testChar(bool testPastConf) {
     auto lambda = [](int i) -> char { return static_cast<char>(i & 0xff); };
     testHistory<char>("charProperty", lambda, testPastConf);
 }
 
 
-void DataLogging_Test::testNans() {
+void TestDataLogging::testNans() {
     std::clog << "Test handling of NaNs for getPropertyHistory and getConfigurationFromPast ..." << std::endl;
 
     Epochstamp testCaseStart;
@@ -1879,7 +1942,7 @@ void DataLogging_Test::testNans() {
     const std::string deviceId(m_deviceId + "forNan");
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "NanTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testNans");
 
@@ -1921,7 +1984,7 @@ void DataLogging_Test::testNans() {
         new_conf.set("floatProperty", bad_floats[i % bad_floats.size()]);
         new_conf.set("doubleProperty", bad_doubles[i % bad_doubles.size()]);
 
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, new_conf));
+        ASSERT_NO_THROW(m_deviceClient->set(deviceId, new_conf));
         const Hash cfg = m_deviceClient->get(deviceId);
         updateStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("doubleProperty")));
         std::this_thread::sleep_for(10ms);
@@ -1937,7 +2000,7 @@ void DataLogging_Test::testNans() {
     end_conf.set("int32Property", static_cast<int>(max_set));
     end_conf.set("floatProperty", (1.f * max_set));
     end_conf.set("doubleProperty", (1. * max_set));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, end_conf));
+    ASSERT_NO_THROW(m_deviceClient->set(deviceId, end_conf));
     updateStamps.push_back(
           Epochstamp::fromHashAttributes(m_deviceClient->get(deviceId).getAttributes("doubleProperty")));
     // The sleep interval below had to be increased because of the Telegraf environment - the time required to save
@@ -1950,9 +2013,9 @@ void DataLogging_Test::testNans() {
     Epochstamp es_afterWrites;
     std::string afterWrites = es_afterWrites.toIso8601();
 
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     Hash params;
     params.set<string>("from", beforeWrites);
@@ -2004,44 +2067,43 @@ void DataLogging_Test::testNans() {
                       << afterLastCheck.elapsed(beforeFirstCheck).getTotalSeconds() << " secs)." << std::endl;
         }
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              "History size different than expected after " + toString(numChecks) + " checks:\n\tdeviceId: " +
-                    deviceId + "\n\tproperty : " + property_pair.first + "\n\tparam.from: " + beforeWrites +
-                    "\n\tparam.to: " + afterWrites + "\n\tparam.maxNumData: " + toString(max_set * 2) +
-                    "\n\thistory.size(): " + toString(history.size()) + "\n\tNumber of Exceptions: " +
-                    toString(numExceptions) + "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
-              static_cast<size_t>(property_pair.second), history.size());
+        ASSERT_EQ(static_cast<size_t>(property_pair.second), history.size())
+              << "History size different than expected after " << toString(numChecks)
+              << " checks:\n\tdeviceId: " << deviceId << "\n\tproperty : " << property_pair.first
+              << "\n\tparam.from: " << beforeWrites << "\n\tparam.to: " << afterWrites
+              << "\n\tparam.maxNumData: " << (max_set * 2) << "\n\thistory.size(): " << history.size()
+              << "\n\tNumber of Exceptions: " << numExceptions << "\n\tExceptions:\n"
+              << boost::algorithm::join(exceptionsMsgs, "\n");
 
         // Test that the return values match, incl. timestamps
         for (size_t i = 0; i <= max_set; ++i) {
             // First check timestamp - to microsecond precision
             const Epochstamp historyStamp = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
             const TimeDuration diff = historyStamp.elapsed(updateStamps[i]);
-            CPPUNIT_ASSERT_MESSAGE(toString(diff),
-                                   diff < TimeDuration(0ull, 1000000000000ull)); // 1e12 attosec, i.e. 1 microsec
+            ASSERT_TRUE(diff < TimeDuration(0ull, 1000000000000ull)) << toString(diff); // 1e12 attosec, i.e. 1 microsec
 
             if (property_pair.first == "floatProperty") {
                 const float floatInput = (i == max_set ? max_set : bad_floats[i % bad_floats.size()]);
                 const float historyFloat = history[i].get<float>("v");
                 if (std::isnan(floatInput)) {
                     // comparison with nan is always false
-                    CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(historyFloat));
+                    ASSERT_TRUE(std::isnan(historyFloat)) << i;
                 } else {
                     // comparison with +/-inf works
-                    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), floatInput, historyFloat);
+                    ASSERT_EQ(floatInput, historyFloat) << i;
                 }
             } else if (property_pair.first == "doubleProperty") {
                 const double doubleInput = (i == max_set ? max_set : bad_doubles[i % bad_doubles.size()]);
                 const double historyDouble = history[i].get<double>("v");
                 if (std::isnan(doubleInput)) {
                     // comparison with nan is always false
-                    CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(historyDouble));
+                    ASSERT_TRUE(std::isnan(historyDouble)) << i;
                 } else {
                     // comparison with +/-inf works
-                    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), doubleInput, historyDouble);
+                    ASSERT_EQ(doubleInput, historyDouble) << i;
                 }
             } else if (property_pair.first == "int32Property") {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), static_cast<int>(i), history[i].get<int>("v"));
+                ASSERT_EQ(static_cast<int>(i), history[i].get<int>("v")) << i;
             }
         }
     }
@@ -2052,31 +2114,31 @@ void DataLogging_Test::testNans() {
         Schema schema;
         bool configAtTimepoint = false;
         std::string configTimepoint;
-        CPPUNIT_ASSERT_NO_THROW(
+        ASSERT_NO_THROW(
               m_sigSlot->request(dlReader, "slotGetConfigurationFromPast", deviceId, vec_es_afterWrites[i].toIso8601())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(conf, schema, configAtTimepoint, configTimepoint));
 
-        CPPUNIT_ASSERT(configAtTimepoint);
+        ASSERT_TRUE(configAtTimepoint);
         // This equality check relies on the fact that the string representation implicitly rounds to micro second
         // precision, i.e. the precision in the data base. So if the test fails here, do like above with the
         // TimeDuration.
-        CPPUNIT_ASSERT_EQUAL(vec_es_updateStamps[i].toIso8601Ext(), configTimepoint);
+        ASSERT_EQ(vec_es_updateStamps[i].toIso8601Ext(), configTimepoint);
         const double theD = conf.get<double>("doubleProperty");
         const float theF = conf.get<float>("floatProperty");
         if (std::isnan(bad_floats[i])) {
             // assuming same order of nan/inf for both bad_floats and bad_doubles
-            CPPUNIT_ASSERT_MESSAGE(toString(i) + ": theF = " + toString(theF), std::isnan(theF));
-            CPPUNIT_ASSERT_MESSAGE(toString(i) + ": theD = " + toString(theD), std::isnan(theD));
+            ASSERT_TRUE(std::isnan(theF)) << i << ": theF = " << theF;
+            ASSERT_TRUE(std::isnan(theD)) << i << ": theD = " << theD;
         } else {
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_floats[i], theF);
-            CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_doubles[i], theD);
+            ASSERT_EQ(bad_floats[i], theF) << i;
+            ASSERT_EQ(bad_doubles[i], theD) << i;
         }
     }
 
     // Clean-up
     success = m_deviceClient->killDevice(deviceId);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     const karabo::data::TimeDuration testDuration = testCaseStart.elapsed();
 
@@ -2088,7 +2150,7 @@ void DataLogging_Test::testNans() {
 }
 
 
-void DataLogging_Test::testSchemaEvolution() {
+void TestDataLogging::testSchemaEvolution() {
     std::clog << "Testing property history retrieval when schema evolution happens ..." << std::endl;
 
     // Instantiates a DataLogTestDevice to use for the schema evolution test.
@@ -2096,7 +2158,7 @@ void DataLogging_Test::testSchemaEvolution() {
     const std::string deviceId(getDeviceIdPrefix() + "SchemaEvolutionDevice");
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testSchemaEvolution");
 
@@ -2111,15 +2173,14 @@ void DataLogging_Test::testSchemaEvolution() {
           .defaultValue("")
           .reconfigurable()
           .commit();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStr).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", "Non empty str"))
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", "Non empty str"))
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     // "reconfigurableValue" as vector of strings
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", Schema()).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     Schema schemaVecStr;
     VECTOR_STRING_ELEMENT(schemaVecStr)
@@ -2128,18 +2189,18 @@ void DataLogging_Test::testSchemaEvolution() {
           .defaultValue(std::vector<std::string>({"a"}))
           .reconfigurable()
           .commit();
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaVecStr)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaVecStr)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     const std::vector<std::string> strVector{"a", "", "b", "c"};
     Hash strVecValueCfg{"reconfigurableValue", strVector};
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", strVecValueCfg)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", strVecValueCfg)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
 
     // "reconfigurableValue" as int32
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", Schema()).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     Schema schemaInt32;
     INT32_ELEMENT(schemaInt32)
@@ -2148,16 +2209,16 @@ void DataLogging_Test::testSchemaEvolution() {
           .defaultValue(0)
           .reconfigurable()
           .commit();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaInt32).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", 10))
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", 10))
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
 
     // Makes sure all the writes are done before retrieval.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                  .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                          .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     // The sleep interval below had to be added because of the Telegraf environment - the time required to save is
     // higher. If toTimePoint captured after the sleep instruction refers to a time point that comes before the time
     // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the
@@ -2205,45 +2266,42 @@ void DataLogging_Test::testSchemaEvolution() {
         nTries--;
     }
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(
-          "History size different than expected after " + toString(numChecks) + " checks:\n\tdeviceId: " + deviceId +
-                "\n\tproperty: \"value\"" + "\n\tparam.from: " + fromTimePoint.toIso8601() +
-                "\n\tparam.to: " + toTimePoint.toIso8601() + "\n\tparam.maxNumData: " + toString(maxNumData) +
-                "\n\thistory.size(): " + toString(history.size()) + "\n\tNumber of Exceptions: " +
-                toString(numExceptions) + "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
-          6, static_cast<int>(history.size()));
+    ASSERT_EQ(6, static_cast<int>(history.size()))
+          << "History size different than expected after " << numChecks << " checks:\n\tdeviceId: " << deviceId
+          << "\n\tproperty: \"value\"" << "\n\tparam.from: " << fromTimePoint.toIso8601()
+          << "\n\tparam.to: " << toTimePoint.toIso8601() << "\n\tparam.maxNumData: " << maxNumData
+          << "\n\thistory.size(): " << history.size() << "\n\tNumber of Exceptions: " << numExceptions
+          << "\n\tExceptions:\n"
+          << boost::algorithm::join(exceptionsMsgs, "\n");
 
     // Checks the first two expected values - of string type.
     // The first is the empty string that is the default value.
     // The second is an explicitily set non empty string value.
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("First string value different from expected for history entry", std::string(""),
-                                 history[0].get<std::string>("v"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Second string value different from expected for history entry",
-                                 std::string("Non empty str"), history[1].get<std::string>("v"));
+    ASSERT_EQ("", history[0].get<std::string>("v")) << "First string value different from expected for history entry";
+    ASSERT_EQ("Non empty str", history[1].get<std::string>("v"))
+          << "Second string value different from expected for history entry";
+
     // Checks the next two expected values - of vector of strings type.
     // The first is the empty vector that is the default value.
     // The second is an explicitily set non empty vector.
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("First vector of strings in history is not of the expected size", 1ul,
-                                 history[2].get<std::vector<std::string>>("v").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of sole element of first vector of strings in history different from exepected",
-                                 std::string("a"), history[2].get<std::vector<std::string>>("v")[0]);
+    ASSERT_EQ(1ul, history[2].get<std::vector<std::string>>("v").size())
+          << "First vector of strings in history is not of the expected size";
+    ASSERT_EQ("a", history[2].get<std::vector<std::string>>("v")[0])
+          << "Value of sole element of first vector of strings in history different from exepected";
 
     const auto& strVectorValue = history[3].get<std::vector<std::string>>("v");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size of second vector of strings in history different from expected",
-                                 strVector.size(), strVectorValue.size());
+    ASSERT_EQ(strVector.size(), strVectorValue.size())
+          << "Size of second vector of strings in history different from expected";
     for (size_t i = 0; i < strVectorValue.size(); i++) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              "Value at index " + toString(i) + " of second vector of strings in history different from expected",
-              strVector[i], strVectorValue[i]);
+        ASSERT_EQ(strVector[i], strVectorValue[i])
+              << "Value at index " << i << " of second vector of strings in history different from expected";
     }
     // Checks the last expected values - of int type.
     // The first is the default value of 0.
     // The second is an explicitily set int value.
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("First int value different from expected for history entry", 0,
-                                 history[4].get<int>("v"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Second int value different from expected for history entry", 10,
-                                 history[5].get<int>("v"));
+    ASSERT_EQ(0, history[4].get<int>("v")) << "First int value different from expected for history entry";
+    ASSERT_EQ(10, history[5].get<int>("v")) << "Second int value different from expected for history entry";
 
     std::clog << "Ok" << std::endl;
 }
@@ -2252,18 +2310,18 @@ void DataLogging_Test::testSchemaEvolution() {
 // TODO: implement test and FIX for a vector of strings with an empty string as its only element
 
 
-void DataLogging_Test::influxAllTestRunner() {
+TEST_F(TestDataLogging, influxAllTestRunner) {
     std::this_thread::sleep_for(1000ms);
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     setPropertyTestSchema();
 
     std::clog << "\n==== Starting sequence of Influx Logging tests on \"" << m_deviceId << "\" ====" << std::endl;
     success = startDataLoggerManager("InfluxDataLogger");
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
 
@@ -2310,7 +2368,14 @@ void DataLogging_Test::influxAllTestRunner() {
 }
 
 
-void DataLogging_Test::testInfluxMaxSchemaLogRate() {
+/**
+ * @brief Checks that the maximum per device schema logging rate for Influx is being properly enforced.
+ *
+ * This test instantiates its own Influx DataLoggerManager with a much lower threshold for the maximum schema
+ * logging rate allowed. The smaller value is needed to make it easier to violate the threshold. It has to be
+ * run in isolation because a smaller threshold could easily interfere with the other tests.
+ */
+TEST_F(TestDataLogging, testInfluxMaxSchemaLogRate) {
     std::clog << "Testing enforcing of max schema logging rate limit for Influx ..." << std::endl;
 
     const unsigned int rateWinSecs = 1u;
@@ -2356,13 +2421,13 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     // Starts the logger and readers with a lower max schema rate threshold - 18 kb/s - over a rateWinSecs seconds
     // rating window. The base64 encoded schema of the DataLogTestDevice is 12,516 bytes (before schema update),
     // so with rateWinSecs == 1, a single schema can be logged in that period, but two cannot.
     success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 18, rateWinSecs);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
     waitUntilLogged(deviceId, "testInfluxMaxSchemaLogRate");
@@ -2372,22 +2437,22 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
 
     ///////  Checks that a schema update within the rating limit is accepted.
     Epochstamp beforeFirstBurst;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrA).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
     std::this_thread::sleep_for(500ms);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterFirstBurst;
 
     // Checks that the schema update has not been flagged as bad data.
     Hash badDataAllDevices;
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(logReaderId, "slotGetBadData", beforeFirstBurst.toIso8601Ext(),
-                                            afterFirstBurst.toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), 0ul, badDataAllDevices.size());
+    ASSERT_NO_THROW(m_sigSlot
+                          ->request(logReaderId, "slotGetBadData", beforeFirstBurst.toIso8601Ext(),
+                                    afterFirstBurst.toIso8601Ext())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(badDataAllDevices));
+    ASSERT_EQ(0ul, badDataAllDevices.size()) << toString(badDataAllDevices);
 
     // Wait some time to isolate the schema update bursts.
     std::this_thread::sleep_for(milliseconds(rateWinSecs * 1000 + 1));
@@ -2395,13 +2460,13 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     ////////  Checks that two schema updates in a fast succession would go above the
     ////////  threshold and one of the updates (the second) would be rejected.
     Epochstamp beforeSecondBurst;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrB).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrC).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
     std::this_thread::sleep_for(500ms);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterSecondBurst;
 
@@ -2422,14 +2487,14 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
               }
           },
           KRB_TEST_MAX_TIMEOUT * 1'000u, 200u);
-    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
-    CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
+    ASSERT_EQ(1ul, badDataAllDevices.size());
+    ASSERT_TRUE(badDataAllDevices.has(deviceId));
     const auto& badDataEntries = badDataAllDevices.get<std::vector<Hash>>(deviceId);
-    CPPUNIT_ASSERT_EQUAL(1ul, badDataEntries.size());
+    ASSERT_EQ(1ul, badDataEntries.size());
     const std::string& badDataInfo = badDataEntries[0].get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(
-          "Expected pattern, '" + deviceId + "::schema', not found in bad data description:\n'" + badDataInfo + "'",
-          badDataInfo.find(deviceId + "::schema") != std::string::npos);
+    ASSERT_TRUE(badDataInfo.find(deviceId + "::schema") != std::string::npos)
+          << "Expected pattern, '" << deviceId << "::schema', not found in bad data description:\n'" << badDataInfo
+          << "'";
 
     // Wait some time to isolate the schema update bursts.
     std::this_thread::sleep_for(milliseconds(rateWinSecs * 1000 + 1));
@@ -2437,21 +2502,21 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     //////  Checks that after the updates have settled down for a while, schemas
     //////  can be logged again.
     Epochstamp beforeThirdBurst;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrD).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been received by logger and written to Influx.
     std::this_thread::sleep_for(500ms);
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterThirdBurst;
     // Checks that the schema update succeeded.
     badDataAllDevices.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(logReaderId, "slotGetBadData", beforeThirdBurst.toIso8601Ext(),
-                                            afterThirdBurst.toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    ASSERT_NO_THROW(m_sigSlot
+                          ->request(logReaderId, "slotGetBadData", beforeThirdBurst.toIso8601Ext(),
+                                    afterThirdBurst.toIso8601Ext())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(badDataAllDevices));
+    ASSERT_EQ(0ul, badDataAllDevices.size());
 
     // Checks that the latest version of the schema, and by consequence, the past configuration are retrieved correctly.
     // This check fails for schemas saved by versions of the InfluxDataLogger prior to the fixes in
@@ -2463,22 +2528,26 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     std::string cfgTime;
     int nTries = NUM_RETRY;
     do {
-        CPPUNIT_ASSERT_NO_THROW(
+        ASSERT_NO_THROW(
               m_sigSlot->request(logReaderId, "slotGetConfigurationFromPast", deviceId, afterThirdBurst.toIso8601())
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                     .receive(pastCfg, schema, cfgAtTime, cfgTime));
         if (schema.has("stringPropertyD")) break;
         std::this_thread::sleep_for(milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
     } while (nTries-- > 0);
-    CPPUNIT_ASSERT_MESSAGE("Schema lacks expected key, \"stringPropertyD\"", schema.has("stringPropertyD"));
-    CPPUNIT_ASSERT_EQUAL(Types::STRING, schema.getValueType("stringPropertyD"));
-    CPPUNIT_ASSERT_EQUAL(pastCfg.get<std::string>("stringPropertyD"), "D_" + defValueSuffix);
+    ASSERT_TRUE(schema.has("stringPropertyD")) << "Schema lacks expected key, \"stringPropertyD\"";
+    ASSERT_EQ(Types::STRING, schema.getValueType("stringPropertyD"));
+    ASSERT_EQ(pastCfg.get<std::string>("stringPropertyD"), "D_" + defValueSuffix);
 
     std::clog << "OK" << std::endl;
 }
 
 
-void DataLogging_Test::testInfluxMaxStringLength() {
+/**
+ * @brief Checks that the maximum length allowed for a string value to be saved on Influx is being enforced and that
+ * all violations are being properly logged.
+ */
+TEST_F(TestDataLogging, testInfluxMaxStringLength) {
     std::clog << "Testing enforcing of max string value length for Influx ..." << std::endl;
 
     const unsigned int maxStringLength = 8'192u;
@@ -2500,10 +2569,10 @@ void DataLogging_Test::testInfluxMaxStringLength() {
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     success = startDataLoggerManager("InfluxDataLogger", false, false, 5120u, 5u, 15'360u, 5u, maxStringLength);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
     waitUntilLogged(propTestDevice, "testInfluxMaxStringLength");
@@ -2512,56 +2581,56 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     Epochstamp beforeBelowLimit;
     m_deviceClient->set(propTestDevice, "stringProperty", belowLimitStr);
     // Makes sure the data has been written to Influx
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterBelowLimit;
 
     Hash badDataAllDevices;
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(logReaderId, "slotGetBadData", beforeBelowLimit.toIso8601Ext(),
-                                            afterBelowLimit.toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    ASSERT_NO_THROW(m_sigSlot
+                          ->request(logReaderId, "slotGetBadData", beforeBelowLimit.toIso8601Ext(),
+                                    afterBelowLimit.toIso8601Ext())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(badDataAllDevices));
+    ASSERT_EQ(0ul, badDataAllDevices.size());
 
     ///////  Checks that a string whose length is exactly at the limit is accepted.
     Epochstamp beforeAtLimit;
     m_deviceClient->set(propTestDevice, "stringProperty", atLimitStr);
     // Makes sure the data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterAtLimit;
 
     badDataAllDevices.clear();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetBadData", beforeAtLimit.toIso8601Ext(), afterAtLimit.toIso8601Ext())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    ASSERT_EQ(0ul, badDataAllDevices.size());
 
 
     ///////  Checks that a string above the length limit is rejected with the proper code.
     Epochstamp beforeAboveLimit;
     m_deviceClient->set(propTestDevice, "stringProperty", aboveLimitStr);
     // Makes sure the data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
     Epochstamp afterAboveLimit;
 
     badDataAllDevices.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(logReaderId, "slotGetBadData", beforeAboveLimit.toIso8601Ext(),
-                                            afterAboveLimit.toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
+    ASSERT_NO_THROW(m_sigSlot
+                          ->request(logReaderId, "slotGetBadData", beforeAboveLimit.toIso8601Ext(),
+                                    afterAboveLimit.toIso8601Ext())
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive(badDataAllDevices));
+    ASSERT_EQ(1ul, badDataAllDevices.size());
     const auto deviceBadData = badDataAllDevices.get<std::vector<Hash>>(propTestDevice);
     const std::string badDataInfo = deviceBadData[0].get<std::string>("info");
 
     // [1] is the code for string metric values longer than the Influx limit.
-    CPPUNIT_ASSERT_MESSAGE(
-          "Expected pattern, \">> [1] 'stringProperty'\", not found in bad data description:\n'" + badDataInfo + "'",
-          badDataInfo.find(">> [1] 'stringProperty") != std::string::npos);
+    ASSERT_TRUE(badDataInfo.find(">> [1] 'stringProperty") != std::string::npos)
+          << "Expected pattern, \">> [1] 'stringProperty'\", not found in bad data description:\n'" << badDataInfo
+          << "'";
 
     ///////  Checks that the PropertyTest device with the appended prefix had its schema properly chunked by
     ///////  asserting that the past configuration with a string logged exactly at the limit can be retrieved.
@@ -2569,19 +2638,26 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     Hash pastCfg;
     bool cfgAtTime;
     std::string cfgTime;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetConfigurationFromPast", propTestDevice, afterAtLimit.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(pastCfg, schema, cfgAtTime, cfgTime));
-    CPPUNIT_ASSERT_MESSAGE("Schema lacks expected key, \"stringProperty\"", schema.has("stringProperty"));
-    CPPUNIT_ASSERT_EQUAL(Types::STRING, schema.getValueType("stringProperty"));
-    CPPUNIT_ASSERT_EQUAL(pastCfg.get<std::string>("stringProperty"), atLimitStr);
+    ASSERT_TRUE(schema.has("stringProperty")) << "Schema lacks expected key, \"stringProperty\"";
+    ASSERT_EQ(Types::STRING, schema.getValueType("stringProperty"));
+    ASSERT_EQ(pastCfg.get<std::string>("stringProperty"), atLimitStr);
 
     std::clog << "OK" << std::endl;
 }
 
 
-void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
+/**
+ * @brief Checks that the maximum per device property logging rate for Influx is being properly enforced.
+ *
+ * This test instantiates its own Influx DataLoggerManager with a much lower threshold for the maximum logging rate
+ * allowed. The smaller value is needed to make it easier to violate the threshold. It has to be run in isolation
+ * because a smaller threshold could easily interfere with the other tests.
+ */
+TEST_F(TestDataLogging, testInfluxMaxPerDevicePropLogRate) {
     std::clog << "Testing enforcing of max per device property logging rate limit for Influx ..." << std::endl;
 
     // CAVEAT - to avoid long sleeps between its parts, this test sets the timestamp properties as part of the
@@ -2611,12 +2687,12 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
 
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           m_server, "DataLogTestDevice", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     // Starts the logger and readers with a lower max rate threshold - 32 kb/s - over a rateWinSecs seconds rating
     // window.
     success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
     waitUntilLogged(m_deviceId, "testInfluxMaxPerDevicePropLogRate");
@@ -2628,42 +2704,40 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
         Epochstamp updateEpoch(before32KbWrite + TimeDuration(0, (i + 1) * millisecInAtto));
         Timestamp updateTime(updateEpoch, TimeId());
         updateTime.toHashAttributes(updateProp.getAttributes("stringProperty"));
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProp)
-                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                      .receive());
+        ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProp)
+                              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                              .receive());
     }
     // after32KbWrite is set to be the timestamp of the last write performed in the
     // previous loop plus a safety margin.
     Epochstamp after32KbWrite(before32KbWrite + TimeDuration(0, 5 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
 
     // Checks that the 32Kb strings have not been flagged as bad data.
     Hash badDataAllDevices;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot
                 ->request(logReaderId, "slotGetBadData", before32KbWrite.toIso8601Ext(), after32KbWrite.toIso8601Ext())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    ASSERT_EQ(0ul, badDataAllDevices.size());
     // Checks that the 8Kb strings have been successfully logged.
     std::vector<Hash> history;
     Hash historyParams{
           "from", before32KbWrite.toIso8601Ext(), "to", after32KbWrite.toIso8601Ext(), "maxNumData", maxPropHistSize};
     std::string replyDevice;
     std::string replyProperty;
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, history));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 4ul * rateWinSecs,
-                                 history.size());
+    ASSERT_EQ(4ul * rateWinSecs, history.size()) << "stringProperty history size different from expected.";
     for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
         std::string& historyStr8Kb = history[i].get<std::string>("v");
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 8192ul, historyStr8Kb.size());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str8Kb.at(0ul),
-                                     historyStr8Kb.at(0ul));
+        ASSERT_EQ(8192ul, historyStr8Kb.size()) << "stringProperty value doesn't have expected size.";
+        ASSERT_EQ(str8Kb.at(0ul), historyStr8Kb.at(0ul)) << "stringProperty value doesn't have expected characters.";
     }
 
     // Checks that updating a string property constantly above the rate will cause data to be rejected.
@@ -2677,25 +2751,25 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
         Timestamp updateTime(updateEpoch, TimeId());
         updateTime.toHashAttributes(updateProps.getAttributes("stringProperty"));
         updateTime.toHashAttributes(updateProps.getAttributes("int32Property"));
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProps)
-                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                      .receive());
+        ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProps)
+                              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                              .receive());
     }
     Epochstamp after64KbWrite(before64KbWrite + TimeDuration(0, 9 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
 
     // Checks that the half of the stringProperty updates has exceeded the max log rate and has been rated as bad data.
     badDataAllDevices.clear();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot
                 ->request(logReaderId, "slotGetBadData", before64KbWrite.toIso8601Ext(), after64KbWrite.toIso8601Ext())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(1ul,
-                         badDataAllDevices.size()); // 1 is because the bad data is grouped under a single deviceId.
-    CPPUNIT_ASSERT_EQUAL(4ul * rateWinSecs, badDataAllDevices.get<std::vector<karabo::data::Hash>>(m_deviceId).size());
+    ASSERT_EQ(1ul,
+              badDataAllDevices.size()); // 1 is because the bad data is grouped under a single deviceId.
+    ASSERT_EQ(4ul * rateWinSecs, badDataAllDevices.get<std::vector<karabo::data::Hash>>(m_deviceId).size());
     // Checks that half of the 8Kb strings written have been successfully set as property values.
     history.clear();
     historyParams.set<std::string>("from", before64KbWrite.toIso8601Ext());
@@ -2703,17 +2777,15 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     historyParams.set<int>("maxNumData", maxPropHistSize);
     replyDevice.clear();
     replyProperty.clear();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, history));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 4ul * rateWinSecs,
-                                 history.size());
+    ASSERT_EQ(4ul * rateWinSecs, history.size()) << "stringProperty history size different from expected.";
     for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
         const std::string historyStr8Kb = history[i].get<std::string>("v");
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 8192ul, historyStr8Kb.size());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str8Kb.at(0ul),
-                                     historyStr8Kb.at(0ul));
+        ASSERT_EQ(8192ul, historyStr8Kb.size()) << "stringProperty value doesn't have expected size.";
+        ASSERT_EQ(str8Kb.at(0ul), historyStr8Kb.at(0ul)) << "stringProperty value doesn't have expected characters.";
     }
 
     // Checks that the int32Property updates were successfully logged even though the stringProperty was blocked.
@@ -2723,14 +2795,13 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     historyParams.set<int>("maxNumData", maxPropHistSize);
     replyDevice.clear();
     replyProperty.clear();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "int32Property", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, history));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("int32Property history size different from expected.", 8ul * rateWinSecs,
-                                 history.size());
+    ASSERT_EQ(8ul * rateWinSecs, history.size()) << "int32Property history size different from expected.";
     for (unsigned int i = 0; i < 8 * rateWinSecs; i++) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("int32Property value differs from expected.", 10, history[i].get<int>("v"));
+        ASSERT_EQ(10, history[i].get<int>("v")) << "int32Property value differs from expected.";
     }
 
     // Updating a string property with a 32 Kb string should be accepted again after enough
@@ -2740,12 +2811,12 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp updateEpoch(beforeSingle32KbWrite + TimeDuration(0, 6 * millisecInAtto));
     Timestamp updateTime(updateEpoch, TimeId());
     updateTime.toHashAttributes(updateStr32Kb.getAttributes("stringProperty"));
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateStr32Kb)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive());
+    ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateStr32Kb)
+                          .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                          .receive());
     Epochstamp afterSingle32KbWrite(beforeSingle32KbWrite + TimeDuration(0, 8 * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
 
     // Checks that the 32 Kb string has been successfully set as property values.
@@ -2755,21 +2826,24 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     historyParams.set<int>("maxNumData", maxPropHistSize);
     replyDevice.clear();
     replyProperty.clear();
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, history));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 1ul, history.size());
+    ASSERT_EQ(1ul, history.size()) << "stringProperty history size different from expected.";
     const std::string historySingleStr32kb = history[0].get<std::string>("v");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 32768ul,
-                                 historySingleStr32kb.size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str32Kb.at(0ul),
-                                 historySingleStr32kb.at(0ul));
+    ASSERT_EQ(32768ul, historySingleStr32kb.size()) << "stringProperty value doesn't have expected size.";
+    ASSERT_EQ(str32Kb.at(0ul), historySingleStr32kb.at(0ul))
+          << "stringProperty value doesn't have expected characters.";
 
     std::clog << "OK" << std::endl;
 }
 
-void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
+
+/**
+ * @brief Checks that schemas older than the safeSchemaRetentionPeriod are copied.
+ */
+TEST_F(TestDataLogging, testInfluxSafeSchemaRetentionPeriod) {
     namespace nl = nlohmann;
 
     std::clog << "Testing that schemas older than safeSchemaRetentionPeriod are preserved ..." << std::endl;
@@ -2787,29 +2861,29 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
           "InfluxDataLogger", /* useInvalidInfluxUrl */ false, /* useInvalidDbName */ false,
           /* maxPerDevicePropLogRate */ 5120u, 5u, /* maxSchemaLogRate */ 15'360u, /* schemaLogRatePeriod */ 5u,
           /* maxStringLength */ 921'600u, /* safeSchemaRetentionPeriod */ halfSecInYears);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
 
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
     waitUntilLogged(propTestDevice, "testInfluxSafeSchemaRetentionPeriod - 1");
 
     // Restart the PropertyTest device under test - this will trigger a new attempt to save the device schema with the
     // same digest, since no change happened to the schema between the two instantiations.
     success = m_deviceClient->killDevice(propTestDevice, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
     // Waits for an interval long enough to guarantee that any other schema saving attempt will happen after the
     // one saved for the previous PropertyTest device under test has gone outside the safe retention window.
     std::this_thread::sleep_for(1600ms);
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
     waitUntilLogged(propTestDevice, "testInfluxSafeSchemaRetentionPeriod - 2");
 
     // Makes sure all the data has been saved in Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
     std::this_thread::sleep_for(milliseconds(afterFlushWait));
 
     Epochstamp afterWritesEpoch;
@@ -2864,9 +2938,9 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
           },
           20'000u, 500u); // seen timeout with 10,000 ms
 
-    CPPUNIT_ASSERT_MESSAGE("Didn't find the first expected schema", !firstDigest.empty());
-    CPPUNIT_ASSERT_MESSAGE("Didn't find the second expected schema", !secondDigest.empty());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Schemas in Influx response don't have the same digest.", firstDigest, secondDigest);
+    ASSERT_TRUE(!firstDigest.empty()) << "Didn't find the first expected schema";
+    ASSERT_TRUE(!secondDigest.empty()) << "Didn't find the second expected schema";
+    ASSERT_EQ(firstDigest, secondDigest) << "Schemas in Influx response don't have the same digest.";
 
     /* -- Sample of response body expected for the query for schemas
     {
@@ -2903,22 +2977,33 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
 }
 
 
-void DataLogging_Test::testNoInfluxServerHandling() {
+/**
+ * Checks that the Influx logger and reader fail as soon as
+ * possible when there's no Influx server available. Uses an
+ * invalid url configuration for simulating the scenario of
+ * the Influx server not being available.
+ *
+ * Note: During the test run in the CI machine, the docker
+ * command is not available (the CI test is already executed
+ * in a container), so the karabo-startinfluxdb and
+ * karabo-stopinfluxdb commands cannot be run. That's the
+ * reason behind the forced invalid configuration.
+ */
+TEST_F(TestDataLogging, testNoInfluxServerHandling) {
     std::clog << "Testing handling of no Influx Server available scenarios ..." << std::endl;
 
     // Temporarily set the logging level to FATAL to avoid spamming the logs of the device server (and the
     // test output) with connection errors.
-    CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-          "Error setting the logger level to 'FATAL'",
-          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, "FATAL"));
+    ASSERT_NO_THROW(m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, "FATAL"))
+          << "Error setting the logger level to 'FATAL'";
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     // Starts the logger and readers with invalid InfluxDB (or Telegraf) URLs.
     success = startDataLoggerManager("InfluxDataLogger", true);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated(false);
 
@@ -2934,8 +3019,8 @@ void DataLogging_Test::testNoInfluxServerHandling() {
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
-    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
-                           loggerState == karabo::data::State::ERROR);
+    ASSERT_TRUE(loggerState == State::ERROR)
+          << "Timeout while waiting for DataLogger '" << dataLoggerId << "' to reach ERROR state.";
 
     std::clog << "... Influx logger in ERROR state, as expected, with status '" << loggerStatus << "'" << std::endl;
 
@@ -2950,8 +3035,8 @@ void DataLogging_Test::testNoInfluxServerHandling() {
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
-    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + logReaderId + "' to reach ON state.",
-                           readerState == karabo::data::State::ON);
+    ASSERT_TRUE(readerState == State::ON)
+          << "Timeout while waiting for LogReader '" << logReaderId << "' to reach ON state.";
 
     // Any attempt to recover a configuration from Influx should fail when the Influx Server is not
     // available.
@@ -2972,13 +3057,12 @@ void DataLogging_Test::testNoInfluxServerHandling() {
         bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos) ||
                          (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos) ||
                          (exc.detailedMsg().find("Connection reset by peer"));
-        CPPUNIT_ASSERT_MESSAGE(
-              std::string("Unexpected RemoteException while handling no Influx server:\n'") + exc.detailedMsg() + "'\n",
-              condition);
+        ASSERT_TRUE(condition) << "Unexpected RemoteException while handling no Influx server:\n'" << exc.detailedMsg()
+                               << "'\n";
         remoteExceptionCaught = true;
     }
 
-    CPPUNIT_ASSERT(remoteExceptionCaught);
+    ASSERT_TRUE(remoteExceptionCaught);
 
     // At this point the LogReader will have tried to access Influx and failed. It should now be in ERROR.
     readerState = karabo::data::State::UNKNOWN;
@@ -2989,8 +3073,8 @@ void DataLogging_Test::testNoInfluxServerHandling() {
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
-    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for LogReader '" + logReaderId + "' to reach ERROR state.",
-                           readerState == karabo::data::State::ERROR);
+    ASSERT_TRUE(readerState == State::ERROR)
+          << "Timeout while waiting for LogReader '" << logReaderId << "' to reach ERROR state.";
 
     std::clog << "... request to retrieve past configuration failed with RemoteException as expected." << std::endl;
 
@@ -3000,15 +3084,21 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // server not available condition - the host of the Influx logger is the same process that runs this test.
 
     // Restore the logger level of the device server that hosts the logger to the WARN level
-    CPPUNIT_ASSERT_NO_THROW_MESSAGE(
-          "Error setting the logger level level back to 'WARN'",
-          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, DEFAULT_TEST_LOG_PRIORITY));
+    ASSERT_NO_THROW(
+          m_deviceClient->execute(m_server, "slotLoggerLevel", KRB_TEST_MAX_TIMEOUT, DEFAULT_TEST_LOG_PRIORITY))
+          << "Error setting the logger level level back to 'WARN'";
 
     std::clog << "OK" << std::endl;
 }
 
 
-void DataLogging_Test::testInfluxPropHistoryAveraging() {
+/**
+ * @brief Checks that the InfluxLogReader does averaging properly during the execution of slotPropertyHistory when
+ * the number of data points available is larger than the maximum number of data points to be retrieved.
+ *
+ * This test is motivated by the bug fixed in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6805.
+ */
+TEST_F(TestDataLogging, testInfluxPropHistoryAveraging) {
     std::clog << "Testing InfluxLogReader averaging when the requested Property History has too many points ..."
               << std::flush;
 
@@ -3019,10 +3109,10 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
 
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     success = startDataLoggerManager("InfluxDataLogger");
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testAllInstantiated();
     waitUntilLogged(m_deviceId, "testInfluxPropHistoryAveraging");
@@ -3036,12 +3126,12 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
             // https://git.xfel.eu/Karabo/Framework/-/merge_requests/6805.
             propValue = std::numeric_limits<double>::signaling_NaN();
         }
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<double>(m_deviceId, "doubleProperty", propValue));
+        ASSERT_NO_THROW(m_deviceClient->set<double>(m_deviceId, "doubleProperty", propValue));
     }
     Epochstamp afterPropWrites;
 
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
+    ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     std::this_thread::sleep_for(1500ms);
 
     // Checks that slotGetPropertyHistory gets the averages consistently - the same number of data points and the same
@@ -3052,30 +3142,30 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
     Hash historyParams("from", beforePropWrites.toIso8601Ext(), "to", afterPropWrites.toIso8601Ext(), "maxNumData",
                        maxPropHistorySize);
 
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "doubleProperty", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, hist1));
 
-    CPPUNIT_ASSERT_NO_THROW(
+    ASSERT_NO_THROW(
           m_sigSlot->request(logReaderId, "slotGetPropertyHistory", m_deviceId, "doubleProperty", historyParams)
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(replyDevice, replyProperty, hist2));
 
-    CPPUNIT_ASSERT_EQUAL(hist1.size(), hist2.size());
+    ASSERT_EQ(hist1.size(), hist2.size());
     for (size_t i = 0; i < hist1.size(); i++) {
-        CPPUNIT_ASSERT_MESSAGE("History items at position " + toString(i) + " differ.", hist1[i].fullyEquals(hist2[i]));
+        ASSERT_TRUE(hist1[i].fullyEquals(hist2[i])) << "History items at position " << i << " differ.";
     }
 
     std::clog << "OK" << std::endl;
 }
 
 
-void DataLogging_Test::testFailingManager() {
+void TestDataLogging::testFailingManager() {
     std::clog << "Testing logger manager goes to ERROR with inconsistent config ..." << std::flush;
     const std::string dataLogManagerId("loggerManager");
     std::pair<bool, std::string> success = m_deviceClient->killDevice(dataLogManagerId, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     const Hash conf("deviceId", dataLogManagerId,
                     // Place list that is inconsistent with existing loggermap.xml (i.e. server in loggerMap is
@@ -3083,7 +3173,7 @@ void DataLogging_Test::testFailingManager() {
                     "serverList", std::vector<std::string>{"garbageServer"});
 
     success = m_deviceClient->instantiate(m_server, "DataLoggerManager", conf, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     karabo::data::State loggerState = karabo::data::State::UNKNOWN;
     waitForCondition(
@@ -3094,11 +3184,9 @@ void DataLogging_Test::testFailingManager() {
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     const std::string status = m_deviceClient->get<std::string>(dataLogManagerId, "status");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status, karabo::data::State::ERROR, loggerState);
-    CPPUNIT_ASSERT_MESSAGE(status,
-                           status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(
-          status, status.find("Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(status,
-                           status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos);
+    ASSERT_EQ(State::ERROR, loggerState) << "Missed ERROR state - status: " << status;
+    ASSERT_TRUE(status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos) << status;
+    ASSERT_TRUE(status.find("Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos)
+          << status;
+    ASSERT_TRUE(status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos) << status;
 }

@@ -2704,6 +2704,44 @@ TEST(TestHash, testFullyEqualUnordered) {
 }
 
 
+template <typename T>
+testing::AssertionResult areItemsEqual(const T& lhs, const T& rhs, bool orderMatters = true) {
+    if (karabo::data::fullyEquals(lhs, rhs, orderMatters)) {
+        return testing::AssertionSuccess() << "\n\n    LHSide...\n"
+                                           << lhs << "\n\n    RHSide...\n"
+                                           << rhs << "\n\n    are equal\n";
+    }
+    return testing::AssertionFailure() << "\n\n    LHSide...\n"
+                                       << lhs << "\n\n    RHSide...\n"
+                                       << rhs << "\n\n    are not equal\n";
+}
+
+
+TEST(TestHash, testVectorHashEquality) {
+    std::vector<Hash> vh1{Hash("1", 1), Hash("2", 2, "a", "b")};
+    std::vector<Hash> vh2{Hash("1", 1), Hash("2", 2, "a", "b")};     // same vector
+    std::vector<Hash> vh3{Hash("1", 1), Hash("a", "b", "2", 2)};     // different order (inside Hash)
+    std::vector<Hash> vh4{Hash("1", 2), Hash("2", 1, "a", "b")};     // different values
+    std::vector<Hash> vh5{Hash("1.2", 2), Hash("2", 1, "a", "b")};   // different keys
+    std::vector<Hash> vh6{Hash("1", 1), Hash("2", 2), Hash("3", 3)}; // different vector length
+
+    // Check vectors to have "similar" structures... (Hash.hh: global bool operator==(l, r))
+    ASSERT_TRUE(vh1 == vh2) << __LINE__ << ": Vectors are not similar";
+    ASSERT_FALSE(vh1 == vh3) << __LINE__ << ": Vectors are similar";
+    ASSERT_TRUE(vh1 == vh4) << __LINE__ << ": Vectors are not similar";
+    ASSERT_FALSE(vh4 == vh5) << __LINE__ << ": Vectors are similar";
+    ASSERT_FALSE(vh1 == vh6) << __LINE__ << ": Vectors are similar";
+
+    // Check vectors to be strictly the same...
+    ASSERT_TRUE(areItemsEqual(vh1, vh2));
+    ASSERT_FALSE(areItemsEqual(vh1, vh3));
+    ASSERT_TRUE(areItemsEqual(vh1, vh3, false));
+    ASSERT_FALSE(areItemsEqual(vh1, vh4));
+    ASSERT_FALSE(areItemsEqual(vh4, vh5));
+    ASSERT_FALSE(areItemsEqual(vh1, vh6));
+}
+
+
 TEST(TestHash, testNode) {
     // Hash::Node::setValue
     {

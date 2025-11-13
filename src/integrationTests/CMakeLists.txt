@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-find_package(cppunit REQUIRED)
+find_package(GTest REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
@@ -37,7 +37,7 @@ add_library(INTEGRATION_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/integrationRun
 target_link_libraries(
     INTEGRATION_RUNNER
     ${KARABO_LIB_TARGET_NAME}
-    cppunit::cppunit
+    GTest::gtest
 )
 
 
@@ -52,46 +52,45 @@ set(INTEGRATION_TEST_TARGETS
 
 
 set(dataLoggingIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/DataLogging_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testDataLogging.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(deviceIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Device_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testDevice.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
-
 
 set(pipelinedProcessingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/P2PSenderDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PipeReceiverDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/PipelinedProcessing_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testPipelinedProcessing.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(propertyTestIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/PropertyTest_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testPropertyTest.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
-
 
 set(sceneProviderIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/NonSceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProviderTestDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/SceneProvider_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testSceneProvider.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(timingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/SimulatedTimeServerDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/TimingTestDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/Timing_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testTiming.cc
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
+
 foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     add_executable(${testTarget} ${${testTarget}_FILES})
-    add_test(NAME ${testTarget} COMMAND ${testTarget})
+    add_test(NAME ${testTarget} COMMAND ${testTarget} --gtest_output=xml:testresults/${testTarget}.xml)
     target_compile_options(
         ${testTarget}
         PRIVATE
@@ -101,7 +100,7 @@ foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     target_link_libraries(
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
-        cppunit::cppunit
+        GTest::gtest
     )
     message(STATUS "Added integration test executable ${testTarget}")
 

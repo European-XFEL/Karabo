@@ -16,15 +16,12 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   SignalSlotable_LongTest.cc
- * Author: heisenb
+ * File:   testSignalSlotableLong.cc
  *
- * Created on Apr 4, 2013, 1:24:22 PM
+ * Created on Apr 4, 2013, 1:24:21 PM
  */
 
-#include "SignalSlotable_LongTest.hh"
-
-#include <cppunit/TestAssert.h>
+#include <gtest/gtest.h>
 
 #include <chrono>
 #include <future>
@@ -35,32 +32,39 @@
 #include "karabo/data/types/StringTools.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
+
+class TestSignalSlotableLong : public testing::Test {
+   protected:
+    TestSignalSlotableLong();
+    virtual ~TestSignalSlotableLong() override;
+    void SetUp() override;
+    void TearDown() override;
+};
+
+
 using namespace karabo::data;
 using namespace karabo::xms;
 
 using std::placeholders::_1;
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_LongTest);
+TestSignalSlotableLong::TestSignalSlotableLong() {}
 
 
-SignalSlotable_LongTest::SignalSlotable_LongTest() {}
+TestSignalSlotableLong::~TestSignalSlotableLong() {}
 
 
-SignalSlotable_LongTest::~SignalSlotable_LongTest() {}
-
-
-void SignalSlotable_LongTest::setUp() {
+void TestSignalSlotableLong::SetUp() {
     // Logger::configure(Hash("priority", "ERROR"));
     // Logger::useConsole();
     //  Event loop is started in xmsLongTestRunner.cc's main()
 }
 
 
-void SignalSlotable_LongTest::tearDown() {}
+void TestSignalSlotableLong::TearDown() {}
 
 
-void SignalSlotable_LongTest::testStressSyncReplies() {
+TEST_F(TestSignalSlotableLong, testStressSyncReplies) {
     auto instance = std::make_shared<SignalSlotable>("instance");
     instance->start();
 
@@ -82,13 +86,13 @@ void SignalSlotable_LongTest::testStressSyncReplies() {
         }
         // Our slot functions do not place any answers, so an empty one will be added.
         // We do self messaging...
-        CPPUNIT_ASSERT_NO_THROW_MESSAGE("Lost synchronous reply #" + toString(sentRequests),
-                                        instance->request("", "slot").timeout(1000).receive());
+        ASSERT_NO_THROW(instance->request("", "slot").timeout(1000).receive())
+              << "Lost synchronous reply #" << sentRequests;
         ++receivedReplies;
     }
     std::clog << std::endl;
-    CPPUNIT_ASSERT_EQUAL(sentRequests, firstCalledCounter.load());
-    CPPUNIT_ASSERT_EQUAL(sentRequests, receivedReplies);
+    ASSERT_EQ(sentRequests, firstCalledCounter.load());
+    ASSERT_EQ(sentRequests, receivedReplies);
 
     float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                                                                       testStartTime)
@@ -99,7 +103,7 @@ void SignalSlotable_LongTest::testStressSyncReplies() {
 }
 
 
-void SignalSlotable_LongTest::testStressAsyncReplies() {
+TEST_F(TestSignalSlotableLong, testStressAsyncReplies) {
     auto instance = std::make_shared<SignalSlotable>("instance");
     instance->start();
 
@@ -132,10 +136,10 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
     const auto testStartTime = std::chrono::high_resolution_clock::now();
     handler(false, numIterations);
 
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::seconds(600)));
+    ASSERT_EQ(std::future_status::ready, future.wait_for(std::chrono::seconds(600)));
     std::clog << std::endl;
-    CPPUNIT_ASSERT_EQUAL(0u, future.get());
-    CPPUNIT_ASSERT_EQUAL(numIterations, counter);
+    ASSERT_EQ(0u, future.get());
+    ASSERT_EQ(numIterations, counter);
 
     float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                                                                       testStartTime)

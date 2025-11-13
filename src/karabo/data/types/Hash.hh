@@ -717,6 +717,8 @@ namespace karabo {
              */
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
+            friend std::ostream& operator<<(std::ostream& os, const std::vector<Hash>& vhash);
+
             /**
              * Checks if this Hash is similar to other.
              *
@@ -1234,6 +1236,12 @@ namespace karabo {
             visitor.post(node);
             return res;
         }
+
+        bool fullyEquals(const karabo::data::Hash& lhs, const karabo::data::Hash& rhs, bool orderMatters = true);
+
+        bool fullyEquals(const std::vector<karabo::data::Hash>& vhl, const std::vector<karabo::data::Hash>& vhr,
+                         bool orderMatters = true);
+
     } // namespace data
 } // namespace karabo
 #endif

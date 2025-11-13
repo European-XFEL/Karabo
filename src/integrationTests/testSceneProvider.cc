@@ -16,38 +16,54 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   SceneProvider_Test.cc
+ * File:   testSceneProvider.cc
  * Author: steffen.hauf@xfel.eu
 
  */
 
-#include "SceneProvider_Test.hh"
+#include <gtest/gtest.h>
 
 #include <cstdlib>
 #include <karabo/net/EventLoop.hh>
+#include <memory>
+
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/karabo.hpp"
 
 
-using namespace std;
+class TestSceneProvider : public ::testing::Test {
+   protected:
+    TestSceneProvider();
+    ~TestSceneProvider() override;
+    void SetUp() override;
+    void TearDown() override;
+
+    void testInstanceInfo();
+
+    karabo::core::DeviceServer::Pointer m_deviceServer;
+    karabo::core::DeviceClient::Pointer m_deviceClient;
+    std::jthread m_eventLoopThread;
+};
+
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
 USING_KARABO_NAMESPACES
+using namespace std;
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(SceneProvider_Test);
+TestSceneProvider::TestSceneProvider() {}
 
 
-SceneProvider_Test::SceneProvider_Test() {}
+TestSceneProvider::~TestSceneProvider() {}
 
 
-SceneProvider_Test::~SceneProvider_Test() {}
-
-
-void SceneProvider_Test::setUp() {
+void TestSceneProvider::SetUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
-    m_eventLoopThread = std::jthread([](std::stop_token stoken) { karabo::net::EventLoop::work(); });
+    m_eventLoopThread = std::jthread([](std::stop_token stoken) { EventLoop::work(); });
     // Create and start server
     Hash config("serverId", "testServerSceneProvider", "log.level", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
@@ -58,7 +74,7 @@ void SceneProvider_Test::setUp() {
 }
 
 
-void SceneProvider_Test::tearDown() {
+void TestSceneProvider::TearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -67,30 +83,28 @@ void SceneProvider_Test::tearDown() {
 }
 
 
-void SceneProvider_Test::appTestRunner() {
+TEST_F(TestSceneProvider, appTestRunner) {
     std::pair<bool, std::string> success;
     success = m_deviceClient->instantiate("testServerSceneProvider", "SceneProviderTestDevice",
                                           Hash("deviceId", "sceneProvider"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     success = m_deviceClient->instantiate("testServerSceneProvider", "NonSceneProviderTestDevice",
                                           Hash("deviceId", "noSceneProvider"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    ASSERT_TRUE(success.first) << success.second;
 
     testInstanceInfo();
 }
 
 
-void SceneProvider_Test::testInstanceInfo() {
+void TestSceneProvider::testInstanceInfo() {
     // Tests if the instance info correctly reports scene availability
     const Hash& topo = m_deviceClient->getSystemTopology();
-    CPPUNIT_ASSERT(topo.has("device"));
+    ASSERT_TRUE(topo.has("device"));
     const Hash& device = topo.get<Hash>("device");
-    CPPUNIT_ASSERT(device.hasAttribute("sceneProvider", "capabilities"));
-    CPPUNIT_ASSERT(
-          (device.getAttribute<unsigned int>("sceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 1u);
-    CPPUNIT_ASSERT(device.hasAttribute("noSceneProvider", "capabilities"));
-    CPPUNIT_ASSERT(
-          (device.getAttribute<unsigned int>("noSceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 0u);
+    ASSERT_TRUE(device.hasAttribute("sceneProvider", "capabilities"));
+    ASSERT_TRUE((device.getAttribute<unsigned int>("sceneProvider", "capabilities") & PROVIDES_SCENES) == 1u);
+    ASSERT_TRUE(device.hasAttribute("noSceneProvider", "capabilities"));
+    ASSERT_TRUE((device.getAttribute<unsigned int>("noSceneProvider", "capabilities") & PROVIDES_SCENES) == 0u);
     std::clog << "Tested scene providers identified in instanceInfo.. Ok" << std::endl;
 }

@@ -16,13 +16,13 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 /*
- * File:   InputOutputChannel_LongTest.cc
+ * File:   testInputOutputChannelLong.hh
  * Author: gero.flucke@xfel.eu
  *
  * Created on May 2019
  */
 
-#include "InputOutputChannel_LongTest.hh"
+#include <gtest/gtest.h>
 
 #include <chrono>
 #include <future>
@@ -33,12 +33,27 @@
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
 
+
+class TestInputOutputChannelLong : public ::testing::Test {
+   protected:
+    TestInputOutputChannelLong();
+    ~TestInputOutputChannelLong() override;
+    void SetUp() override;
+    void TearDown() override;
+
+    void testDisconnectWhileSendingImpl(const std::string& sender_dataDistribution,
+                                        const std::string& sender_onSlowness, const std::string& receiver_noInputShared,
+                                        bool registerRoundRobinSelector = false);
+};
+
+
 using namespace karabo;
 using namespace std::chrono;
 using data::Configurator;
 using data::Hash;
 using xms::InputChannel;
 using xms::OutputChannel;
+
 
 /// A class that adds threads following the RAII principle
 /// to safely (exceptions!) remove them when going out of scope.
@@ -57,78 +72,78 @@ class ThreadAdder {
 };
 
 
-CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_LongTest);
+TestInputOutputChannelLong::TestInputOutputChannelLong() {}
 
 
-InputOutputChannel_LongTest::InputOutputChannel_LongTest() {}
+TestInputOutputChannelLong::~TestInputOutputChannelLong() {}
 
 
-void InputOutputChannel_LongTest::setUp() {
+void TestInputOutputChannelLong::SetUp() {
     // Event loop started in xmsTestRunner.cc's main().
 }
 
 
-void InputOutputChannel_LongTest::tearDown() {}
+void TestInputOutputChannelLong::TearDown() {}
 
 
 // copy case - sender is irrelevant, so keep its defaults
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending1() {
-    testDisconnectWhileSending_impl("copy", "wait", "wait");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending1) {
+    testDisconnectWhileSendingImpl("copy", "wait", "wait");
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending2() {
-    testDisconnectWhileSending_impl("copy", "drop", "wait");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending2) {
+    testDisconnectWhileSendingImpl("copy", "drop", "wait");
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending3() {
-    testDisconnectWhileSending_impl("copy", "queueDrop", "wait");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending3) {
+    testDisconnectWhileSendingImpl("copy", "queueDrop", "wait");
 }
 
 
 // load-balanced shared case - onSlowness of receiver is irrelevant, so keep default "wait"
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending4() {
-    testDisconnectWhileSending_impl("shared", "wait", "wait");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending4) {
+    testDisconnectWhileSendingImpl("shared", "wait", "wait");
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending5() {
-    testDisconnectWhileSending_impl("shared", "wait", "drop");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending5) {
+    testDisconnectWhileSendingImpl("shared", "wait", "drop");
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending6() {
-    testDisconnectWhileSending_impl("shared", "wait", "queueDrop");
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending6) {
+    testDisconnectWhileSendingImpl("shared", "wait", "queueDrop");
 }
 
 
 // round-robin shared case - onSlowness of receiver is irrelevant, so keep default "wait"
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending7() {
-    testDisconnectWhileSending_impl("shared", "wait", "wait", true); // true -> round-robin
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending7) {
+    testDisconnectWhileSendingImpl("shared", "wait", "wait", true); // true -> round-robin
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending8() {
-    testDisconnectWhileSending_impl("shared", "wait", "drop"); // true -> round-robin
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending8) {
+    testDisconnectWhileSendingImpl("shared", "wait", "drop"); // true -> round-robin
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending9() {
-    testDisconnectWhileSending_impl("shared", "wait", "queueDrop"); // true -> round-robin
+TEST_F(TestInputOutputChannelLong, testDisconnectWhileSending9) {
+    testDisconnectWhileSendingImpl("shared", "wait", "queueDrop"); // true -> round-robin
 }
 
 
-void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
-                                                                  const std::string& sender_onSlowness,
-                                                                  const std::string& receiver_noInputShared,
-                                                                  bool registerRoundRobinSelector) {
+void TestInputOutputChannelLong::testDisconnectWhileSendingImpl(const std::string& sender_dataDistribution,
+                                                                const std::string& sender_onSlowness,
+                                                                const std::string& receiver_noInputShared,
+                                                                bool registerRoundRobinSelector) {
     std::clog << "\ntestDisconnectWhileSending: sender " << sender_dataDistribution << "/" << sender_onSlowness
               << ", receiver (for shared sender) " << receiver_noInputShared
               << (registerRoundRobinSelector ? " (round-robin)" : "") << std::endl;
@@ -176,7 +191,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     });
 
     Hash outputInfo = output->getInformation();
-    CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+    ASSERT_TRUE(outputInfo.get<unsigned int>("port") > 0) << "OutputChannel keeps port 0!";
 
     //
     // Connect
@@ -191,9 +206,9 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     // initiate connect and block until done (fail test if timeout)
     karabo::net::ErrorCode ec;
     input->connect(outputInfo, connectHandler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
-    ec = connectFuture.get();                                                 // Can get() only once...
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
+    ASSERT_EQ(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
+    ec = connectFuture.get();                                // Can get() only once...
+    ASSERT_EQ(karabo::net::ErrorCode(), ec) << ec.message(); // i.e. no error
 
     //
     // Prepare handlers for sending data and in parallel dis-/reconnecting:
@@ -285,18 +300,18 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     // Take care that both posted methods are done, so they cannot access local variables anymore
     // (worst case: doing that when the test method is left due to a failure)
     //
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, numSentFuture.wait_for(std::chrono::seconds(maxDuration)));
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, disReconnectFuture.wait_for(std::chrono::seconds(2)));
+    ASSERT_EQ(std::future_status::ready, numSentFuture.wait_for(std::chrono::seconds(maxDuration)));
+    ASSERT_EQ(std::future_status::ready, disReconnectFuture.wait_for(std::chrono::seconds(2)));
 
 
     const unsigned int totalSent = numSentFuture.get();
     std::clog << "DONE: output sent " << totalSent << " data items out of which only " << *calls << " reached input "
               << "since input disconnected " << disconCounter << " times" << std::endl;
     // Finally do all the necessary asserts:
-    CPPUNIT_ASSERT_MESSAGE(exceptionText, exceptionText.empty());
-    CPPUNIT_ASSERT_EQUAL(numData, totalSent);
+    ASSERT_TRUE(exceptionText.empty()) << exceptionText;
+    ASSERT_EQ(numData, totalSent);
 
-    CPPUNIT_ASSERT_MESSAGE(disreconnectFailure, disreconnectFailure.empty());
+    ASSERT_TRUE(disreconnectFailure.empty()) << disreconnectFailure;
 
-    CPPUNIT_ASSERT(*calls > 0);
+    ASSERT_TRUE(*calls > 0);
 }
