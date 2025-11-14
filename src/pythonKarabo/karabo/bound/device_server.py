@@ -297,23 +297,26 @@ class DeviceServer:
             if not self.deviceClasses or ep.name in self.deviceClasses:
                 # All entry points have been verified already
                 deviceClass = ep.load()
-                classid = deviceClass.__classid__
                 try:
+                    if not hasattr(deviceClass, "__classid__"):
+                        msg = (f"Class {deviceClass.__name__} lacks "
+                               "__classid__, use decorator @KARABO_CLASSINFO")
+                        raise RuntimeError(msg)
+                    classid = deviceClass.__classid__
                     schema = Configurator(PythonDevice).getSchema(classid)
                     self.availableDevices[classid] = {"module": ep.name,
                                                       "schema": schema}
                     logs.append(("info",
                                  'Successfully loaded plugin: "{}"'.format(
                                      ep.name)))
-                # A generic handler is used here due to the different kind
-                # of exceptions that may be raised when obtained the schema
-                # for the just loaded plugin.
-                except Exception as e:
-                    m = "Failure while building schema for class {}, base " \
-                        "class {} and bases {} : {}" \
-                        .format(classid, deviceClass.__base_classid__,
-                                deviceClass.__bases_classid__, repr(e))
-                    # repr(e) also includes type
+                except Exception:
+                    # Continue the server, but log the stack trace
+                    m = ("Failure building schema for class "
+                         f"{deviceClass.__name__} from plugin {ep.name}.\n"
+                         f"Details:\n{traceback.format_exc()}")
+                    if not hasattr(deviceClass, "__base_classid__"):
+                        m += "End details.\nIts base (or itself) likely lacks "
+                        m += "decorator @KARABO_CONFIGURATION_BASE_CLASS."
                     logs.append(("error", m))
 
         instInfo = Hash("deviceClasses",

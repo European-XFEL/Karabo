@@ -174,7 +174,7 @@ class TestDeviceServer(BoundDeviceTestCase):
             idx = n_msgs - 1
             while not error_msg_found and idx > -1:
                 error_msg_found = (
-                    "Failure while building schema for class "
+                    "Failure building schema for class "
                     "InvalidImportDevice" in
                     cached_log["content"][idx]["message"])
                 idx -= 1
