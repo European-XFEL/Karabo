@@ -36,8 +36,10 @@ void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId
     m_deviceSrv->finalizeInternalInitialization();
 
     // instantiate the device under test
+    karabo::data::Hash cfg("deviceId", instanceId);
+    cfg += devCfg;
     std::pair<bool, std::string> success =
-          m_deviceCli->instantiate(DEVICE_SERVER_ID, classId, devCfg, DEV_CLI_TIMEOUT_SEC);
+          m_deviceCli->instantiate(DEVICE_SERVER_ID, classId, cfg, DEV_CLI_TIMEOUT_SEC);
 
     ASSERT_TRUE(success.first) << "Failure instantiating '" << instanceId << "':\n" << success.second;
 }
