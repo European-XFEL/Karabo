@@ -67,16 +67,6 @@ variables:
     # try to update cmake on host (debian needs this)
     - apt-get update || true
     - apt-get install -y -qq --no-install-recommends cmake || true
-    # install conan to docker image
-    - |
-      if type "pipx" > /dev/null; then
-          # use pipx when available; needed for Ubuntu since 23.04; details at:
-          # https://askubuntu.com/questions/1465218/pip-error-on-ubuntu-externally-managed-environment-%C3%97-this-environment-is-extern
-          pipx install --global conan==2.21.0
-      else
-          python3 -m pip install --upgrade pip
-          python3 -m pip install conan==2.21.0
-      fi
     # do CI build
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_JOB_NAME"
