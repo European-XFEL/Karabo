@@ -12,6 +12,7 @@ source "$scriptDir/../set_lsb_release_info.sh"
 CONAN_RECIPE_CHANNEL=py312
 DAEMONTOOLS_VERSION=1.11-karabo3
 NSS_VERSION=3.93
+CONAN_MIN_VERSION=2.21.0
 
 declare -A CONAN_MIRRORS=(
     ["GNU_DOGADO"]="http://mirror.dogado.de/gnu/"
@@ -77,7 +78,95 @@ add_conan_mirrors() {
     done
 }
 
+compare_versions() {
+    # Returns 1 if $1 < $2, 0 if $1 == $2 or 2 if $1 > $2
+    local v1="$1"
+    local v2="$2"
+
+    if [ "$v1" = "$v2" ]; then
+        return 0
+    fi
+
+    # determine the smallest using version sort
+    smallest=$(printf '%s\n%s\n' "$v1" "$v2" | sort -V | head -n1)
+
+    if [ "$smallest" = "$v1" ]; then
+        return 1
+    else
+        return 2
+    fi
+}
+
 set_up_conan() {
+
+    # Makes sure that conan is available and has at least the version to be bundled with the Framework
+    CONAN_VERSION=0.0.0
+    if check_for conan; then
+      CONAN_VERSION=$(conan --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
+    fi
+
+    compare_versions "$CONAN_VERSION" "$CONAN_MIN_VERSION"
+    compare_result=$?
+
+    if [ $compare_result -eq 1 ]; then
+        echo "Conan >= $CONAN_MIN_VERSION not found (but $CONAN_VERSION). Attempting to install with pip..."
+
+        # Ensures that "$HOME/.local/bin" is in the path as that would be the location
+        # where both "pip install --user" and "pipx install" would make conan available
+        # from.
+        if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            export PATH="$HOME/.local/bin:$PATH"
+        fi
+
+        # Try pip installation first
+        if python3 -m pip install "conan==$CONAN_MIN_VERSION"; then
+            echo "... installation of Conan $CONAN_MIN_VERSION with pip succeeded!"
+        else
+            echo "... Conan pip installation failed. Attempting to install with pipx..."
+            # Install pipx if not available
+            if ! check_for pipx; then
+                echo "pipx is not available. Attempting to install it..."
+                python3 -m pip install --upgrade pipx;
+                if ! check_for pipx; then
+                    echo "... pipx installation failed; retrying with --user --break-system-packages options ..."
+                    python3 -m pip install --user --break-system-packages --upgrade pipx
+                    if ! check_for pipx; then
+                        echo "... pipx installation failed!"
+                        exit 1
+                    fi
+                fi
+                python3 -m pipx --global ensurepath
+            fi
+
+            # Install conan with pipx: --force is needed because pipx wouldn't
+            # overwrite an existing installation of conan even if it had an
+            # older version.
+            python3 -m pipx install --force "conan==$CONAN_MIN_VERSION"
+
+            # NOTE: a successful pipx installation of conan with pipx will
+            # make conan available irregardless of whether pipx was installed on
+            # the system or on a virtual python env. pipx creates an environment for
+            # conan and makes it available from $HOME/.local/bin.
+        fi
+
+        # Checks if the Conan installation (or update) was successful
+        if check_for conan; then
+            INSTALLED_CONAN=$(which conan)
+            INSTALLED_CONAN_VERSION=$(conan --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
+            compare_versions "$INSTALLED_CONAN_VERSION" "$CONAN_MIN_VERSION"
+            compare_result=$?
+            if [ $compare_result -eq 1 ]; then
+               echo "Failed to install Conan >= $CONAN_MIN_VERSION. Installed Conan is $INSTALLED_CONAN ($INSTALLED_CONAN_VERSION)."
+               exit 1
+            fi
+        else
+            echo "Failed to install Conan"
+            exit 1
+        fi
+    fi
+
+    # Show which conan version is being used
+    conan --version
 
     add_conan_mirrors
 
@@ -287,23 +376,6 @@ INSTALL_PREFIX=$(get_abs_path $1)
 TARGET_ARCH=$(uname -m)
 WHAT=${@:2}
 FORCE="n"
-
-# Make sure conan is available
-check_for conan
-if [ $? -ne 0 ]; then
-    echo
-    echo
-    echo "!!! 'conan' command not found!"
-    echo "Please install 'conan' so that dependencies can be downloaded!"
-    echo
-    echo
-    # Give the user time to see the message
-    sleep 2
-    return 1
-else
-   # Make aware of which conan is used
-   conan --version
-fi
 
 set_up_conan
 
