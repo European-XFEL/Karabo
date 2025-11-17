@@ -659,7 +659,7 @@ pages:
   <<: *docs_build
   only:
     refs:
-      - main
+      - /^(main)$/ # the changes check will default to true
   artifacts:
     paths:
       - public
