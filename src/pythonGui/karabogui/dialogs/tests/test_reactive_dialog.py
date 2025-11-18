@@ -6,7 +6,6 @@ from qtpy.QtCore import Qt
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
-from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
     AccessCodeWidget, LoginType, ReactiveLoginDialog, UserSessionDialog,
     remaining_time_info)
@@ -266,7 +265,7 @@ def test_access_widget(gui_app):
     assert cells[2] == widget.focusWidget()
 
 
-def test_session_dialog(mocker):
+def test_session_remaining_dialog(mocker):
     """Test the session dialog and the remaining time"""
     def create_start_str() -> str:
         """Generates a UTC datetime string in expected format"""
@@ -277,10 +276,7 @@ def test_session_dialog(mocker):
     start = create_start_str()
     duration = 30 * 60  # 30 minutes
     _, _, remaining = remaining_time_info(start, duration)
-    if IS_WINDOWS_SYSTEM:
-        assert "~30 minute(s) left" in remaining
-    else:
-        assert "~29 minute(s) left" in remaining
+    assert "~29 minute(s) left" in remaining
 
     # 2 hours from now
     start = create_start_str()
