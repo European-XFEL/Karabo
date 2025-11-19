@@ -154,6 +154,7 @@ variables:
     FRAMEWORK_LATEST_DIR: karaboFramework/tags/$LATEST_RELEASE_TAG
     LATEST_TAG: $LATEST_RELEASE_TAG
     GUI_DEST_DIR: karaboGui
+  allow_failure: true
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
@@ -598,12 +599,10 @@ long tests:
 internal_mirror_publish:
   stage: mirror
   image: europeanxfel/karabo-ci:miniconda-3-006
-
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
-  except:
-    - branches
-    - schedules
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.){2}\d+((a|b|rc)\d+)?$/'
+      when: on_success
+    - when: manual
   script:
     # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden in the
     # commit history of the public repository.
@@ -611,13 +610,25 @@ internal_mirror_publish:
     # Retrieves the main branch and the tags of the Karabo Framework repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch main --single-branch FrameworkHead
     - cd FrameworkHead
+    # loop over all branches that are either main, or a hotfix branch and fetch them too, allowing tags to be pushed
+    - |
+      for remote_branch in $(git ls-remote --heads origin | awk '{print $2}' | grep -E '^refs/heads/[0-9]+\.[0-9]+\.[xX]-hotfix$'); do
+        branch_name=${remote_branch#refs/heads/}
+        git fetch origin "$remote_branch:$branch_name"
+      done
     # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
     - git remote rm origin
     # Pushes main and tags to the internal mirror.
     # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
     # value is a project access token generated for the FrameworkMirror Gitlab project.
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    - git push --mirror internal_mirror
+    - git fetch internal_mirror main
+    - git push -u internal_mirror main --force-with-lease
+    - |
+      git branch --format='%(refname:short)' | grep -E '^[0-9]+\.[0-9]+\.[xX]-hotfix$' | while read branch; do
+        git push internal_mirror "$branch" --force
+      done
+    - git push internal_mirror --tags --force
     # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
     - cd ..
     - rm -rf FrameworkHead
@@ -646,11 +657,12 @@ internal_mirror_publish:
     # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
     # found at https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#INTERNALS.
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
-    # Note: the push below requires the FrameworkMirror repository to be set to allow force push to its main branch (by default not allowed)
-    - git push -u internal_mirror main --force --prune
-    # Note: the forced push of the tags below is needed because 'git-filter-repo' changes the commits SHAs of the repo
-    # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
-    # to the old commit idenfitifiers in the mirror.
+    - git fetch internal_mirror main
+    - git push -u internal_mirror main --force-with-lease
+    - |
+      git for-each-ref --format='%(refname:short)' refs/heads | grep -E '^[0-9]+\.[0-9]+\.[xX]-hotfix$' | while read branch; do
+        git push internal_mirror "$branch" --force;
+      done
     - git push internal_mirror --tags --force
 
 # NB: no documentation is built for A.B.X-hotfix! only add documentation against main
