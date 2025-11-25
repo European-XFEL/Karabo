@@ -77,11 +77,6 @@ Also, please be aware of the licenses issues of the various channels as highligh
 in this link `recommended conda installer`_
 and `here <https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`__.
 
-.. _framework/xfel_installation:
-
-Installations in the XFEL network or using the VPN (recommended)
-----------------------------------------------------------------
-
 For KaraboGUI, some package channels are needed besides Conda's defaults. You
 only need to do this once and it can be done either from command line or
 editting Conda's configuration file (``.condarc``).
@@ -92,70 +87,29 @@ From your terminal, add the needed channels executing the following commands::
     conda config --add channels http://exflctrl01.desy.de/karabo/channel
     conda config --add channels http://exflctrl01.desy.de/karabo/channel/mirror/conda-forge
 
-.. _framework/remote_installation:
-
-Remote installations using SSH tunneling
-----------------------------------------
-
-The channel ``http://exflctrl01.desy.de/karabo/channel`` is not reachable outside the
-XFEL office network. For this reason if one is installing from a network outside
-the DESY internal network and not using VPN, the connection can be established with
-an SSH tunnel.
-
-In order to create the tunnel to ``exflctrl01``, one can open a terminal or `PuTTY`
-(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflctrl01.desy.de:80`` in Linux and MacOS
-and the equivalent for the PuTTY SSH client in Windows), and then configure
-the following channel definitions on your local machine (may be from a new terminal)::
-
-    conda config --add channels http://localhost:8081/karabo/channel
-    conda config --add channels http://localhost:8081/karabo/channel/mirror/conda-forge
-
-Please note that if you added the channels as instructed in :ref:`framework/xfel_installation`
-you will have to remove the channels for the internal network with the commands::
-
-    conda config --remove channels http://exflctrl01.desy.de/karabo/channel
-    conda config --remove channels http://exflctrl01.desy.de/karabo/channel/mirror/conda-forge
-
-
-Remote installations using dynamic SSH tunneling (SOCKS)
---------------------------------------------------------
-
-The second option is to use a proxy and dynamic port forwarding, i.e.
-setup connection::
-
-    ssh <user>@bastion.desy.de -D 9090
-
-and tell ``conda`` to use a proxy server from your local machine (may be from a new terminal)::
-
-    conda config --set proxy_servers.http socks5://localhost:9090
-
-After everything is installed, you may want to remove the proxy definition
-again::
-
-    conda config --remove-key proxy_servers.http
 
 Installing KaraboGUI
 ====================
 
-When using conda one should preferrably not alter the base environment that
+.. _framework/xfel_installation:
+
+The steps shown here will work from either the XFEL office network
+or using a VPN. In case one is using a connection to an external network
+or a guest network, follow the steps here :ref:`framework/remote_installation`.
+
+When using ``conda`` one should preferrably not alter the base environment that
 comes with it, therefore we should install the GUI in a separate environment.
 If needed, one can safely remove this environment with no fear with corrupting
 the base environment.
 
-* Create a target environment for KaraboGUI with any name you want.
-    * ``conda create -n karabogui<version> karabogui=<version> --yes``
-
-* Or run this to get the latest version (recommended)
+* Run this to create an environement pointing to the latest version (recommended)
     * ``conda create -n karabogui_latest karabogui --yes``
   To upgrade this environement, run these commands:
     * ``conda env remove -n karabogui_latest``
     * ``conda create -n karabogui_latest karabogui --yes``
 
-* Or, if you have an existing conda environment, install the package directly:
-    * ``conda install karabogui=<version> --yes``
-        Leave the version out to get the latest one: ``conda install karabogui --yes``
-        NOTE: Dependencies might clash with your environment, use at your risk
-
+* Or create a target environment for KaraboGUI pointing to a specific version:
+    * ``conda create -n karabogui<version> karabogui=<version> --yes``
 
 Helpful commands are available below:
 
@@ -163,6 +117,27 @@ Helpful commands are available below:
   you have configured
 
 * ``conda env remove -n your_karabo_environment`` will remove the environment called ``your_karabo_environment``.
+
+.. _framework/remote_installation:
+
+Installation using dynamic SSH tunneling (SOCKS5)
+--------------------------------------------------------
+
+In case the internal conda channels are not directly reacheable
+in the network, one can set up a dynamic tunneling with the
+following command in a terminal (Linux and MacOS)::
+
+    ssh <user>@bastion.desy.de -D 9090
+
+For Windows, a similar tunnelling configuration can be achieved
+with the PuTTY application.
+
+After the connection is established, ``conda`` needs to be
+configured to use the socks5 proxy server. In a new terminal execute::
+
+    conda config --set proxy_servers.http socks5://localhost:9090
+
+please note that: at the European XFEL, the GUI will needs to access 
 
 Running KaraboGUI
 =================
@@ -173,12 +148,17 @@ After successfully installing KaraboGUI, you will have access to the following e
     * karabo-theatre;
     * karabo-update-extensions
 
-.. note::
-    From now on, all you need to do to run KaraboGUI is:
-        * Open your terminal/prompt
-        * ``conda activate <your_karabo_environment>``
-        * ``karabo-gui``
+From now on, all you need to do to run KaraboGUI is:
+    * Open your terminal/prompt
+    * ``conda activate <your_karabo_environment>``
+    * ``karabo-gui``
 
+in case you are connecting from an external network such a the one explained here
+:ref:`framework/remote_installation`, you need to configure the GUI to proxy the
+network connections with:
+    * Open your terminal/prompt
+    * ``conda activate <your_karabo_environment>``
+    * ``https_proxy=socks5://localhost:9090 karabo-gui``
 
 Upgrading
 =========
