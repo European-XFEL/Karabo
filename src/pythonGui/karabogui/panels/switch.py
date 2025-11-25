@@ -44,7 +44,7 @@ class SwitchButton(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.setObjectName("ConfigurationSwitchButton")
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(5)

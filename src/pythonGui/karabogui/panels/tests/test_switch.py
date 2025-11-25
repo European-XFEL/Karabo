@@ -39,3 +39,4 @@ def test_switch_button(gui_app):
     assert mediator.state is True
     click_button(button.switch_frame)
     assert mediator.state is False
+    assert button.objectName() == "ConfigurationSwitchButton"
