@@ -429,10 +429,18 @@ class ReactiveLoginDialog(QDialog):
             self._clear_refresh_token()
 
         error = reply.error()
+        if error != QNetworkReply.NoError:
+            text = reply.errorString()
+            self._error = f"Network Error in Authentication: {text}"
+            self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
+            self._update_status_label()
+            reply.deleteLater()
+            return
+
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
-        if error == QNetworkReply.NoError and auth_result["success"]:
+        if auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             refresh_token = auth_result.get("refresh_token")
             if refresh_token is not None:
@@ -622,10 +630,18 @@ class UserSessionDialog(QDialog):
     @Slot(QNetworkReply)
     def onAuthReply(self, reply: QNetworkReply):
         error = reply.error()
+        if error != QNetworkReply.NoError:
+            text = f"Network Error in Authentication: {reply.errorString()}"
+            self.error_label.setStyleSheet(
+                "QLabel#error_label {color:red;}")
+            self.error_label.setText(text)
+            reply.deleteLater()
+            return
+
         bytes_string = reply.readAll()
         reply_body = str(bytes_string, "utf-8")
         auth_result = json.loads(reply_body)
-        if error == QNetworkReply.NoError and auth_result["success"]:
+        if auth_result["success"]:
             krb_access.ONE_TIME_TOKEN = auth_result["once_token"]
             # Temporary Session
             if self.combo_mode.currentIndex() == TEMPORARY_INDEX:
