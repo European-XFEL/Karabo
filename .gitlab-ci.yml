@@ -18,9 +18,9 @@ stages:
   - lint
   - build
   - test
-  - mirror
   - systemtest
   - docs
+  - mirror
 
 variables:
   CONAN_HOME: $CI_PROJECT_DIR/.cache/conan
