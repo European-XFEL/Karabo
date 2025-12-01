@@ -33,11 +33,11 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 
+#include "DataLogTestDevice.hh"
 #include "karabo/data/types/Hash.hh"
 #include "karabo/data/types/Schema.hh"
 #include "karabo/data/types/StringTools.hh"
 #include "karabo/karabo.hpp"
-
 
 class TestDataLogging : public ::testing::Test {
    protected:
@@ -206,125 +206,6 @@ const char* TestDataLogging::DEFAULT_TEST_LOG_PRIORITY = "ERROR";
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3, 0, 0, 0, 0);
 
 const unsigned int maxVectorSize = 2'000u; // smaller than default - verify that it can be set.
-
-
-class DataLogTestDevice : public karabo::core::Device {
-   public:
-    KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
-
-    static void expectedParameters(karabo::data::Schema& expected) {
-        OVERWRITE_ELEMENT(expected)
-              .key("state")
-              .setNewOptions(State::INIT, State::ON)
-              .setNewDefaultValue(State::INIT)
-              .commit();
-
-        INT32_ELEMENT(expected).key("oldValue").readOnly().initialValue(-1).commit();
-
-        INT32_ELEMENT(expected).key("value").readOnly().initialValue(0).commit();
-
-        VECTOR_INT32_ELEMENT(expected).key("vector").readOnly().initialValue({}).commit();
-
-        INT32_ELEMENT(expected)
-              .key("int32Property")
-              .displayedName("Int32 property")
-              .reconfigurable()
-              .assignmentOptional()
-              .defaultValue(32000000)
-              .commit();
-
-        INT32_ELEMENT(expected)
-              .key("Int32NoDefault")
-              .displayedName("Int32 without default")
-              .reconfigurable()
-              .assignmentOptional()
-              .noDefaultValue()
-              .commit();
-
-        STRING_ELEMENT(expected)
-              .key("stringProperty")
-              .displayedName("String property")
-              .description("A string property")
-              .readOnly()
-              .commit();
-
-        SLOT_ELEMENT(expected).key("slotIncreaseValue").commit();
-
-        SLOT_ELEMENT(expected).key("slotUpdateSchema").commit();
-    }
-
-    DataLogTestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {
-        KARABO_SLOT(slotIncreaseValue);
-        KARABO_SLOT(slotUpdateSchema, const karabo::data::Schema);
-        // NOTE: this is a terrible idea. Never do this in the field.
-        KARABO_SLOT(slotUpdateConfigGeneric, const karabo::data::Hash);
-        KARABO_INITIAL_FUNCTION(initialize);
-    }
-
-    virtual ~DataLogTestDevice() {}
-
-   private:
-    void initialize() {
-        // Set oldValue with time stamp from past - now - 3 days
-        set("oldValue", 99, Timestamp(threeDaysBack, 0ull));
-
-        updateState(State::ON);
-    }
-
-    void slotIncreaseValue() {
-        set("value", get<int>("value") + 1);
-    }
-
-    void slotUpdateConfigGeneric(const Hash conf) {
-        // this is a terrible idea, but is helpful in this test.
-        // Do NOT use this pattern in any production system!
-        set(conf);
-    }
-
-    void slotUpdateSchema(const Schema sch) {
-        updateSchema(sch);
-    }
-};
-
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, DataLogTestDevice)
-
-
-// A device with float and double properties without limits to be able to set inf and nan.
-// Otherwise copy PropertyTest behaviour as needed for testNans().
-class NanTestDevice : public karabo::core::Device {
-   public:
-    KARABO_CLASSINFO(NanTestDevice, "NanTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
-
-    static void expectedParameters(karabo::data::Schema& expected) {
-        INT32_ELEMENT(expected).key("int32Property").reconfigurable().assignmentOptional().defaultValue(3).commit();
-
-        FLOAT_ELEMENT(expected)
-              .key("floatProperty")
-              .reconfigurable()
-              .assignmentOptional()
-              .defaultValue(3.141596f)
-              .commit();
-
-        DOUBLE_ELEMENT(expected)
-              .key("doubleProperty")
-              .reconfigurable()
-              .assignmentOptional()
-              .defaultValue(3.1415967773331)
-              .commit();
-
-        DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly").readOnly().initialValue(3.1415967773331).commit();
-    }
-
-    NanTestDevice(const karabo::data::Hash& input) : karabo::core::Device(input) {}
-
-    void preReconfigure(Hash& incomingReconfiguration) {
-        if (incomingReconfiguration.has("doubleProperty")) {
-            set("doublePropertyReadOnly", incomingReconfiguration.get<double>("doubleProperty"));
-        }
-    }
-};
-
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::Device, NanTestDevice)
 
 
 void TestDataLogging::testLoggerMapProperty() {
@@ -1180,7 +1061,7 @@ void TestDataLogging::testCfgFromPastRestart(bool pastConfigStaysPast) {
     std::vector<Epochstamp> stampsAfter;        // stamps after increasing value
     std::vector<Epochstamp> valueStamps;        // stamps of the updated values
     std::vector<Epochstamp> stampsAfterRestart; // stamps after restart logging
-    const Epochstamp oldStamp = threeDaysBack;
+    const Epochstamp oldStamp = karabo::DataLogTestDevice::THREE_DAYS_AGO;
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
         ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
@@ -1309,7 +1190,7 @@ void TestDataLogging::testCfgFromPastRestart(bool pastConfigStaysPast) {
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
         ASSERT_TRUE((stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull)
               << stampValueFromPast.toIso8601() << " vs " << valueStamps[i].toIso8601();
-        // The stamp for "oldValue" differs bewteen backends
+        // The stamp for "oldValue" differs between backends
         const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
         std::string oldFromPastStr = stampOldFromPast.toIso8601(); // convert to microsecond precision
         if (pastConfigStaysPast) {
@@ -1940,8 +1821,8 @@ void TestDataLogging::testNans() {
     Epochstamp testCaseStart;
 
     const std::string deviceId(m_deviceId + "forNan");
-    std::pair<bool, std::string> success =
-          m_deviceClient->instantiate(m_server, "NanTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          m_server, "DataLogNanTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     ASSERT_TRUE(success.first) << success.second;
 
     waitUntilLogged(deviceId, "testNans");
