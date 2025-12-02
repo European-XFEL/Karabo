@@ -88,9 +88,6 @@ class ProjectDatabaseConnection(QObject):
         self.project_manager = KARABO_PROJECT_MANAGER
         self._ignore_cache = True
 
-        # XXX: This is really asinine right now!
-        self._have_logged_in = False
-
     # -------------------------------------------------------------------
     # Karabo Events
 
