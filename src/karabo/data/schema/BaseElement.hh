@@ -57,7 +57,7 @@ namespace karabo {
 
            public:
             BaseElement(Schema& expected)
-                : m_schema(&expected), m_node(std::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {}
+                : m_schema(&expected), m_node(std::shared_ptr<Hash::Node>(new Hash::Node(std::string(), Hash()))) {}
 
             virtual ~BaseElement() {}
 
