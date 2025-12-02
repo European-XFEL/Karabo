@@ -98,9 +98,9 @@ class LoadProjectDialog(QDialog):
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
         # ... request the domains list
-        # initial request
-        self.initial_request = False
         domains = db_conn.get_available_domains()
+        self.cache_domains = domains
+        self.remote_domains = []
 
         # Domain combobox
         if is_subproject:
@@ -140,7 +140,9 @@ class LoadProjectDialog(QDialog):
         self._titleChanged(self.leTitle.text())
 
     def _event_domain_list(self, data):
-        self._domains_updated(data.get("items", []))
+        self.remote_domains = data.get("items", [])
+        if self.ignore_cache:
+            self._domains_updated(self.remote_domains)
 
     def _event_trashed(self, data):
         domain = data.get("domain", "")
@@ -157,19 +159,8 @@ class LoadProjectDialog(QDialog):
         super().done(result)
 
     def _domains_updated(self, domains):
-        # Domain combobox
-        with SignalBlocker(self.cbDomain):
-            self.cbDomain.clear()
-            self.cbDomain.addItems(sorted(domains))
-        # Select default domain, can be initially `None`
-        index = 0
-        if self.default_domain is not None:
-            index = self.cbDomain.findText(self.default_domain)
-        with SignalBlocker(self.cbDomain):
-            self.cbDomain.setCurrentIndex(index if index > -1 else 0)
-        if not self.initial_request:
-            self.initial_request = True
-            self.update_view()
+        self.toggle_cache_remote_domains(domains)
+        self.update_view()
 
     def selected_item(self):
         """Return selected domain and project
@@ -257,13 +248,28 @@ class LoadProjectDialog(QDialog):
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.model.sourceModel()
         model.show_trashed = is_checked
-
         self._check_button_state()
         self.update_view()
 
     @Slot(QAbstractButton)
     def _open_from_changed(self, button):
+        if button is self.rbFromRemote:
+            self.toggle_cache_remote_domains(self.remote_domains)
+        elif button is self.rbFromCache:
+            self.toggle_cache_remote_domains(self.cache_domains)
         self.update_view()
+
+    def toggle_cache_remote_domains(self, domains):
+        with SignalBlocker(self.cbDomain):
+            self.cbDomain.clear()
+            self.cbDomain.addItems(sorted(domains))
+
+        # Select default domain, can be initially `None`
+        index = 0
+        if self.default_domain is not None:
+            index = self.cbDomain.findText(self.default_domain)
+        with SignalBlocker(self.cbDomain):
+            self.cbDomain.setCurrentIndex(index if index > -1 else 0)
 
 
 class NewProjectDialog(QDialog):
