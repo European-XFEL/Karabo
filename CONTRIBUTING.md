@@ -35,11 +35,11 @@ Gitlab
 Git Workflow
 -------------
 
-All new features and fixes should be developed against the *master*/*main*
+All new features and fixes should be developed against the *main*
 branch. Afterwards, fixes may be backported to a release branch that usually
 follows the format `<MAJOR>.<MINOR>.X-hotfix`.
 
-- Checkout the targeted branch (usually master/main) and `git pull`.
+- Checkout the targeted branch (usually main) and `git pull`.
 - Switch to a development branch, e.g. `git checkout -b <branchname>`
 - Edit code, `add`, `commit` and finally `push` that branch.
 - Create  a merge request in GitLab using the url that the output of `push`
