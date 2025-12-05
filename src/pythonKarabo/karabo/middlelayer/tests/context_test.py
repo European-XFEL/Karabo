@@ -21,7 +21,8 @@ import pytest
 import pytest_asyncio
 
 from karabo.middlelayer import (
-    Device, Slot, State, String, connectDevice, getDevice, isSet, lock)
+    Device, KaraboError, Slot, State, String, connectDevice, getDevice,
+    instantiate, isSet, lock)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, AsyncServerContext, assert_wait_property,
     create_device_server, run_test)
@@ -143,8 +144,16 @@ async def test_loop_instance():
 async def test_async_server_context():
     config = {"PropertyTestContext": {"classId": "PropertyTest"}}
     init = json.dumps(config)
-    server = AsyncServerContext(
-        "testServerContext", [f"init={init}"], verbose=True, api="middlelayer")
-    async with server:
+    server1 = AsyncServerContext(
+        "testServerContext1", [f"init={init}"], verbose=True,
+        api="middlelayer")
+    server2 = AsyncServerContext(
+        "testServerContext2", [], verbose=True, api="middlelayer")
+    async with server1, server2:
         await assert_wait_property(
             "PropertyTestContext", "state", State.NORMAL.value, timeout=10)
+        with pytest.raises(KaraboError):
+            # Provoke instantiation conflict in different processes
+            await instantiate(
+                "testServerContext2", "PropertyTest",
+                "PropertyTestContext")
