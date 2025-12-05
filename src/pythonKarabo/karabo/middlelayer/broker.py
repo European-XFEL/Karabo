@@ -200,9 +200,11 @@ class Broker:
         """
         self.brokerId = f"{self.domain}.{self.deviceId}"
         try:
-            await self.channel.queue_declare(self.brokerId, passive=True)
+            await self.channel.queue_declare(
+                self.brokerId, exclusive=True, auto_delete=True, passive=True)
             # If no exception raised the queue name exists already ...
             # To continue  just use generated queue name...
+            # Note: This can happen on same process
             timestamp = hex(int(time.monotonic() * 1000000000))[2:]
             self.brokerId = f"{self.domain}.{self.deviceId}:{timestamp}"
         except aiormq.exceptions.ChannelNotFoundEntity:
@@ -210,6 +212,15 @@ class Broker:
             # The channel is not valid anymore, so create the new one
             self.channel = await self.connection.channel(
                 publisher_confirms=False)
+        except aiormq.exceptions.ChannelLockedResource:
+            # The queue name exists on different process and is exclusive use
+            # The channel is not valid anymore, so create the new one
+            # Change queue name and rely on karabo discovery for the
+            # unique instanceId
+            self.channel = await self.connection.channel(
+                publisher_confirms=False)
+            timestamp = hex(int(time.monotonic() * 1000000000))[2:]
+            self.brokerId = f"{self.domain}.{self.deviceId}:{timestamp}"
 
         # Move full subscription under mutex
         async with self.subscribe_lock:
