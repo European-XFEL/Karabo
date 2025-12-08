@@ -3,17 +3,26 @@ import os
 import os.path as op
 import shutil
 from contextlib import contextmanager
+from platform import machine
 from platform import system as sys_name
 from tempfile import gettempdir
 
 import yaml
 
 from .mirrors import Mirrors
-from .utils import (
-    chdir, command_run, conda_run_command, connected_to_remote,
-    environment_exists, mkdir)
+from .utils import (chdir, command_run, conda_run_command, connected_to_remote,
+                    environment_exists, mkdir)
 
-PLATFORMS = {"Windows": "win-64", "Darwin": "osx-64", "Linux": "linux-64"}
+
+def _get_mach_architecture():
+    if machine == "x86_64":
+        return "osx-64"
+    return "osx-arm64"
+
+
+PLATFORMS = {"Windows": "win-64",
+             "Darwin": _get_mach_architecture(),
+             "Linux": "linux-64"}
 KARABOGUI = "karabogui"
 
 
