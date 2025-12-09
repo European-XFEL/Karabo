@@ -14,14 +14,14 @@ from .utils import (chdir, command_run, conda_run_command, connected_to_remote,
                     environment_exists, mkdir)
 
 
-def _get_mach_architecture():
+def _get_mac_architecture():
     if machine == "x86_64":
         return "osx-64"
     return "osx-arm64"
 
 
 PLATFORMS = {"Windows": "win-64",
-             "Darwin": _get_mach_architecture(),
+             "Darwin": _get_mac_architecture(),
              "Linux": "linux-64"}
 KARABOGUI = "karabogui"
 
