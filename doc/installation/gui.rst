@@ -25,21 +25,13 @@ Download and install miniforge (Python version >= 3).
 
 #. Download the installer script/executable.
 
-   * Linux:
+   * Linux and Mac:
       Download and install by running
 
       .. code-block:: bash
 
          curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
          bash Miniforge3-$(uname)-$(uname -m).sh
-
-   * Mac :
-      Download `the script <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh>`_ and install by running
-
-      .. code-block:: bash
-
-         bash Miniforge3-MacOSX-x86_64.sh
-
 
    * Windows:
       Download `the installer
