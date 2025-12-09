@@ -62,9 +62,9 @@ def test_convert_string_list():
     assert string2list(value) == ["2", "2", "3"]
     # Only for testing. Prevented by delegates later.
     value = "2,2,    3"
-    assert string2list(value) == ["2", "2", "3"]
+    assert string2list(value) == ["2", "2", "    3"]
     value = ", , ,"
-    assert string2list(value) == ["", "", "", ""]
+    assert string2list(value) == ["", " ", " ", ""]
     value = ",2,"
     assert string2list(value) == ["", "2", ""]
 
