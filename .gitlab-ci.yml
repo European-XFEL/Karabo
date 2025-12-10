@@ -165,6 +165,7 @@ variables:
       -P $KARABO_CONDA_CHANNEL_PATH
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
+      --guiextensions-test
   only:
     - /^(\d+\.)(\d+\.)(\d+)$/
   except:
@@ -190,6 +191,7 @@ variables:
       -P $KARABO_CONDA_CHANNEL_PATH/nightly
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
+      --guiextensions-test
   only:
     - /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/
   except:
