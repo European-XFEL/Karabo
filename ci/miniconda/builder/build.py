@@ -87,6 +87,8 @@ class Builder:
             # Proceed only if recipe supports testing
             if recipe == KARABOGUI and self.args.test:
                 self.test(recipe)
+                if self.args.guiextensions_test:
+                    self.test_guiextensions(recipe)
             if not self.args.skip_build:
                 self.build(recipe)
 
@@ -224,6 +226,27 @@ class Builder:
             if output:
                 print(output)
             print("Tests successful")
+
+    def test_guiextensions(self, recipe):
+        if recipe != KARABOGUI:
+            print("GUIExtensions tests can be run only for 'karabogui' "
+                  "recipe. Skipping tests")
+            return
+        token = os.environ.get("CI_JOB_TOKEN")
+        extensions_git_path = (
+            f"https://gitlab-ci-token:"
+            f"{token}@git.xfel.eu/karaboextensions/guiextensions.git"
+        )
+        # Clone guiextensions master
+        gui_extensions_dir = op.join(self.root_path, "guiextensions")
+        command_run(["git", "clone", extensions_git_path, gui_extensions_dir])
+        print("Cloned 'guiextensions' repository")
+        install_cmd = ["pip", "install", "-e", gui_extensions_dir]
+        conda_run_command(install_cmd, env_name=recipe)
+        print("Installed GUIExtensions package. Running the tests")
+        conda_run_command(["--cwd", gui_extensions_dir, "python", "-m",
+                           "pytest", "-vv", "."],
+                          env_name=recipe)
 
     # -----------------------------------------------------------------------
     # Building recipe
@@ -487,6 +510,8 @@ def main():
     ap.add_argument("-D", "--recipes-dir", type=str, default="conda-recipes",
                     help="Base folder for recipes relative to the top level "
                          "directory of the git repository")
+    ap.add_argument("--guiextensions-test", action="store_true",
+                    help="Whether to run the GUIExtensions tests or not.")
 
     args = ap.parse_args()
     b = Builder(args)
