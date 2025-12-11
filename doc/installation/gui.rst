@@ -69,10 +69,16 @@ Also, please be aware of the licenses issues of the various channels as highligh
 in this link `recommended conda installer`_
 and `here <https://mamba.readthedocs.io/en/latest/user_guide/troubleshooting.html#defaults-channels>`__.
 
-For KaraboGUI, some package channels are needed besides Conda's defaults. You
+For KaraboGUI, some package channels are needed to be configured. You
 only need to do this once and it can be done either from command line or
-editting Conda's configuration file (``.condarc``).
+editing Conda's configuration file (``.condarc``).
 You can find your configuration file location typing ``conda info`` on your terminal.
+
+Please ensure to remove the ``defaults`` channels.
+
+   .. code-block:: bash
+
+      conda config --remove channels defaults
 
 From your terminal, add the needed channels executing the following commands::
 
