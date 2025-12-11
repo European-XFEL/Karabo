@@ -417,16 +417,16 @@ class Macro(Device):
 
     def printToConsole(self, data):
         """Put a data from the std out on the print stack"""
-        if data == "\n":
+        if not data:
+            # Prevent std out flush write polluting our print
             return
-        sp = self.stacked_print
-        sp.extend(data.splitlines())
+        self.stacked_print.append(data)
 
     async def _timer_callback(self):
         """Provide a nice print output for the macro instance and update"""
         if self.stacked_print:
             self.doNotCompressEvents += 1
-            self.print = "\n".join(self.stacked_print)
+            self.print = "".join(self.stacked_print)
             self.stacked_print.clear()
             self.update()
 
