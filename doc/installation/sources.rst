@@ -327,3 +327,26 @@ external dependencies for shipping or for package developement:
   After successfull bundling you should find a ``karabo-<version>.sh`` in
 
   ``package/<Conf>/<OS-Name>/<OS-Version>/<Arch>/``
+
+
+Run InfluxDB locally for Karabo
+===============================
+
+From version 3.1 onwards, since the file-based datalogging is not supported in Karabo, to
+make the dataLogger devices working fine, you may need to run a local InfluxDB.
+To do so on a Green desktop, please follow the steps below:
+
+#. Install docker if you have not already done.
+
+    .. code-block:: bash
+
+        pkcon docker.io
+
+#. From karabo virtual enviroment, run
+
+    .. code-block:: bash
+
+        karabo-startinfluxdb
+
+This should start a local InfluxDB at ``http://localhost:8086``. The dataLogger device has
+this address set to the `influxdb URL` property by default.
