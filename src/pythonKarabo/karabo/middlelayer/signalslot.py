@@ -183,6 +183,7 @@ class SignalSlotable(Configurable):
         self._proxy_futures = {}
         self._timers = weakref.WeakSet()
         self.__initialized = False
+        self.__shutdown = False
         self.__removed = False
         self._new_device_futures = FutureDict()
 
@@ -390,6 +391,12 @@ class SignalSlotable(Configurable):
         :returns: success boolean if all tasks related to the device
                   are gone.
         """
+        if self.__shutdown:
+            # We can be shutdown several times, in concurrence but also
+            # from the destructor, hence, we must be graceful
+            return True
+        self.__shutdown = True
+
         if self.__initialized:
             instanceId = (
                 self._sigslot.get_property(message, "signalInstanceId")
