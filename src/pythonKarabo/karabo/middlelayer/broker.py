@@ -182,8 +182,7 @@ class Broker:
         self.exit_event = Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
-        # Flag to indicate when a channel is about to be closed
-        self.shutdown_channel = False
+        self._shutdown = False
 
     async def subscribe_default(self):
         """Subscribe to 'default' exchanges to allow a communication
@@ -559,6 +558,10 @@ class Broker:
 
     async def stop_tasks(self) -> bool:
         """Reimplemented method of `Broker`"""
+        if self._shutdown:
+            return True
+        self._shutdown = True
+
         await self._on_stop_tasks()
         me = current_task(loop=None)
         # Services that are listening to broadcasts don't need their
@@ -580,9 +583,10 @@ class Broker:
 
     def close_channel(self, cb):
         """Close channel callback after slotKillDevice"""
-        if self.shutdown_channel:
+        if cb.cancelled():
+            # If we are already cancelled, we cannot close
+            self.logger.error("Cannot close channel since already cancelled.")
             return
-        self.shutdown_channel = True
 
         async def closing_channel():
             if self.channel is not None:
