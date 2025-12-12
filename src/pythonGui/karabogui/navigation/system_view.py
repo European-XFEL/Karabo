@@ -100,6 +100,7 @@ class SystemTreeView(QTreeView):
 
         # Device server instance menu
         self.mHostItem = QMenu(self)
+        self.mHostItem.setToolTipsVisible(True)
         text = "Network information"
         self.acNetworkInfo = QAction(icons.about, text, self)
         self.acNetworkInfo.setStatusTip(text)
@@ -403,6 +404,7 @@ class SystemTreeView(QTreeView):
         if node_type is NavigationItemTypes.HOST:
             instance_control = access_role_allowed(AccessRole.INSTANCE_CONTROL)
             self.acNetworkInfo.setEnabled(instance_control)
+            _set_tooltip(self.acNetworkInfo, allow_service_edit)
             self.mHostItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.SERVER:
             self.acKillServer.setEnabled(allow_service_edit)
