@@ -253,6 +253,7 @@ class LoadProjectDialog(QDialog):
 
     @Slot(QAbstractButton)
     def _open_from_changed(self, button):
+        self.model.sourceModel().clear()
         if button is self.rbFromRemote:
             self.toggle_cache_remote_domains(self.remote_domains)
         elif button is self.rbFromCache:
@@ -446,3 +447,10 @@ class TableModel(QAbstractTableModel):
                           reverse=bool(order))
         self.layoutChanged.emit()
         super().sort(column, order)
+
+    def clear(self):
+        try:
+            self.beginResetModel()
+            self.entries = []
+        finally:
+            self.endResetModel()
