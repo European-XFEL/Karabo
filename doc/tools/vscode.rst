@@ -9,8 +9,18 @@ Getting Started - VSCode
 
 This guide provides instructions on how to setup VSCode for C++
 development work on the Karabo Framework or on a Karabo C++ Device. The setup
-instructions in here are for Ubuntu versions 18 and 20 - they should work
+instructions in here are for Ubuntu version 20 or newer - they should work
 with few modifications for other Linux distributions supported by Karabo.
+
+Support for VSCode is provided through the generation of a `CMakeUserPresets.json` file.
+To create the CMake presets file, please execute the script `build/karabo/setupCMakeUserPresets.py`.
+To see the command line options supported by the script, invoke it with the `-h` option. 
+A successful execution of the script will create a `CMakeUserPresets.json` file with the appropriate
+settings for configuring and building the C++ components of the Karabo Framework with `cmake`.
+An already existing `CMakeUserPresets.json` will be copied by the script with a timestamp prefixed to 
+the `CMakeUserPresets` file name. The generated `CMakeUserPresets.json` file has been validated to 
+work with VSCode C++ Extensions 1.28.X (https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/cmake-presets.md),
+and with QtCreator 18.0.X (https://doc.qt.io/qtcreator/creator-build-settings-cmake-presets.html).
 
 
 1. Installation Steps
@@ -98,38 +108,11 @@ Karabo git repository.
 1.5. Configure the VSCode for the Karabo Framework Workspace
 ------------------------------------------------------------
 
-To setup VSCode with the appropriate CMake related options for building the
-Karabo Framework, go to the directory where you cloned the Karabo Framework in 
-the previous step and from there run the script `build/karabo/setupVSCodeCMake.py`.
-The script will create (or update) the file `.vscode/settings.json` used by 
-VSCode as the settings for the workspace for the Karabo Framework project. 
-The script is pretty safe: it backs-up any existing version of the `settings.json` 
-file and it only sets the entries related to CMake. An example of the settings
-updated (or added) by the script is given::
-
-    "cmake.sourceDirectory": "/home/bob/work/Framework/src",
-    "cmake.buildDirectory": "/home/bob/work/Framework/build_debug",
-    "cmake.cmakePath": "/home/bob/work/Framework/extern/Ubuntu-20-x86_64/bin/cmake",
-    "cmake.configureSettings": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "/home/bob/work/Framework/package/Debug/Ubuntu/20/x86_64/karabo",
-        "CMAKE_PREFIX_PATH": "/home/bob/work/Framework/extern/Ubuntu-20-x86_64",
-        "BUILD_UNIT_TESTING": "1",
-        "BUILD_INTEGRATION_TESTING": "0",
-        "BUILD_LONG_RUN_TESTING": "0",
-        "GEN_CODE_COVERAGE": "0"
-    }
-
-The `cmake.sourceDirectory` informs the VSCode CMake extension about the location of the 
-root `CMakeLists.txt` file. If this parameter is not specified, VSCode will complain about 
-not finding a `CMakeLists.txt` file in the root of the workspace and will prompt you to manually
-choose the main `CMakeLists.txt` among all the `CMakeLists.txt` files it finds in the workspace.
-
 As the Gitlab CI of the Karabo Framework project checks the formatting of the C++
-source files for compliance with a standard style, it is recommended to also setup 
-the options related to automatic formatting by VSCode. The standard style checked against 
+source files for compliance with a standard style, it is recommended to also setup
+the options related to automatic formatting by VSCode. The standard style checked against
 is defined by the configurations in the `.clang-format` file at the root of the Karabo Framework
-repository. A recommended configuration is shown by the excerpt of the `.vscode/settings.json` file shown below:: 
+repository. A recommended configuration is shown by the excerpt of the `.vscode/settings.json` file shown below::
 
       "editor.defaultFormatter": null,
       "editor.formatOnPaste": true,
@@ -138,14 +121,14 @@ repository. A recommended configuration is shown by the excerpt of the `.vscode/
       "C_Cpp.formatting": "clangFormat",
 
 The VSCode C++ Extension installed in step 1.2 contains a recent version of the `clang-format` tool,
-so no installation is needed. If for some reason you prefer to use another instance of the 
+so no installation is needed. If for some reason you prefer to use another instance of the
 `clang-format` tool, please be informed that the Gitlab CI uses version `17.0.6` of `clang-format`.
 Formatting with any version older than that may result in the CI formatting test not passing.
 
 Before opening the Karabo Framework CMake project inside VSCode, the `auto_build_all.sh` script must have
 been executed successfully at least once with either the `Debug`, `Release` or `CodeCoverage` options.
-`auto_build_all.sh` will take care of either downloading or building the external dependencies of the 
-Karabo Framework and make them available to the CMake project. 
+`auto_build_all.sh` will take care of either downloading or building the external dependencies of the
+Karabo Framework and make them available to the CMake project.
 
 Similarly, as `auto_build_all.sh Clean-All` clears all the external dependencies, after its execution an
 `auto_build_all.sh` with either the `Debug`, `Release` or `CodeCoverage` options must be completed successfully

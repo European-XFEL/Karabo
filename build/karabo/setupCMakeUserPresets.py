@@ -18,12 +18,13 @@
 import argparse
 import json
 import os
+import psutil   # Python installation bundled with the Framework has psutil
 import shutil
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 
 def git_root() -> str:
@@ -59,22 +60,34 @@ def _get_lsb_release_info() -> Dict[str, str]:
     return resp
 
 
-def cmake_settings(build_type: str,
-                   skip_build_unit_tests: bool,
-                   skip_build_integration_tests: bool,
-                   build_long_tests: bool) -> Dict[str, Union[str, Dict]]:
+def cmake_user_presets(build_type: str,
+                       skip_build_unit_tests: bool,
+                       skip_build_integration_tests: bool,
+                       build_long_tests: bool) -> Dict[str,
+                                                       Union[str, Dict, List]]:
 
     arch = os.uname().machine
     lsb_release_info = _get_lsb_release_info()
     distro_id = lsb_release_info["LSB_RELEASE_DIST"]
     distro_release_major = lsb_release_info["LSB_RELEASE_VERSION"]
-    base_dir = git_root()
+
+    physical_cores = psutil.cpu_count(logical=False) or 1
+    total_memory_gb = psutil.virtual_memory().total/(1024**3)
+    parallel_level = physical_cores
+    if total_memory_gb / physical_cores < 2.0:
+        # From experience, when the ratio of physical memory per building job
+        # goes below 2 GB/job, the performance of the building system can be
+        # compromised.
+        parallel_level = physical_cores // 2
+
     cmake_prefix_path = (
-        f"{base_dir}/extern/{distro_id}-{distro_release_major}-{arch}")
-    cmake_install_prefix = (
-        f"{base_dir}/package/{build_type}/{distro_id}/"
+        f"${{sourceDir}}/extern/{distro_id}-{distro_release_major}-{arch}")
+    cmake_install_dir = (
+        f"${{sourceDir}}/package/{build_type}/{distro_id}/"
         f"{distro_release_major}/{arch}/karabo")
-    cmake_toolchain_file = f"{cmake_prefix_path}/conan_toolchain/conan_toolchain.cmake"
+    cmake_toolchain_file = (
+        f"${{sourceDir}}/extern/{distro_id}-{distro_release_major}-{arch}/"
+        "/conan_toolchain/conan_toolchain.cmake")
 
     if (build_type.upper() == "DEBUG" or
             build_type.upper() == "CODECOVERAGE"):
@@ -82,121 +95,108 @@ def cmake_settings(build_type: str,
     else:
         cmake_build_type = "Release"
 
-    cmake_build_directory = f"{base_dir}/build_{cmake_build_type.lower()}"
-
     build_unit_testing = "0" if skip_build_unit_tests else "1"
     build_integration_testing = "0" if skip_build_integration_tests else "1"
     build_long_run_testing = "1" if build_long_tests else "0"
     gen_code_coverage = "1" if build_type.upper() == "CODECOVERAGE" else "0"
+
     # NOTE: Please keep in sync with the arguments passed to cmake configure
     # step in auto_build_all.sh:
-    cmake_config_settings = {
-        "CMAKE_BUILD_TYPE": cmake_build_type,
-        "CMAKE_INSTALL_PREFIX": cmake_install_prefix,
-        "CMAKE_PREFIX_PATH": cmake_prefix_path,
-        "BUILD_UNIT_TESTING": build_unit_testing,
-        "BUILD_INTEGRATION_TESTING": build_integration_testing,
-        "BUILD_LONG_RUN_TESTING": build_long_run_testing,
-        "GEN_CODE_COVERAGE": gen_code_coverage,
-        "CMAKE_MAP_IMPORTED_CONFIG_DEBUG": "Release",
-        "CMAKE_TOOLCHAIN_FILE": cmake_toolchain_file
+    cmake_user_presets = {
+        "version": 3,  # CLion as of 2025.2.5 can't deal with newer versions
+        "cmakeMinimumRequired": {
+            "major": 3,
+            "minor": 15,
+            "patch": 0
+        },
+        "configurePresets": [
+            {
+                "name": f"{cmake_build_type}",
+                "binaryDir": "${sourceDir}/build_debug",
+                "cacheVariables": {
+                    "CMAKE_BUILD_TYPE": f"{cmake_build_type}",
+                    "CMAKE_PREFIX_PATH": f"{cmake_prefix_path}",
+                    "BUILD_UNIT_TESTING": f"{build_unit_testing}",
+                    "BUILD_INTEGRATION_TESTING": (
+                        f"{build_integration_testing}"),
+                    "BUILD_LONG_RUN_TESTING": f"{build_long_run_testing}",
+                    "GEN_CODE_COVERAGE": f"{gen_code_coverage}",
+                    "CMAKE_MAP_IMPORTED_CONFIG_DEBUG": "Release",
+                    "CMAKE_EXPORT_COMPILE_COMMANDS": "1",
+                },
+                "cmakeExecutable": (
+                    "${sourceDir}/extern/"
+                    f"{distro_id}-{distro_release_major}-{arch}/bin/cmake"),
+                "description": (
+                    "Debug build of the Karabo C++ Framework with unit and "
+                    "integration tests"),
+                "displayName": "Debug Build",
+                "environment": {
+                    "CMAKE_BUILD_PARALLEL_LEVEL": f"{parallel_level}"
+                },
+                "installDir": f"{cmake_install_dir}",
+                "toolchainFile": f"{cmake_toolchain_file}"
+            }
+        ],
     }
 
     # Synchronizes with the behavior of auto_build_all.sh to use Ninja as the
     # generator if Ninja is available.
     if shutil.which("ninja") is not None:
-        cmake_config_settings["CMAKE_GENERATOR"] = "Ninja"
+        cmake_user_presets["configurePresets"][0]["generator"] = "Ninja"
 
-    return {
-        "cmake.sourceDirectory": f"{base_dir}/src",
-        "cmake.buildDirectory": cmake_build_directory,
-        "cmake.cmakePath": f"{cmake_prefix_path}/bin/cmake",
-        "cmake.configureSettings": cmake_config_settings
-    }
+    return cmake_user_presets
 
 
-def update_cmake_settings(settings: Dict[str, str]) -> int:
-    file_dir = f"{git_root()}/.vscode"
-    settings_path = Path(f"{file_dir}/settings.json")
-    data_to_save = {}
-    file_operation = ""
+def update_cmake_user_presets(
+        user_presets: Dict[str, Union[str, Dict, List]]) -> int:
+    file_dir = f"{git_root()}"
+    file_path = Path(f"{file_dir}/CMakeUserPresets.json")
 
-    if settings_path.exists():
-        # Initializes data_to_save with the current settings.
-        # If the current settings cannot be read, just reports the error and
-        # leave.
-        with open(settings_path, "r") as settings_file:
-            try:
-                data_to_save = json.load(settings_file)
-            except json.JSONDecodeError as je:
-                print("")
-                print(f"ERROR: invalid settings file found: '{settings_path}'")
-                print(f"       {je}")
-                print("")
-                print("Setup aborted.")
-                print("")
-                return os.EX_OSFILE
+    if file_path.exists():
         # Back-up the current settings file.
         now_stamp = datetime.now().isoformat()
         now_stamp = now_stamp.replace(":", "_").replace(".", "_")
-        backup_path = f"{file_dir}/settings.bak.{now_stamp}.json"
-        shutil.copy(settings_path, backup_path)
+        backup_path = f"{file_dir}/CMakeUserPresets.{now_stamp}.json"
+        shutil.copy(file_path, backup_path)
         print("")
-        print("Settings back-up file created at:")
+        print(f"{file_path} back-up file created at:")
         print(f"    '{backup_path}'")
-        file_operation = "updated"
-    else:
-        dir_path = Path(file_dir)
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True, exist_ok=True)
-        file_operation = "created"
 
-    data_to_save["cmake.configureSettings"] = (
-        settings["cmake.configureSettings"])
-    data_to_save["cmake.sourceDirectory"] = settings["cmake.sourceDirectory"]
-    data_to_save["cmake.buildDirectory"] = settings["cmake.buildDirectory"]
-    data_to_save["cmake.cmakePath"] = settings["cmake.cmakePath"]
-
-    # Be sure the directory that will host the settings file exists
-    os.makedirs(file_dir, exist_ok=True)
-
-    with open(settings_path, "w") as settings_file:
-        json.dump(data_to_save, settings_file, indent=4)
+    with open(file_path, "w") as presets_file:
+        json.dump(user_presets, presets_file, indent=4)
 
     print("")
-    print(f"File '{settings_path}' {file_operation} with the settings:")
-    print(json.dumps(settings, indent=4))
+    print(f"File '{file_path}' created")
     print("")
-    print("Please choose to 'Clean Reconfigure All Projects' before building "
-          "from inside\n'Visual Studio Code'!")
     print("")
 
     return os.EX_OK
 
 
-def setupVSCodeCMake(build_type: str,
-                     skip_build_unit_tests: bool,
-                     skip_build_integration_tests: bool,
-                     build_long_tests: bool) -> int:
+def setupCMakeUserPresets(build_type: str,
+                          skip_build_unit_tests: bool,
+                          skip_build_integration_tests: bool,
+                          build_long_tests: bool) -> int:
     """
-    Updates (or initializes) the "settings.json" file of the VSCode Workspace
-    for the Karabo Framework with the same CMake settings used by the
+    Updates (or initializes) the "CMakeUserPresets.json" file for the
+    configuration of the Framework project with the same settings used by the
     "auto_build_all.sh" script.
 
-    Any existing "settings.json" file for the Karabo Framework workspace will
-    be backed up with the name "settings.bak.<create_timestamp>.json".
+    Any existing "CMakeUserPresets.json" file for the Karabo Framework project
+    will be backed up with the name "CMakeUserPresets.<create_timestamp>.json".
     "<create_timestamp>" is the timestamp of the creation of the backup file.
 
     NOTE: The current external dependency management mechanism requires
     "auto_build_all.sh" to be executed if there is any change in the set of
-    external dependecies - starting a build from VSCode won't update any
+    external dependencies - starting a build from an IDE won't update any
     external dependency.
     """
     os_type = os.uname().sysname
     if os_type.upper() == "LINUX":
-        settings = cmake_settings(build_type, skip_build_unit_tests,
-                                  skip_build_integration_tests,
-                                  build_long_tests)
+        settings = cmake_user_presets(build_type, skip_build_unit_tests,
+                                      skip_build_integration_tests,
+                                      build_long_tests)
     else:
         print("")
         print("This script must be run on a Linux system.")
@@ -205,7 +205,7 @@ def setupVSCodeCMake(build_type: str,
         print("")
         return os.EX_SOFTWARE
 
-    return update_cmake_settings(settings)
+    return update_cmake_user_presets(settings)
 
 
 if __name__ == "__main__":
@@ -234,9 +234,9 @@ if __name__ == "__main__":
         print("")
         sys.exit(os.EX_CONFIG)
 
-    ret_code = setupVSCodeCMake(cmd_args.build_type,
-                                cmd_args.skipBuildUnitTests,
-                                cmd_args.skipBuildIntegrationTests,
-                                cmd_args.buildLongTests)
+    ret_code = setupCMakeUserPresets(cmd_args.build_type,
+                                     cmd_args.skipBuildUnitTests,
+                                     cmd_args.skipBuildIntegrationTests,
+                                     cmd_args.buildLongTests)
 
     sys.exit(ret_code)

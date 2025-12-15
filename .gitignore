@@ -50,8 +50,9 @@ junitoutput.xml
 /conda-recipes/*/meta.yaml
 # CMake specific stuff
 CMakeCache.txt
-CMakeLists.txt.user
 CMakeFiles
+CMakeLists.txt.user
+CMakeUserPresets*.json
 CMakeScripts
 Testing
 cmake_install.cmake
