@@ -23,13 +23,10 @@ from qtpy.QtWidgets import QDialog, QMessageBox
 from karabo.common.api import (
     KARABO_PROJECT_MANAGER, set_modified_flag, walk_traits_object)
 from karabo.common.project.api import (
-    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
-    device_instance_exists, macro_exists, read_lazy_object,
-    recursive_save_object)
+    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
+    ProjectModel, device_config_exists, device_instance_exists, macro_exists,
+    read_lazy_object, recursive_save_object)
 from karabo.common.sanity_check import validate_macro
-from karabo.common.scenemodel.api import (
-    BaseWidgetObjectData, SceneLinkModel, SceneModel)
 from karabo.native import Hash, read_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
@@ -276,90 +273,6 @@ def maybe_save_modified_project(project, parent=None):
         save_object(project)
 
     return True
-
-
-def save_as_object(obj):
-    """ Save copy of individual `obj` recursively into the project database
-
-    :param obj A project model object
-    """
-    from karabogui.project.dialog.project_handle import NewProjectDialog
-
-    # Map old scene UUIDs to new UUIDs
-    scene_uuids = {}
-    # Map old macro UUIDs to new UUIDs
-    macro_uuids = {}
-    # Store all scene link references
-    scene_links = []
-    # Store all models that link to macros
-    macro_models = []
-
-    def _visitor(model):
-        if isinstance(model, BaseProjectObjectModel):
-            old_uuid = model.uuid
-            model.reset_uuid()
-            if isinstance(model, SceneModel):
-                # Keep track of new UUIDs
-                scene_uuids[old_uuid] = model.uuid
-            if isinstance(model, MacroModel):
-                # Keep track of new UUIDs
-                macro_uuids[old_uuid] = model.uuid
-        elif isinstance(model, SceneLinkModel):
-            scene_links.append(model)
-        elif isinstance(model, BaseWidgetObjectData):
-            for key in model.keys:
-                # optimize out non macros
-                if key.startswith("Macro-"):
-                    # key will be => Macro-module-UUID-Classname.keyname
-                    uuid = '-'.join(key.split('-')[2:-1])
-                    macro_models.append((model, uuid))
-
-    def _replace_scene_link_uuids():
-        for link in scene_links:
-            parts = link.target.split(':')
-            if len(parts) != 2:
-                break
-            # target format => "simple_name:UUID"
-            simple_name = parts[0]
-            old_uuid = parts[1]
-            if old_uuid in scene_uuids:
-                new_uuid = scene_uuids[old_uuid]
-                target = f"{simple_name}:{new_uuid}"
-            else:
-                target = f"{simple_name}:{old_uuid}"
-            link.target = target
-
-    def _replace_macro_uuids():
-        for widget, old_uuid in macro_models:
-            new_keys = []
-            for key in widget.keys:
-                if old_uuid in key:
-                    # replace old uuid with new uuid
-                    new_uuid = macro_uuids[old_uuid]
-                    key = key.replace(old_uuid, new_uuid)
-                new_keys.append(key)
-            widget.keys = new_keys
-
-    assert isinstance(obj, ProjectModel)
-    dialog = NewProjectDialog(model=obj)
-    if dialog.exec() == QDialog.Accepted:
-        if obj.simple_name == dialog.simple_name:
-            # Throw a tantrum
-            messagebox.show_error(
-                "Please choose a different name. "
-                "Projects with the same name should be avoided.")
-            return
-        obj.simple_name = dialog.simple_name
-        # Reset UUIDs and map scene and macro models
-        walk_traits_object(obj, _visitor)
-        # Replace old scene link UUIDs with new ones
-        _replace_scene_link_uuids()
-        # Replace old macro UUIDs keys with new ones
-        _replace_macro_uuids()
-        # Set all child object of the given ``obj`` to modified to actually
-        # save the complete tree to the new domain
-        set_modified_flag(obj, value=True)
-        save_object(obj, dialog.domain)
 
 
 def save_object(obj, domain=None):
