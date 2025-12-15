@@ -86,7 +86,9 @@ namespace karabo {
         std::vector<std::string> Broker::brokersFromEnv() {
             const char* env = getenv("KARABO_BROKER");
             return karabo::data::fromString<std::string, std::vector>(
-                  env ? env : "amqp://xfel::karabo@exfl-broker-1.desy.de:5672,amqp://guest:guest@localhost:5672");
+                  env ? env
+                      : "amqp://xfel::karabo@exfl-broker-1.desy.de:5672,amqp://guest:guest@localhost:5672, "
+                        "amqp://karabo:karabo@localhost:5672");
         }
 
 

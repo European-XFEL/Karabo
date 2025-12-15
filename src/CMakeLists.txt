@@ -37,7 +37,7 @@
 #                    tests depend on CppUnit. The variable should point to the
 #                    directory that host the header files and libs for the
 #                    dependencies. If you are using Visual Studio Code there is
-#                    a Python script, "$REPO_ROOT/build/karabo/setupVSCodeCMake.py"
+#                    a Python script, "$REPO_ROOT/build/karabo/setupCMakeUserPresets.py"
 #                    that generates a settings file containing among other things
 #                    the right CMAKE_PREFIX_PATH for your system.
 #
