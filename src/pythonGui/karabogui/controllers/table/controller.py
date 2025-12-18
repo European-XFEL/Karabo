@@ -366,14 +366,16 @@ class BaseTableController(BaseBindingController):
             remove_action = menu.addAction(icons.delete, "Delete Row")
             remove_action.triggered.connect(self.remove_row)
 
-            # Check for min and max size of the table
+            # Check for min and max size of the table, but take care
+            # of numpy casting
             row_count = self._item_model.rowCount()
             attributes = self.proxy.binding.attributes
             min_size = attributes.get(KARABO_SCHEMA_MIN_SIZE)
             max_size = attributes.get(KARABO_SCHEMA_MAX_SIZE)
-            add_row = True if max_size is None else row_count + 1 <= max_size
-            rm_row = True if min_size is None else row_count - 1 >= min_size
-
+            add_row = (True if max_size is None
+                       else row_count + 1 <= int(max_size))
+            rm_row = (True if min_size is None
+                      else row_count - 1 >= int(min_size))
             # Set actions enabled or disabled!
             num_row = self.tableWidget().model().rowCount() - 1
             up_action.setEnabled(index.row() > 0)
