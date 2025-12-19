@@ -41,9 +41,15 @@ def command_run(cmd) -> str:
 def environment_exists(env_name: str) -> bool:
     """Check if the environment already exists"""
     result = command_run(["conda","env", "list"])
-    return any(
+    ret = any(
         env_name in line.split()[0] for line in result.splitlines() if
         line.strip())
+    print("--- BEGIN FOUND ENVIRONMENTS -----\n")
+    print(result)
+    print("--- END FOUND ENVIRONMENTS -----\n")
+    print(f"--- Looking: {env_name} --- Return {result} ---")
+    return ret
+
 
 def get_host_from_env():
     """Retrieve hostname, user and password from the environment"""
