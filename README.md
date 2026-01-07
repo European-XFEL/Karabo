@@ -57,7 +57,8 @@ pip install 'karabo[karathon]'
 Development of Python devices against such installations is straight-forward,
 assuming you add the correct entry-points to your device's `pyproject.toml`.
 If you intend to develop C++ devices, please use the self-consistent
-build described below.
+build described below, or use one of the installers at
+https://github.com/European-XFEL/Karabo-binaries.
 
 ## GUI
 
@@ -67,6 +68,9 @@ The GUI should be installed separately (and into a separate environment):
 pip install 'karabo.gui'
 ```
 
+Alternatively, you can run a single, self-contained executable for supported
+operating systems. These executables can be found at 
+https://github.com/European-XFEL/Karabo-binaries.
 
 # Building
 
