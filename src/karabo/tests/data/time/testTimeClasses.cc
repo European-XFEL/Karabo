@@ -517,8 +517,14 @@ TEST(TestTimeClasses, testTimestamp) {
 
     // default ctr.
     Timestamp stamp1;
-    // cannot really test seconds and fractional seconds from now()...
+    // cannot really test (fractional) seconds from now()...
     EXPECT_EQ(0ull, stamp1.getTid());
+    EXPECT_GT(stamp1.getSeconds(), 0ull);
+
+    Timestamp stampZero(nullptr);
+    EXPECT_EQ(0ull, stampZero.getTid());
+    EXPECT_EQ(0ull, stampZero.getSeconds());
+    EXPECT_EQ(0ull, stampZero.getFractionalSeconds());
 
     // default from epoch and train stamp
     const Timestamp stamp2(eStamp, trStamp);

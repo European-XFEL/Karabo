@@ -42,9 +42,19 @@ namespace karabo {
            public:
             using enum TIME_UNITS;
 
+            /**
+             * Create timestamp from system clock, time id will be zero
+             */
             Timestamp();
 
             Timestamp(const Epochstamp& e, const TimeId& t);
+
+            /**
+             * "Zero" Timestamp: seconds, fractions and time id are zero
+             *
+             * Epochstamp is start of epoch.
+             */
+            Timestamp(std::nullptr_t);
 
             /**
              * Return Epochstamp part of the timestamp

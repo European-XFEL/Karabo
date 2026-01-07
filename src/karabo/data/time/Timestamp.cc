@@ -33,6 +33,7 @@ namespace karabo {
 
         Timestamp::Timestamp(const Epochstamp& e, const TimeId& t) : m_epochstamp(e), m_timeId(t) {}
 
+        Timestamp::Timestamp(std::nullptr_t) : m_epochstamp(0ull, 0ull), m_timeId() {}
 
         Timestamp::~Timestamp() {}
 
