@@ -182,6 +182,7 @@ class SignalSlotable(Configurable):
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
         self._timers = weakref.WeakSet()
+        self._output_channel_servers = weakref.WeakSet()
         self.__initialized = False
         self.__shutdown = False
         self.__removed = False
@@ -423,7 +424,11 @@ class SignalSlotable(Configurable):
 
         if self._sigslot is not None:
             # Returns success
-            return await self._sigslot.stop_tasks()
+            success = await self._sigslot.stop_tasks()
+            for server in list(self._output_channel_servers):
+                server.close()
+
+            return success
 
         # No tasks are running
         return True
