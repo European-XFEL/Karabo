@@ -17,6 +17,7 @@
 
 from random import randint
 
+import psutil
 import pytest
 
 from karabo.middlelayer import (
@@ -84,6 +85,7 @@ class CrazyInjector(Device):
 
     async def onInitialization(self):
         background(self._inject_chooch())
+        self.state = State.ON
 
     async def _inject_chooch(self):
         while self.running:
@@ -100,13 +102,31 @@ class CrazyInjector(Device):
         self.running = False
 
 
+def get_random_port():
+    """Get a random unused port on this machine"""
+    def is_port_in_use(port: int):
+        # Iterate over all current network connections on the machine
+        for conn in psutil.net_connections():
+            # conn.laddr is a named tuple (ip, port)
+            if conn.laddr.port == port:
+                return True
+        return False
+
+    for _ in range(100):
+        target_port = randint(59000, 65535)
+        if not is_port_in_use(target_port):
+            return target_port
+    raise RuntimeError("No port could be opened.")
+
+
 @pytest.mark.timeout(90)
 @pytest.mark.asyncio(loop_scope="module")
 async def test_crazy_injected_channel_connection():
     """Test the crazy injected output channel"""
     INJECTING_TIME = 20
-
-    output_device = CrazyInjector({"_deviceId_": "CrazyInjectedSender"})
+    target_port = get_random_port()
+    output_device = CrazyInjector({"_deviceId_": "CrazyInjectedSender",
+                                   "output": {"port": target_port}})
     receiver = Receiver({"_deviceId_": "ReceiverCrazyInjectedSender"})
     # Start the devices
     async with AsyncDeviceContext(output=output_device, input=receiver):
@@ -124,3 +144,21 @@ async def test_crazy_injected_channel_connection():
         await sleepUntil(lambda: receiver.received > 0)
         assert receiver.received == 1
     assert not receiver.connected
+
+
+@pytest.mark.timeout(90)
+@pytest.mark.asyncio(loop_scope="module")
+async def test_output_channel_shutdown():
+    """Test that we don't leak resources"""
+    target_port = get_random_port()
+
+    class OutputDevice(CrazyInjector):
+        running = False
+
+    # We should be able to instantiate this device in cycles
+    # if the tcp socket is closed properly (fixed port assignment)
+    for i in range(3):
+        output_device = OutputDevice({"_deviceId_": "OutputRunnerPort",
+                                      "output": {"port": target_port}})
+        async with AsyncDeviceContext(output=output_device):
+            await sleepUntil(lambda: output_device.state == State.ON)

@@ -986,6 +986,10 @@ class NetworkOutput(Configurable):
         port = int(self.port) if isSet(self.port) else 0
         self.server = await start_server(serve, host=hostname,
                                          port=port)
+
+        if instance is not None:
+            instance._output_channel_servers.add(self.server)
+
         self.hostname = value
         self.address = hostname
 
@@ -1203,8 +1207,9 @@ class NetworkOutput(Configurable):
         await self.wait_server_online()
         # Perform cleanup only after server is online
         for channel_task in list(self.active_channels):
-            channel_task.cancel()
-            await channel_task
+            if not channel_task.done():
+                channel_task.cancel()
+                await channel_task
 
         self.active_channels = WeakSet()
         self.server.close()
