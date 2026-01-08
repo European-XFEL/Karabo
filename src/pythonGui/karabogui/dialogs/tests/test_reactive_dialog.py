@@ -2,10 +2,12 @@ import json
 from ast import literal_eval
 from datetime import datetime, timezone
 
+import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtNetwork import QNetworkReply, QNetworkRequest
 
 from karabogui import access as krb_access
+from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.dialogs.reactive_login_dialog import (
     AccessCodeWidget, LoginType, ReactiveLoginDialog, UserSessionDialog,
     remaining_time_info)
@@ -265,6 +267,7 @@ def test_access_widget(gui_app):
     assert cells[2] == widget.focusWidget()
 
 
+@pytest.mark.skipif(IS_WINDOWS_SYSTEM, reason="Different time rounding.")
 def test_session_remaining_dialog(mocker):
     """Test the session dialog and the remaining time"""
     def create_start_str() -> str:
