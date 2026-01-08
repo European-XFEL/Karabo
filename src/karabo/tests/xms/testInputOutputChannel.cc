@@ -400,6 +400,12 @@ TEST_F(TestInputOutputChannel, testConnectDisconnect) {
         EXPECT_EQ(table[0].get<std::string>("dataDistribution"), std::string("copy"));
         EXPECT_EQ(table[0].get<std::string>("onSlowness"), std::string("drop"));
         EXPECT_EQ(table[0].get<std::string>("memoryLocation"), std::string("local"));
+        { // Verify that the same table can be retrieved by direct query:
+            const std::vector<Hash> connectionTable = output->getConnectionTable();
+            ASSERT_EQ(1UL, connectionTable.size());
+            EXPECT_TRUE(connectionTable[0].fullyEquals(table[0]))
+                  << "connectionTable: " << connectionTable << "\ntable: " << table;
+        }
 
         // Now we are indeed connected:
         connectStatusMap = input->getConnectionStatus();
@@ -442,6 +448,8 @@ TEST_F(TestInputOutputChannel, testConnectDisconnect) {
         ASSERT_TRUE(trackedStatus.size() > 2ul);
         EXPECT_EQ(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED), static_cast<int>(trackedStatus[2]));
         EXPECT_EQ(3ul, trackedStatus.size()); // i.e. nothing else!
+        // Also the connection table of the output channel took note:
+        EXPECT_EQ(output->getConnectionTable().size(), 0);
     }
 
     // Write data again - input does not anymore receive data.
