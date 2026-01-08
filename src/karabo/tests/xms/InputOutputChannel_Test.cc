@@ -402,6 +402,12 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("drop"));
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
+        { // Verify that the same table can be retrieved by direct query:
+            const std::vector<Hash> connectionTable = output->getConnectionTable();
+            CPPUNIT_ASSERT_EQUAL(1UL, connectionTable.size());
+            const std::string msg("connectionTable: " + toString(connectionTable) += "\ntable: " + toString(table));
+            CPPUNIT_ASSERT_MESSAGE(msg, connectionTable[0].fullyEquals(table[0]));
+        }
 
         // Now we are indeed connected:
         connectStatusMap = input->getConnectionStatus();
@@ -445,6 +451,8 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
                              static_cast<int>(trackedStatus[2]));
         CPPUNIT_ASSERT_EQUAL(3ul, trackedStatus.size()); // i.e. nothing else!
+        // Also the connection table of the output channel took note:
+        CPPUNIT_ASSERT_EQUAL(output->getConnectionTable().size(), 0ul);
     }
 
     // Write data again - input does not anymore receive data.

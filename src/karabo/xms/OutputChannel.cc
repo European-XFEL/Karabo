@@ -534,6 +534,21 @@ namespace karabo {
             }
         }
 
+        std::vector<karabo::data::Hash> OutputChannel::getConnectionTable() const {
+            std::vector<karabo::data::Hash> result;
+            {
+                std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
+                result = m_connections;
+            }
+            // Remove some keys to return result as passed to m_showConnectionsHandler
+            for (Hash& h : result) {
+                h.erase("weakChannel");
+                h.erase("bytesRead");
+                h.erase("bytesWritten");
+            }
+
+            return result;
+        }
 
         void OutputChannel::updateConnectionTable() {
             std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
