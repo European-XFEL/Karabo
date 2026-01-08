@@ -69,7 +69,7 @@ pip install 'karabo.gui'
 ```
 
 Alternatively, you can run a single, self-contained executable for supported
-operating systems. These executables can be found at 
+operating systems. These executables can be found at
 https://github.com/European-XFEL/Karabo-binaries.
 
 # Building
