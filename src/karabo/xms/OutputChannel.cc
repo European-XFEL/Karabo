@@ -550,6 +550,11 @@ namespace karabo {
             return result;
         }
 
+        size_t OutputChannel::numConnections() const {
+            std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
+            return m_connections.size();
+        }
+
         void OutputChannel::updateConnectionTable() {
             std::lock_guard<std::mutex> lock(m_showConnectionsHandlerMutex);
             m_updateDeadline.cancel();

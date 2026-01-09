@@ -417,6 +417,8 @@ namespace karabo {
 
             std::vector<karabo::data::Hash> getConnectionTable() const;
 
+            size_t numConnections() const;
+
            private:
             void initializeServerConnection(int countdown);
 
