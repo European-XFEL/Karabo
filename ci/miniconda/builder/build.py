@@ -114,7 +114,7 @@ class Builder:
 
     @staticmethod
     def get_env_name(recipe):
-        return f"build_env_{recipe}"
+        return f"{recipe}"
 
     def recipe_path(self, recipe):
         return op.join(
@@ -157,8 +157,9 @@ class Builder:
 
         try:
             # Remove the environment for the recipe
-            command_run(
-                ["conda", "remove", "-n", name, "--all", "quiet", "--yes"])
+            command = ["conda", "remove", "-n", name,
+                       "--all", "quiet", "--yes"]
+            conda_run_command(cmd=command, env_name="base")
         except Exception as e:
             # this might fail if the environment does not exist
             print(
