@@ -405,6 +405,7 @@ TEST_F(TestInputOutputChannel, testConnectDisconnect) {
             ASSERT_EQ(1UL, connectionTable.size());
             EXPECT_TRUE(connectionTable[0].fullyEquals(table[0]))
                   << "connectionTable: " << connectionTable << "\ntable: " << table;
+            EXPECT_EQ(output->numConnections(), connectionTable.size());
         }
 
         // Now we are indeed connected:
