@@ -13,8 +13,9 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from asyncio import wait_for
+from asyncio import Lock, wait_for
 from io import StringIO
+from weakref import WeakValueDictionary
 
 from lxml import etree
 
@@ -84,6 +85,7 @@ class ProjectManager(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
         self.db_handle = None
+        self._client_locks = WeakValueDictionary()
 
     async def onInitialization(self):
         """
@@ -93,6 +95,7 @@ class ProjectManager(Device):
         If the database is reachable updates the device state to ON,
         otherwise brings the device into ERROR
         """
+
         try:
             self.db_handle = await self.get_project_db(
                 init_db=True)
@@ -272,11 +275,14 @@ class ProjectManager(Device):
                     f"with db schema {project_db_schema}.")
             raise ProjectDBError(text)
 
-        saved, uuids = await self._save_items(items)
-        if uuids:
-            self.signalProjectUpdate(
-                Hash("projects", uuids, "client", client),
-                self.deviceId)
+        # A client needs to batch save a set of items at once.
+        lock = self._client_locks.setdefault(client, Lock())
+        async with lock:
+            saved, uuids = await self._save_items(items)
+            if uuids:
+                self.signalProjectUpdate(
+                    Hash("projects", uuids, "client", client),
+                    self.deviceId)
 
         return Hash('items', saved)
 
