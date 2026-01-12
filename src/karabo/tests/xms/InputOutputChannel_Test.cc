@@ -407,7 +407,9 @@ void InputOutputChannel_Test::testConnectDisconnect() {
             CPPUNIT_ASSERT_EQUAL(1UL, connectionTable.size());
             const std::string msg("connectionTable: " + toString(connectionTable) += "\ntable: " + toString(table));
             CPPUNIT_ASSERT_MESSAGE(msg, connectionTable[0].fullyEquals(table[0]));
+            CPPUNIT_ASSERT_EQUAL(output->numConnections(), connectionTable.size());
         }
+
 
         // Now we are indeed connected:
         connectStatusMap = input->getConnectionStatus();
