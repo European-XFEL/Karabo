@@ -33,7 +33,7 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import maybe_save_modified_project, save_object
 from karabogui.singletons.api import (
-    get_db_conn, get_project_model, get_selection_tracker)
+    get_config, get_db_conn, get_project_model, get_selection_tracker)
 from karabogui.util import is_database_processing, move_to_cursor
 
 from .controller.bases import BaseProjectGroupController
@@ -227,6 +227,7 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller))
                 trash_action.setEnabled(project_allowed)
+
                 menu.addAction(rename_action)
                 menu.addAction(instantiate_all_macros)
                 menu.addAction(instantiate_all_devices)
@@ -235,6 +236,13 @@ class ProjectView(QTreeView):
                 menu.addAction(close_action)
                 menu.addSeparator()
                 menu.addAction(trash_action)
+                if get_config()["development"]:
+                    about_action = QAction(icons.about, 'About', menu)
+                    about_action.triggered.connect(partial(self._about_project,
+                                                           selected_project,
+                                                           project_controller))
+                    menu.addSeparator()
+                    menu.addAction(about_action)
 
             menu.exec(QCursor.pos())
 
@@ -355,6 +363,16 @@ class ProjectView(QTreeView):
                                    project.uuid, project.is_trashed)
             # We directly save on attribute update!
             save_object(project)
+
+    def _about_project(self, project, parent=None):
+        info = {
+            "simple_name": project.simple_name,
+            "uuid": project.uuid}
+
+        htmlString = ("<table>" +
+                      "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
+                              format(*p) for p in info.items()) + "</table>")
+        messagebox.show_information(htmlString, parent=parent)
 
     @Slot()
     def onDoubleClickHeader(self):
