@@ -1816,6 +1816,7 @@ def launchPythonDevice():
             EventLoop.stop()
             exception = e
 
+    EventLoop.setCatchExceptions(True)
     EventLoop.post(initialize)
 
     # Start the event loop that will first call initialize()

@@ -132,8 +132,8 @@ namespace karabo {
             /**
              * Public flag to change behaviour of catching exceptions in threads
              *
-             * By default, flag is true and the event loop runs its threads such that any exception is caught
-             * and logged as error. If flag is false, exceptions are rethrown after logging them.
+             * By default, flag is false and exceptions are rethrown after logging them. If flag is true, the
+             * event loop runs its threads such that any exception is caught and logged as error.
              *
              * @param flag that should be valid now
              * @return previous value of flag
@@ -143,7 +143,7 @@ namespace karabo {
             }
 
            private:
-            EventLoop() : m_running(false), m_catchExceptions(true){};
+            EventLoop() : m_running(false), m_catchExceptions(false){};
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;

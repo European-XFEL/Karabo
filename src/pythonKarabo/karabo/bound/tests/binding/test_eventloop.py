@@ -19,6 +19,8 @@ from signal import SIGTERM
 from threading import Lock, Thread
 from time import sleep
 
+import pytest
+
 from karabo.bound import Epochstamp, EventLoop
 
 
@@ -100,3 +102,45 @@ def test_eventloop_signalHandler():
     t.join()
 
     assert signal == SIGTERM
+
+
+def test_eventloop_setCatchExceptions():
+    oldFlag = EventLoop.setCatchExceptions(True)
+
+    raiserCalled = False
+
+    def raiser():
+        nonlocal raiserCalled
+        raiserCalled = True
+        raise RuntimeError("An exception that will be caught")
+
+    EventLoop.post(raiser)
+    EventLoop.run()
+
+    timeout = 2
+    while not raiserCalled and timeout > 0:
+        sleep(0.05)
+        print("sleep", timeout)
+        timeout -= 0.05
+
+    # Reset flag before potential exception let's us bail out
+    EventLoop.setCatchExceptions(oldFlag)
+
+    # Check that we get here despite of exception, i.e. it got caught
+    assert raiserCalled
+
+
+def test_eventloop_setCatchExceptions2():
+    oldFlag = EventLoop.setCatchExceptions(False)
+
+    def raiser():
+        raise RuntimeError("An uncaught exception")
+
+    EventLoop.post(raiser)
+    with pytest.raises(RuntimeError) as excinfo:
+        EventLoop.run()
+
+    # Reset before flag before potential exception let's us bail out
+    # (Ok, of exception not raised by run(), we bail out before...)
+    EventLoop.setCatchExceptions(oldFlag)
+    assert "An uncaught exception" in str(excinfo.value)

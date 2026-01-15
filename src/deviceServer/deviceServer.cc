@@ -84,6 +84,7 @@ int main(int argc, const char** argv) {
             boost::asio::post(EventLoop::getIOService(), initializer);
 
             // Start central event loop  and block until event loop stopped, usually by a signal
+            EventLoop::setCatchExceptions(true);
             EventLoop::work();
             serverInitialized.get(); // throws if initializer failed
         }

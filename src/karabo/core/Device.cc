@@ -1007,17 +1007,25 @@ namespace karabo {
                                                << "' failed to create output channel";
                 } else {
                     Device::WeakPointer weakThis(std::dynamic_pointer_cast<Device>(shared_from_this()));
-                    channel->registerShowConnectionsHandler(
-                          [weakThis, path](const std::vector<karabo::data::Hash>& connections) {
-                              Device::Pointer self(weakThis.lock());
-                              if (self) self->set(path + ".connections", connections);
-                          });
+                    channel->registerShowConnectionsHandler([weakThis,
+                                                             path](const std::vector<karabo::data::Hash>& connections) {
+                        Device::Pointer self(weakThis.lock());
+                        if (self) {
+                            std::lock_guard lock(self->m_objectStateChangeMutex);
+                            if (self->m_fullSchema.has(path)) { // updateSchema might have removed it
+                                self->setNoLock(Hash(path + ".connections", connections), self->getActualTimestamp());
+                            }
+                        }
+                    });
                     channel->registerShowStatisticsHandler([weakThis, path](const std::vector<unsigned long long>& rb,
                                                                             const std::vector<unsigned long long>& wb) {
                         Device::Pointer self(weakThis.lock());
                         if (self) {
-                            karabo::data::Hash h(path + ".bytesRead", rb, path + ".bytesWritten", wb);
-                            self->set(h);
+                            std::lock_guard lock(self->m_objectStateChangeMutex);
+                            if (self->m_fullSchema.has(path)) { // updateSchema might have removed it
+                                karabo::data::Hash h(path + ".bytesRead", rb, path + ".bytesWritten", wb);
+                                self->setNoLock(h, self->getActualTimestamp());
+                            }
                         }
                     });
                     karabo::data::Hash update(path, channel->getInitialConfiguration());
