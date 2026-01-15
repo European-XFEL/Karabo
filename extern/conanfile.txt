@@ -71,4 +71,4 @@ boost/*:without_regex=False
 boost/*:without_thread=False
 boost/*:without_system=False
 boost/*:without_program_options=False
-boost/*:without_python=True
+boost/*:without_python=False
