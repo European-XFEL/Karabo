@@ -22,6 +22,9 @@ from karabo.bound import EventLoop
 
 def main():
     # We need the (C++) event loop in the background:
+    # We get a print for exceptions even if caught
+    # and the event loop must stay alive anyway
+    EventLoop.setCatchExceptions(True)
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
 

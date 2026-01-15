@@ -725,6 +725,7 @@ def main(argv=None):
     argv = argv or sys.argv
     # Load plugins already here to make them available for -h option
     PluginLoader.create("PythonPluginLoader", Hash()).update()
+    EventLoop.setCatchExceptions(True)
     t = threading.Thread(target=EventLoop.work)
     t.start()
     server = None

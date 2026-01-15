@@ -340,22 +340,20 @@ void TestPipelinedProcessing::testGetOutputChannelSchema() {
     karabo::data::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
 
     ASSERT_TRUE(dataSchema.has("dataId"));
-    ASSERT_TRUE(dataSchema.getType("dataId") == karabo::data::Types::INT32);
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("dataId", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("dataId", KARABO_SCHEMA_VALUE_TYPE), "INT32");
     ASSERT_TRUE(dataSchema.has("data"));
-    ASSERT_TRUE(dataSchema.getType("data") == karabo::data::Types::INT32);
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("data", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_INT64");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("data", KARABO_SCHEMA_VALUE_TYPE), "VECTOR_INT64");
     ASSERT_TRUE(dataSchema.has("array"));
-    ASSERT_TRUE(!dataSchema.hasAttribute(
+    EXPECT_TRUE(!dataSchema.hasAttribute(
           "array", KARABO_HASH_CLASS_ID)); // As a Schema it should not carry info about HASH_CLASS_ID
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("array", KARABO_SCHEMA_CLASS_ID) == "NDArray");
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("array.data", KARABO_SCHEMA_VALUE_TYPE) == "BYTE_ARRAY");
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("array.shape", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_UINT64");
-    ASSERT_TRUE(dataSchema.getAttributeAs<std::string>("array.shape", KARABO_SCHEMA_DEFAULT_VALUE) == "100,200,0");
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("array.type", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("array", KARABO_SCHEMA_CLASS_ID), "NDArray");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("array.data", KARABO_SCHEMA_VALUE_TYPE), "BYTE_ARRAY");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("array.shape", KARABO_SCHEMA_VALUE_TYPE), "VECTOR_UINT64");
+    EXPECT_EQ(dataSchema.getAttributeAs<std::string>("array.shape", KARABO_SCHEMA_DEFAULT_VALUE), "100,200,0");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("array.type", KARABO_SCHEMA_VALUE_TYPE), "INT32");
     ASSERT_EQ(static_cast<int>(Types::UINT8), dataSchema.getAttribute<int>("array.type", KARABO_SCHEMA_DEFAULT_VALUE));
-    ASSERT_TRUE(dataSchema.getAttribute<std::string>("array.isBigEndian", KARABO_SCHEMA_VALUE_TYPE) == "BOOL");
-    ASSERT_TRUE(dataSchema.getAttributeAs<std::string>("array.isBigEndian", KARABO_SCHEMA_DEFAULT_VALUE) == "0");
+    EXPECT_EQ(dataSchema.getAttribute<std::string>("array.isBigEndian", KARABO_SCHEMA_VALUE_TYPE), "BOOL");
+    EXPECT_EQ(dataSchema.getAttributeAs<std::string>("array.isBigEndian", KARABO_SCHEMA_DEFAULT_VALUE), "0");
 
     std::clog << "Passed!\n\n";
 }

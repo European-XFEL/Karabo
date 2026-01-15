@@ -86,4 +86,10 @@ void exportPyNetEventLoop(py::module_& m) {
           py::arg("handler"),
           "Set handler to be called if a system signal is caught in 'work',\n"
           "'handler' has to take the signal value as argument.");
+
+    el.def_static("setCatchExceptions", &EventLoop::setCatchExceptions, py::arg("flag"),
+                  "Public flag to change behaviour of catching exceptions in threads\n\n"
+                  "By default, flag is false and exceptions are rethrown after logging them.\n"
+                  "If flag is true and the event loop runs its threads such that any exception\n"
+                  "is caught and logged as error.");
 }
