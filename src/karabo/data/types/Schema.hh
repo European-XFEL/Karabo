@@ -231,9 +231,27 @@ namespace karabo {
              */
             Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
-            virtual ~Schema(){
+            virtual ~Schema() {}
 
-            };
+            /**
+             * Schema copy constructor
+             */
+            Schema(const Schema& other) = default;
+
+            /**
+             * Copy assignment operator
+             */
+            Schema& operator=(const Schema& other) = default;
+
+            /**
+             * Schema move constructor
+             */
+            Schema(Schema&& other) noexcept = default;
+
+            /**
+             * Move assignment operator
+             */
+            Schema& operator=(Schema&& other) noexcept = default;
 
             /**
              * Set the assembly rules for this schema
