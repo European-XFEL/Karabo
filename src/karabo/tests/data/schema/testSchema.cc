@@ -150,6 +150,62 @@ TEST_F(TestSchema, testGetRequiredAccessLevel) {
 }
 
 
+TEST_F(TestSchema, testMoveAndCopyConstructors) {
+    { // Copy constructor
+        Schema source("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+        OtherSchemaElements::expectedParameters(source);
+        ASSERT_FALSE(source.empty());
+        ASSERT_TRUE(source.getRootName() == "OtherSchemaElements");
+
+        Schema target(source); // copy constructor
+        EXPECT_FALSE(source.empty());
+        EXPECT_FALSE(target.empty());
+        EXPECT_TRUE(source.getRootName() == target.getRootName());
+        EXPECT_TRUE(target.getRootName() == "OtherSchemaElements");
+    }
+    { // Copy assignment
+        Schema source("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+        OtherSchemaElements::expectedParameters(source);
+        ASSERT_FALSE(source.empty());
+        ASSERT_TRUE(source.getRootName() == "OtherSchemaElements");
+
+        Schema target;
+        ASSERT_TRUE(target.empty());
+        target = source; // Copy assignment
+        EXPECT_FALSE(source.empty());
+        EXPECT_FALSE(target.empty());
+        EXPECT_TRUE(source.getRootName() == target.getRootName());
+        EXPECT_TRUE(target.getRootName() == "OtherSchemaElements");
+    }
+    { // Move constructor
+        Schema source("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+        OtherSchemaElements::expectedParameters(source);
+        ASSERT_FALSE(source.empty());
+        ASSERT_TRUE(source.getRootName() == "OtherSchemaElements");
+
+        Schema target(std::move(source)); // move constructor
+        EXPECT_TRUE(source.empty());
+        EXPECT_FALSE(target.empty());
+        EXPECT_TRUE(source.getRootName() == "");
+        EXPECT_TRUE(target.getRootName() == "OtherSchemaElements");
+    }
+    { // Move assignment
+        Schema source("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+        OtherSchemaElements::expectedParameters(source);
+        ASSERT_FALSE(source.empty());
+        ASSERT_TRUE(source.getRootName() == "OtherSchemaElements");
+
+        Schema target;
+        ASSERT_TRUE(target.empty());
+        target = std::move(source); // move assignment
+        EXPECT_TRUE(source.empty());
+        EXPECT_FALSE(target.empty());
+        EXPECT_TRUE(source.getRootName() == "");
+        EXPECT_TRUE(target.getRootName() == "OtherSchemaElements");
+    }
+}
+
+
 TEST_F(TestSchema, testSetRequiredAccessLevel) {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
