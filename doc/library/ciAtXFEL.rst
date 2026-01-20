@@ -55,10 +55,6 @@ The address http://exflctrl01.desy.de/karabo/karaboFramework/tags/latest_prerele
 contains the latest prerelease build.
 Alpha releases, and release candidates will be linked to this address.
 
-In addition to these builds that are generated from a tag on the git repository,
-a nightly build is generated every day and upoaded to this address
-http://exflctrl01.desy.de/karabo/karaboFramework/nightly
-
 Conda Packages
 ++++++++++++++
 
