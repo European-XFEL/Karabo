@@ -168,5 +168,39 @@ namespace karabo {
             return NDArray(getDataPtr(), getType(), size(), getShape(), isBigEndian(), true);
         }
 
+        std::pair<size_t, size_t> deepCopyNDArrays(Hash& input) {
+            std::pair<size_t, size_t> result(0, 0);
+            for (auto it = input.begin(); it != input.end(); ++it) { // insertion order iteration
+                Hash::Node& node = *it;
+                Hash::Attributes& attrs = node.getAttributes();
+                if (node.getType() == Types::HASH) {
+                    // A Hash node
+                    auto attrIt = attrs.find(KARABO_HASH_CLASS_ID);
+                    // Is the Hash...
+                    if (attrIt != attrs.mend() &&
+                        attrIt->second.getValue<std::string>() == NDArray::classInfo().getClassId()) {
+                        //  ...an NDArray?  Then replace the data in its ByteArray with a copy:
+                        Hash& ndArrayAsHash = node.getValue<Hash>();
+                        ByteArray& byteArr = ndArrayAsHash.get<ByteArray>("data");
+                        NDArray::DataPointer& dataPtr = byteArr.first;
+                        const size_t byteSize = byteArr.second;
+                        auto newDataPtr = NDArray::DataPointer(new char[byteSize], &NDArray::deallocator);
+                        std::copy(dataPtr.get(), dataPtr.get() + byteSize, newDataPtr.get());
+                        byteArr.first = newDataPtr; // assign to ByteArray in 'input'
+
+                        result.first += 1;
+                        result.second += byteSize;
+                    } else {
+                        // ...or an ordinary Hash? We simply recurse:
+                        const std::pair<size_t, size_t> innerResult = deepCopyNDArrays(node.getValue<Hash>());
+                        result.first += innerResult.first;
+                        result.second += innerResult.second;
+                    }
+                } // else a leaf, no action needed
+            }
+            return result;
+        }
+
+
     } // namespace data
 } // namespace karabo

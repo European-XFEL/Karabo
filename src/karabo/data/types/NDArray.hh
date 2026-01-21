@@ -241,6 +241,8 @@ namespace karabo {
 
             NDArray copy() const;
 
+            static void deallocator(const char* p);
+
            private:
             template <typename T>
             void setType() {
@@ -271,9 +273,18 @@ namespace karabo {
             void setBigEndian(const bool isBigEndian);
 
             void swapEndianess();
-
-            static void deallocator(const char* p);
         };
+
+        /**
+         * Deep copy NDArray data in a Hash
+         *
+         * Afterwards, NDArray data is not shared with any other Hash/NDArray
+         *
+         * @param input is the Hash that is manipulated
+         *
+         * @return number of NDArrays are found and total number of bytes copied
+         */
+        std::pair<size_t, size_t> deepCopyNDArrays(Hash& input);
 
         // Implementation of template functions
 
