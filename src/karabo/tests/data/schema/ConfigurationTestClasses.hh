@@ -636,6 +636,7 @@ namespace configurationTest {
 
             TABLE_ELEMENT(expected)
                   .key("testTableEmptyDefault")
+                  .setSpecialDisplayType("MyTableType")
                   .setColumns(rowSchema)
                   .assignmentOptional()
                   .defaultValue(std::vector<Hash>())
