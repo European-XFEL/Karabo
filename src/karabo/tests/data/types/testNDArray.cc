@@ -169,3 +169,33 @@ TEST(TestNDArray, testDataTypeException) {
     EXPECT_TRUE(exceptionMsg.find(toString(12345678)) != std::string::npos) << "'12345678'" << msg << exceptionMsg;
     EXPECT_TRUE(exceptionMsg.find("to INT16") != std::string::npos) << "'to INT16'" << msg << exceptionMsg;
 }
+
+TEST(TestNDArray, testReplaceNDArraysByCopy) {
+    // Some NDArrays (all with size() == 12)
+    NDArray arr0(Dims(12), static_cast<short>(42));
+    NDArray arr1(Dims(6, 2), -42);
+    NDArray arr2(Dims(3, 4), 3.14f);
+    Hash h("arr0", arr0, "b.arr1", arr1, "c.d.arr2", arr2,           //
+           "other", "string", "b.nested", 0, "c.emptyHash", Hash()); // just other junk
+
+    // NDArrays above and those inside 'h' share data pointers
+    EXPECT_EQ(arr0.getData<short>(), h.get<NDArray>("arr0").getData<short>());
+    EXPECT_EQ(arr1.getData<int>(), h.get<NDArray>("b.arr1").getData<int>());
+    EXPECT_EQ(arr2.getData<float>(), h.get<NDArray>("c.d.arr2").getData<float>());
+
+    const std::pair<size_t, size_t> nums = deepCopyNDArrays(h);
+    // Copied 3 NDArrays and all their bytes
+    EXPECT_EQ(nums.first, 3);
+    EXPECT_EQ(nums.second, arr0.byteSize() + arr1.byteSize() + arr2.byteSize());
+
+    // After copy of the data, pointers differ
+    EXPECT_NE(arr0.getData<short>(), h.get<NDArray>("arr0").getData<short>());
+    EXPECT_NE(arr1.getData<int>(), h.get<NDArray>("b.arr1").getData<int>());
+    EXPECT_NE(arr2.getData<float>(), h.get<NDArray>("c.d.arr2").getData<float>());
+    // But data stays equal
+    for (size_t i = 0; i < 12; ++i) {
+        EXPECT_EQ(h.get<NDArray>("arr0").getData<short>()[i], 42);
+        EXPECT_EQ(h.get<NDArray>("b.arr1").getData<int>()[i], -42);
+        EXPECT_EQ(h.get<NDArray>("c.d.arr2").getData<float>()[i], 3.14f);
+    }
+}
