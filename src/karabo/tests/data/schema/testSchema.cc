@@ -1801,6 +1801,7 @@ TEST_F(TestSchema, testInvalidReadOnlyThrows) {
 TEST_F(TestSchema, testTable) {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(AccessType::READ | AccessType::WRITE | AccessType::INIT));
     OtherSchemaElements::expectedParameters(sch);
+
     EXPECT_TRUE(sch.isLeaf("testTable") == true);
     EXPECT_TRUE(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
     const std::vector<Hash> shouldBeDefault(2, Hash("a", 3, "b", "foo"));
@@ -1808,9 +1809,11 @@ TEST_F(TestSchema, testTable) {
     EXPECT_EQ(shouldBeDefault.size(), theDefault.size());
     EXPECT_EQ(shouldBeDefault[0].size(), theDefault[1].size());
     EXPECT_EQ(shouldBeDefault[1].get<int>("a"), theDefault[0].get<int>("a"));
-    EXPECT_STREQ(shouldBeDefault[1].get<std::string>("b").c_str(), theDefault[1].get<std::string>("b").c_str());
+    EXPECT_EQ(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
+    EXPECT_EQ(sch.getDisplayType("testTable"), "Table"); // the default
 
     EXPECT_TRUE(sch.getDefaultValue<std::vector<Hash>>("testTableEmptyDefault").empty());
+    EXPECT_EQ(sch.getDisplayType("testTableEmptyDefault"), "MyTableType"); // via setSpecialDisplayType
 }
 
 
