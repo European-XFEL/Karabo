@@ -641,6 +641,7 @@ class TestStruct1:
 
             TABLE_ELEMENT(expected)
             .key("tableI")
+            .setSpecialDisplayType("myType")
             .setColumns(row)
             .readOnly()
             .initialValue([Hash("int", 2)])
@@ -1566,6 +1567,9 @@ def test_table_element():
     default = schema.getDefaultValue("tableD")
     assert len(default) == 1
     assert fullyEqual(default[0], Hash("int", 3)) is True
+
+    displayType = schema.getDisplayType("tableI")
+    assert displayType == "myType"
 
     # There are more tests of tables in the integration tests...
 

@@ -1766,8 +1766,11 @@ void Schema_Test::testTable() {
     CPPUNIT_ASSERT_EQUAL(shouldBeDefault[0].size(), theDefault[1].size());
     CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<int>("a"), theDefault[0].get<int>("a"));
     CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
+    CPPUNIT_ASSERT_EQUAL(sch.getDisplayType("testTable"), std::string("Table")); // the default
 
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<Hash>>("testTableEmptyDefault").empty());
+    CPPUNIT_ASSERT_EQUAL(sch.getDisplayType("testTableEmptyDefault"),
+                         std::string("MyTableType")); // via setSpecialDisplayType
 }
 
 
