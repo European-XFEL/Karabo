@@ -34,6 +34,7 @@ class NDArray_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(testShapeException);
     CPPUNIT_TEST(testDataTypeException);
+    CPPUNIT_TEST(testReplaceNDArraysByCopy);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -46,6 +47,7 @@ class NDArray_Test : public CPPUNIT_NS::TestFixture {
     void testConstructor();
     void testShapeException();
     void testDataTypeException();
+    void testReplaceNDArraysByCopy();
 };
 
 #endif /* NDARRAY_TEST_HH */
