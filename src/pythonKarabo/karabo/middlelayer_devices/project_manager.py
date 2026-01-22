@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from asyncio import Lock, wait_for
+from collections import defaultdict
 from io import StringIO
 from weakref import WeakValueDictionary
 
@@ -32,13 +33,15 @@ from karabo.middlelayer import (
 from karabo.native import read_project_model
 from karabo.project_db import LocalNode, ProjectDBError, RemoteNode
 
+# This defines the order in which items of a single request must be stored
+# (e.g. storing a server requires that all its devices are already stored)
 _ITEM_TYPES = [
     PROJECT_DB_TYPE_DEVICE_CONFIG,
     PROJECT_DB_TYPE_DEVICE_INSTANCE,
     PROJECT_DB_TYPE_DEVICE_SERVER,
     PROJECT_DB_TYPE_MACRO,
+    PROJECT_DB_TYPE_SCENE,
     PROJECT_DB_TYPE_PROJECT,
-    PROJECT_DB_TYPE_SCENE
 ]
 
 _UNKNOWN_CLIENT = "__none__"
@@ -165,36 +168,48 @@ class ProjectManager(Device):
         """Internally used method to store items in the project database"""
         saved_items = []
         project_uuids = []
+
+        # Sort items accorind to their type
+        items_types = defaultdict(list)
+        for item in items:
+            items_types[item["item_type"]].append(item)
+
+        type_lock = Lock()
         async with self.db_handle as db_session:
-            for item in items:
-                xml = item["xml"]
-                uuid = item["uuid"]
+            for t in _ITEM_TYPES:
+                chunk = items_types[t]
+                if not chunk:
+                    continue
 
-                # XXX: be backward compatible (<2.8.0)!
-                # Also stored in xml
-                item_type = item.get("item_type", "unknown")
-                if item_type == "project":
-                    project_uuids.append(uuid)
+                async with type_lock:
+                    for item in chunk:
+                        xml = item["xml"]
+                        uuid = item["uuid"]
 
-                domain = item["domain"]
-                reason = ""
-                date = ""
-                success = True
-                # All items have their individual success bool
-                try:
-                    date = await db_session.save_item(
-                        domain, uuid, xml, True)
-                except ProjectDBError as e:
-                    success = False
-                    reason = str(e)
+                        # Also stored in xml
+                        item_type = item.get("item_type")
+                        if item_type == "project":
+                            project_uuids.append(uuid)
 
-                ret = Hash(
-                    "success", success,
-                    "reason", reason,
-                    "domain", domain,
-                    "date", date,
-                    "uuid", uuid)
-                saved_items.append(ret)
+                        domain = item["domain"]
+                        reason = ""
+                        date = ""
+                        success = True
+                        # All items have their individual success bool
+                        try:
+                            date = await db_session.save_item(
+                                domain, uuid, xml, True)
+                        except ProjectDBError as e:
+                            success = False
+                            reason = str(e)
+
+                        ret = Hash(
+                            "success", success,
+                            "reason", reason,
+                            "domain", domain,
+                            "date", date,
+                            "uuid", uuid)
+                        saved_items.append(ret)
 
         return saved_items, project_uuids
 
