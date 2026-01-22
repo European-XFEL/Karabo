@@ -1566,8 +1566,15 @@ TEST_F(TestSchema, testStateAndAlarmSets) {
     STRING_ELEMENT(schema).key("string").readOnly().commit();
 
     STATE_ELEMENT(schema).key("state").commit();
+    STATE_ELEMENT(schema).key("state2").setSpecialDisplayType("SpecialState").commit();
 
     ALARM_ELEMENT(schema).key("alarm").commit();
+    ALARM_ELEMENT(schema).key("alarm2").setSpecialDisplayType("SpecialAlarm").commit();
+
+    EXPECT_EQ(schema.getDisplayType("state"), "State");
+    EXPECT_EQ(schema.getDisplayType("state2"), "SpecialState");
+    EXPECT_EQ(schema.getDisplayType("alarm"), "AlarmCondition");
+    EXPECT_EQ(schema.getDisplayType("alarm2"), "SpecialAlarm");
 
     Hash h("string", "abc");
     Validator val;

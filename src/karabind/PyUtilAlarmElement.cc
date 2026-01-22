@@ -49,6 +49,9 @@ void exportPyUtilAlarmConditionElement(py::module_& m) {
 
     a.def("displayedName", &AlarmConditionElement::displayedName, py::return_value_policy::reference_internal);
 
+    a.def("setSpecialDisplayType", &AlarmConditionElement::setSpecialDisplayType,
+          py::return_value_policy::reference_internal);
+
     a.def("key", &AlarmConditionElement::key, py::arg("name"), py::arg("strict") = true,
           py::return_value_policy::reference_internal);
 
