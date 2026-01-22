@@ -77,6 +77,7 @@ class CircleX(ShapeX):
             .commit(),
 
             STATE_ELEMENT(expected).key("stateE")
+            .setSpecialDisplayType("MyStateType")
             .initialValue(State.ERROR)
             .commit(),
 
@@ -88,6 +89,7 @@ class CircleX(ShapeX):
             .commit(),
 
             ALARM_ELEMENT(expected).key("alarmA")
+            .setSpecialDisplayType("MyAlarmType")
             .initialValue(AlarmCondition.ALARM)
             .commit(),
 
@@ -994,6 +996,10 @@ def test_buildUp():
     assert schema.getDefaultValue("alarmW") == 'warn'
     assert schema.getDefaultValue("alarmA") == 'alarm'
     assert schema.getDefaultValue("alarm") == 'warn'
+    assert schema.getDisplayType("state") == 'State'
+    assert schema.getDisplayType("stateE") == 'MyStateType'
+    assert schema.getDisplayType("alarm") == 'AlarmCondition'
+    assert schema.getDisplayType("alarmA") == 'MyAlarmType'
     assert schema.getDisplayedName("radius") == "New Radius"
     assert schema.getAliasFromKey("radius") == 21
     assert schema.getAliasAsString("radius") == "21"

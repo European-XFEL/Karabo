@@ -114,7 +114,9 @@ namespace karabo {
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, static_cast<int>(Schema::OPTIONAL_PARAM));
             m_node->setAttribute<std::string>(KARABO_SCHEMA_CLASS_ID, "State");
-            m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "State");
+            if (!m_node->hasAttribute(KARABO_SCHEMA_DISPLAY_TYPE)) { // from setSpecialDisplayType
+                m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "State");
+            }
 
             // finally protect setting options etc to state element via overwrite
             OverwriteElement::Restrictions restrictions;

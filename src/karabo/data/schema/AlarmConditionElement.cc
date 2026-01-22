@@ -45,7 +45,9 @@ namespace karabo {
             m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
             m_node->setAttribute<std::string>(KARABO_SCHEMA_CLASS_ID, "AlarmCondition");
-            m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "AlarmCondition");
+            if (!m_node->hasAttribute(KARABO_SCHEMA_DISPLAY_TYPE)) { // from setSpecialDisplayType
+                m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "AlarmCondition");
+            }
 
             // finally protect setting options etc to alarm element via overwrite
             OverwriteElement::Restrictions restrictions;

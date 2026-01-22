@@ -47,6 +47,8 @@ void exportPyUtilStateElement(py::module_& m) {
 
     se.def("displayedName", &StateElement::displayedName, py::return_value_policy::reference_internal);
 
+    se.def("setSpecialDisplayType", &StateElement::setSpecialDisplayType, py::return_value_policy::reference_internal);
+
     se.def("key", &StateElement::key, py::arg("name"), py::arg("strict") = true,
            py::return_value_policy::reference_internal);
 
