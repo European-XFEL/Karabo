@@ -1162,6 +1162,7 @@ class SQLDatabase:
                     date=date)
 
             session.add(config)
+            await session.flush()
             await session.commit()
 
     async def _save_device_instance_item(
