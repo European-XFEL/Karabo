@@ -553,7 +553,7 @@ def test_table_model_view_string_button_delegate(gui_app, mocker):
         table_view = controller.tableWidget()
         delegate = table_view.itemDelegate(index)
         assert isinstance(delegate, StringButtonDelegate)
-        path = f"{DELEGATES}.webbrowser"
+        path = "karabogui.util.webbrowser"
         web = mocker.patch(path)
         delegate.click_action(index)
         web.open_new.assert_called_with("https://www.xfel.eu")

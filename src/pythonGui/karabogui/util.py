@@ -18,7 +18,9 @@ import html
 import os
 import os.path as op
 import re
+import subprocess
 import sys
+import webbrowser
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +41,7 @@ from karabo.native import Hash, decodeXML, writeXML
 from karabogui import const, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
+from karabogui.const import IS_LINUX_SYSTEM
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_config, get_db_conn, get_network
 from karabogui.singletons.util import get_error_message
@@ -476,3 +479,26 @@ def is_bundled_gui() -> bool:
     """Check if the GUI is launched from the pyinstaller bundle or from the
     source code."""
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
+
+
+def open_browser(url: str):
+    """Open the default system browser with the given `url`. This also uses
+    a sanitized environment (by removing LD_LIBRARY_PATH) if the GUI is
+    bundled. This method must be used to open browser from GUI, otherwise the
+    functionality will be broken in bundled GUI."""
+    if IS_LINUX_SYSTEM and is_bundled_gui():
+        envs = os.environ.copy()
+        lp_key = 'LD_LIBRARY_PATH'  # for GNU/Linux and *BSD.
+        lp_orig = envs.get(lp_key + '_ORIG')
+        # Pyinstaller always back up the LD_LIBRARY_PATH to
+        # 'LD_LIBRARY_PATH_ORIG'. Restore the original, unmodified value so
+        # that bundled gui pick the browser libraries from the correct
+        # location.
+        envs[lp_key] = lp_orig
+        try:
+            subprocess.Popen(["xdg-open", url], env=envs,
+                             start_new_session=True)
+            return True
+        except Exception:
+            return False
+    return webbrowser.open_new(url)

@@ -26,7 +26,7 @@ from struct import calcsize, unpack
 
 from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, QUrl, Signal, Slot
-from qtpy.QtGui import QDesktopServices, QIntValidator, QKeyEvent, QKeySequence
+from qtpy.QtGui import QIntValidator, QKeyEvent, QKeySequence
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
@@ -40,7 +40,7 @@ from karabogui.const import CLIENT_HOST
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_network
-from karabogui.util import SignalBlocker, utc_to_local_date
+from karabogui.util import SignalBlocker, open_browser, utc_to_local_date
 
 from .utils import get_dialog_ui
 
@@ -461,7 +461,7 @@ class ReactiveLoginDialog(QDialog):
     def open_login_webpage(self):
         """Open browser to load the login page."""
         url = f"{self._auth_url}login_form"
-        success = QDesktopServices.openUrl(QUrl(url))
+        success = open_browser(url)
         if not success:
             self._error = f"Failed to open the page {url}."
             self._update_status_label()
@@ -682,7 +682,7 @@ class UserSessionDialog(QDialog):
     def open_login_webpage(self):
         """Open browser to load the login page."""
         url = f"{self._auth_url}login_form"
-        success = QDesktopServices.openUrl(QUrl(url))
+        success = open_browser(url)
         if not success:
             self.error_label.setText(f"Failed to open the page {url}.")
 
