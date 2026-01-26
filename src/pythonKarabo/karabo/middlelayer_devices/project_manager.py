@@ -14,7 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from asyncio import Lock, wait_for
-from collections import defaultdict
 from io import StringIO
 from weakref import WeakValueDictionary
 
@@ -169,45 +168,35 @@ class ProjectManager(Device):
         saved_items = []
         project_uuids = []
 
-        # Sort items accorind to their type
-        items_types = defaultdict(list)
-        for item in items:
-            items_types[item["item_type"]].append(item)
-
         async with self.db_handle as db_session:
-            for t in _ITEM_TYPES:
-                chunk = items_types[t]
-                if not chunk:
-                    continue
+            for item in items:
+                xml = item["xml"]
+                uuid = item["uuid"]
 
-                for item in chunk:
-                    xml = item["xml"]
-                    uuid = item["uuid"]
+                # Also stored in xml
+                item_type = item.get("item_type")
+                if item_type == "project":
+                    project_uuids.append(uuid)
 
-                    # Also stored in xml
-                    item_type = item.get("item_type")
-                    if item_type == "project":
-                        project_uuids.append(uuid)
+                domain = item["domain"]
+                reason = ""
+                date = ""
+                success = True
+                # All items have their individual success bool
+                try:
+                    date = await db_session.save_item(
+                        domain, uuid, xml, True)
+                except ProjectDBError as e:
+                    success = False
+                    reason = str(e)
 
-                    domain = item["domain"]
-                    reason = ""
-                    date = ""
-                    success = True
-                    # All items have their individual success bool
-                    try:
-                        date = await db_session.save_item(
-                            domain, uuid, xml, True)
-                    except ProjectDBError as e:
-                        success = False
-                        reason = str(e)
-
-                    ret = Hash(
-                        "success", success,
-                        "reason", reason,
-                        "domain", domain,
-                        "date", date,
-                        "uuid", uuid)
-                    saved_items.append(ret)
+                ret = Hash(
+                    "success", success,
+                    "reason", reason,
+                    "domain", domain,
+                    "date", date,
+                    "uuid", uuid)
+                saved_items.append(ret)
 
         return saved_items, project_uuids
 
