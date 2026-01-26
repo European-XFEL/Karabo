@@ -86,7 +86,8 @@ from karabogui.topology.api import (
     is_device_online, is_server_online)
 from karabogui.util import (
     SignalBlocker, generateObjectName, get_reason_parts, get_spin_widget,
-    getOpenFileName, getSaveFileName, show_wait_cursor, wait_cursor)
+    getOpenFileName, getSaveFileName, open_browser, show_wait_cursor,
+    wait_cursor)
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexListValidator,
     RegexValidator)

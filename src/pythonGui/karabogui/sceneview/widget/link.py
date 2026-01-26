@@ -18,7 +18,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-import webbrowser
 
 from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QPainter, QPen
@@ -36,6 +35,7 @@ from karabogui.indicators import get_device_status_pixmap
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_topology
 from karabogui.topology.api import is_device_online
+from karabogui.util import open_browser
 from karabogui.widgets.hints import KaraboSceneWidget
 
 
@@ -198,9 +198,7 @@ class WebLinkWidget(BaseLinkWidget):
     def on_click(self):
         """Reimplemented function of `BaseLinkWidget`"""
         if len(self.model.target) > 0:
-            try:
-                webbrowser.open_new(self.model.target)
-            except webbrowser.Error:
+            if not open_browser(self.model.target):
                 messagebox.show_error("No web browser available!", parent=self)
 
     def on_edit(self):
