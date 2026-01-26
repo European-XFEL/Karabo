@@ -100,7 +100,7 @@ variables:
     INFLUXDB_USER: "infusr"
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
-.image_miniconda_: &image_miniconda
+.image_miniforge_: &image_miniforge
   image: europeanxfel/karabo-ci:miniforge-3-002
   cache: !reference [.build_cache, cache_rw]
   tags:
@@ -158,7 +158,7 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py karabogui
+      python ci/miniforge/main.py karabogui
       --ci --clean
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -184,7 +184,7 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py karabogui
+      python ci/miniforge/main.py karabogui
       --ci --clean
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -208,7 +208,7 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py karabogui
+      python ci/miniforge/main.py karabogui
       --ci --clean
       --upload-to-mirror
       --nightly
@@ -224,7 +224,7 @@ variables:
   script:
     - conda config --add channels conda-forge
     - >
-      python ci/miniconda/main.py karabogui
+      python ci/miniforge/main.py karabogui
       --ci --clean --test
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
@@ -336,7 +336,7 @@ variables:
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
-      python ci/miniconda/main.py karabogui
+      python ci/miniforge/main.py karabogui
       -c $KARABO_CONDA_CHANNEL
       --ci --clean --test
       --skip-build
@@ -420,20 +420,20 @@ release build:
   parallel: !reference [.target_os_matrix, all_targets]
   <<: *release-build
 
-release build miniconda:
-  <<: *image_miniconda
+release build gui-linux:
+  <<: *image_miniforge
   <<: *release-build-conda
 
-release build miniconda-osx64:
+release build gui-osx-arm64:
   before_script:
-    - ci/miniconda/cleanup.sh
+    - ci/miniforge/cleanup.sh
   tags:
     - macos
   <<: *release-build-conda
 
-release build miniconda-win64:
+release build gui-win64:
   before_script:
-    - ci/miniconda/cleanup.cmd
+    - ci/miniforge/cleanup.cmd
   tags:
     - win11
   <<: *release-build-conda
@@ -444,20 +444,20 @@ prerelease build:
   parallel: !reference [.target_os_matrix, all_targets]
   <<: *prerelease-build
 
-prerelease build miniconda:
-  <<: *image_miniconda
+prerelease build gui-linux:
+  <<: *image_miniforge
   <<: *prerelease-build-conda
 
-prerelease build miniconda-osx64:
+prerelease build gui-osx-arm64:
   before_script:
-    - ci/miniconda/cleanup.sh
+    - ci/miniforge/cleanup.sh
   tags:
     - macos
   <<: *prerelease-build-conda
 
-prerelease build miniconda-win64:
+prerelease build gui-win64:
   before_script:
-    - ci/miniconda/cleanup.cmd
+    - ci/miniforge/cleanup.cmd
   tags:
     - win11
   <<: *prerelease-build-conda
@@ -470,22 +470,22 @@ nightly build:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULED_JOB == "nightly-build"
 
-nightly build miniconda-osx64:
+nightly build gui-osx-arm64:
   before_script:
-    - ci/miniconda/cleanup.sh
+    - ci/miniforge/cleanup.sh
   tags:
     - macos
   <<: *nightly-build-conda
 
-nightly build miniconda-win64:
+nightly build gui-win64:
   before_script:
-    - ci/miniconda/cleanup.cmd
+    - ci/miniforge/cleanup.cmd
   tags:
     - win11
   <<: *nightly-build-conda
 
-nightly build miniconda:
-  <<: *image_miniconda
+nightly build gui-linux:
+  <<: *image_miniforge
   <<: *nightly-build-conda
 
 # Dependencies build
@@ -508,38 +508,38 @@ cpp_unit tests:
   script:
     - bash ./auto_build_all.sh Debug --runTests --skipPythonTests
 
-gui_unit tests miniconda:
-  <<: *image_miniconda
+unit_tests gui-linux:
+  <<: *image_miniforge
   <<: *gui-unit-tests
 
-gui_unit tests miniconda-osx64:
+unit_tests gui-osx-arm64:
   before_script:
-    - ci/miniconda/cleanup.sh
+    - ci/miniforge/cleanup.sh
   tags:
     - macos
   <<: *gui-unit-tests
 
-gui_unit tests miniconda-win64:
+unit_tests gui-win64:
   before_script:
-    - ci/miniconda/cleanup.cmd
+    - ci/miniforge/cleanup.cmd
   tags:
     - win11
   <<: *gui-unit-tests
 
-gui_dependency_updates build miniconda:
-  <<: *image_miniconda
+dependency_updates build gui-linux:
+  <<: *image_miniforge
   <<: *manual-build-conda-dependency-update
 
-gui_dependency_updates build miniconda-osx64:
+dependency_updates build gui-osx-arm64:
   before_script:
-    - ci/miniconda/cleanup.sh
+    - ci/miniforge/cleanup.sh
   tags:
     - macos
   <<: *manual-build-conda-dependency-update
 
-gui_dependency_updates build miniconda-win64:
+dependency_updates build gui-win64:
   before_script:
-    - ci/miniconda/cleanup.cmd
+    - ci/miniforge/cleanup.cmd
   tags:
     - win11
   <<: *manual-build-conda-dependency-update
