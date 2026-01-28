@@ -18,11 +18,11 @@
 # Install karaboCommon
 export BUILD_KARABO_SUBMODULE=NATIVE
 cd ./src/pythonKarabo
-python setup.py install
+python -m pip install .
 unset BUILD_KARABO_SUBMODULE
 # Install pythonGui
 cd ../pythonGui
-python setup.py install
+python -m pip install .
 
 # from
 # https://docs.conda.io/projects/conda-build/en/latest/resources/activate-scripts.html
