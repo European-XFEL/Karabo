@@ -18,7 +18,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-import webbrowser
+
 
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import (
@@ -37,7 +37,7 @@ from karabogui.logger import get_logger
 from karabogui.request import (
     call_device_slot, get_scene_from_server, retrieve_default_scene)
 from karabogui.topology.api import is_device_online
-from karabogui.util import SignalBlocker, get_reason_parts
+from karabogui.util import SignalBlocker, get_reason_parts, open_browser
 from karabogui.widgets.edits import LineEditEditor
 
 from .button_delegate import TableButtonDelegate
@@ -228,9 +228,7 @@ class StringButtonDelegate(TableButtonDelegate):
                 get_logger().warning(
                     f"Invalid deviceScene information: {data}.")
         elif action == "url":
-            try:
-                webbrowser.open_new(options)
-            except Exception:
+            if not open_browser(options):
                 get_logger().error(f"No valid url specified {options}")
 
 

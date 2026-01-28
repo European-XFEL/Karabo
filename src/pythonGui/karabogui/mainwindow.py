@@ -20,7 +20,6 @@
 #############################################################################
 import os.path
 import shutil
-import webbrowser
 from enum import Enum
 from pathlib import Path
 
@@ -58,7 +57,8 @@ from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import (
     convert_npy_to_csv, generateObjectName, get_reason_parts, getOpenFileName,
-    getSaveFileName, is_bundled_gui, move_to_cursor, process_qt_events)
+    getSaveFileName, is_bundled_gui, move_to_cursor, open_browser,
+    process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -808,9 +808,7 @@ class MainWindow(QMainWindow):
         return False
 
     def _open_link(self, link):
-        try:
-            webbrowser.open_new(link)
-        except webbrowser.Error:
+        if not open_browser(link):
             messagebox.show_error("No web browser available!", parent=self)
 
     def _begin_temporary_session(self):
