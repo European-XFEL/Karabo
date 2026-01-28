@@ -39,7 +39,7 @@ class DisplayLineEdit(BaseBindingController):
         widget = QLineEdit(parent)
         widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         widget.setReadOnly(True)
-        widget.setFocusPolicy(Qt.NoFocus)
+        widget.setFocusPolicy(Qt.StrongFocus)
         return widget
 
     def value_update(self, proxy):
