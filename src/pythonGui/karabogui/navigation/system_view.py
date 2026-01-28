@@ -43,8 +43,7 @@ from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
 from karabogui.topology.api import is_device_online
 from karabogui.util import (
-    get_reason_parts, load_configuration_from_file, move_to_cursor,
-    save_configuration_to_file)
+    get_reason_parts, move_to_cursor, save_configuration_to_file)
 from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
@@ -146,14 +145,7 @@ class SystemTreeView(QTreeView):
         self.mDeviceItem = QMenu(self)
         self.mDeviceItem.setToolTipsVisible(True)
 
-        text = "Open configuration (*.xml)"
-        self.acOpenFromFile = QAction(icons.load, text, self)
-        self.acOpenFromFile.setStatusTip(text)
-        self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
-        self.mDeviceItem.addAction(self.acOpenFromFile)
-
-        text = "Save configuration as (*.xml)"
+        text = "Save parameters as (*.xml)"
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
@@ -439,11 +431,6 @@ class SystemTreeView(QTreeView):
             # servers and hosts clear the configurator
             proxy = None
         broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
-
-    @Slot()
-    def onOpenFromFile(self):
-        if self._selected_proxy is not None:
-            load_configuration_from_file(self._selected_proxy, parent=self)
 
     @Slot()
     def onSaveToFile(self):
