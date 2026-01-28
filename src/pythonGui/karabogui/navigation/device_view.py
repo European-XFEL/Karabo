@@ -35,6 +35,7 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker
+from karabogui.util import save_configuration_to_file
 from karabogui.widgets.popup import PopupWidget
 
 from .device_filter_model import DeviceFilterModel
@@ -86,6 +87,12 @@ class DeviceTreeView(QTreeView):
         self.ac_about.setToolTip(text)
         self.ac_about.triggered.connect(self.onAbout)
 
+        text = "Save parameters as (*.xml)"
+        self.ac_save_file = QAction(icons.saveAs, text, self)
+        self.ac_save_file.setStatusTip(text)
+        self.ac_save_file.setToolTip(text)
+        self.ac_save_file.triggered.connect(self.onSaveToFile)
+
         text = "Runtime configuration"
         self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
@@ -111,6 +118,8 @@ class DeviceTreeView(QTreeView):
         self.ac_kill_device.setToolTip(text)
         self.ac_kill_device.triggered.connect(self.onKillInstance)
 
+        self.menu.addAction(self.ac_save_file)
+        self.menu.addSeparator()
         self.menu.addAction(self.ac_config_past)
         self.menu.addAction(self.ac_config_name)
         self.menu.addSeparator()
@@ -162,6 +171,11 @@ class DeviceTreeView(QTreeView):
 
     # ----------------------------
     # Slots
+
+    @Slot()
+    def onSaveToFile(self):
+        if self._selected_proxy is not None:
+            save_configuration_to_file(self._selected_proxy, parent=self)
 
     @Slot(str, object)
     def onSelectionChanged(self, item_type, proxy):
