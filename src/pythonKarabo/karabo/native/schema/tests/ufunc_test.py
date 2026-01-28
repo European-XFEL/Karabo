@@ -18,12 +18,12 @@ from unittest import TestCase, main, skip
 
 import numpy as np
 from numpy import e, pi
+from packaging import version
 from pint import DimensionalityError, __version__ as pint_version
 
 from karabo.native.data import MetricPrefix, Timestamp, Unit
 from karabo.native.schema import (
     Int32, QuantityValue as QV, VectorDouble, VectorInt32)
-from packaging import version
 
 
 def _is_numpy_old():

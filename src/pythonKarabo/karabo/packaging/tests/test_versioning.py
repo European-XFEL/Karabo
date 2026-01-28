@@ -15,8 +15,9 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import unittest
 
-from karabo.packaging import versioning
 from packaging.version import InvalidVersion, Version
+
+from karabo.packaging import versioning
 
 
 class TestCase(unittest.TestCase):
