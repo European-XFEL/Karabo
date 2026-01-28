@@ -137,7 +137,7 @@ class TestWeblink(GuiTestCase):
                            self.model.width, self.model.height, )
         self.assertTrue(self.widget.rect() == model_rect)
         self.assertEqual(len(self.widget.actions()), 2)
-        target = 'karabogui.sceneview.widget.link.webbrowser'
+        target = 'karabogui.util.webbrowser'
         with mock.patch(target) as browser:
             self.click(self.widget)
             self.process_qt_events()
