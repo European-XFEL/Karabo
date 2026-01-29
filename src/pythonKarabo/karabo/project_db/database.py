@@ -21,9 +21,9 @@ from datetime import UTC
 from pathlib import Path
 
 from lxml import etree
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from karabo.common.project.api import PROJECT_DB_SCHEMA
 
@@ -322,8 +322,7 @@ class SQLDatabase:
 
         return False, ""
 
-    async def save_item(self, domain: str, uuid: str, item_xml: str,
-                        overwrite: bool = False) -> str:
+    async def save_item(self, domain: str, uuid: str, item_xml: str) -> str:
         """
         Saves a item xml file into the database. It will
         create a new entry if the item does not exist yet, or update the item
@@ -339,24 +338,72 @@ class SQLDatabase:
         :param domain: the domain under which this item is to be stored
         :param uuid: the item's uuid
         :param item_xml: the xml containing the item information
-        :param overwrite (unused): defaults to False. If set to True versioning
-                                   information is removed prior to database
-                                   injection, allowing to overwrite in case of
-                                   versioning conflicts.
 
         :return: date (str) of saving
 
 
         :raises: ProjectDBError on failure.
         """
-        del overwrite  # To avoid unintentional use of unused parameter
+        async with self.session_gen() as session:
+            timestamp = await self._save_item(session, domain, uuid, item_xml)
+            await session.commit()
+            return timestamp
 
-        # Comply with the ExistDB back-end, which creates the domain for the
-        # project being saved if the domain doesn't exist yet. The add_domain
-        # method has the same "ensure domain exists" semantics of its overriden
-        # counterpart in DatabaseBase.
-        await self.add_domain(domain)
+    async def save_items(self, items) -> tuple[
+            list[dict[str, any]], list[str]]:
+        """
+        Saves a list of project items to the database
 
+        :param items: List of items, with the following data for each:
+                - xml (str): The XML content of the item
+                - uuid (str): Unique identifier for the item
+                - domain (str): The domain/category of the item
+                - item_type (str): The type of the item (e.g., "project")
+
+        :return: A tuple containing:
+                - saved_items: List of processed items. For each item:
+                    - success (bool): Whether the save operation succeeded
+                    - reason (str): Error message if save failed
+                    - domain (str): The domain of the item
+                    - date (str): Timestamp of successful save (empty for fail)
+                    - uuid (str): The unique identifier of the item
+                - project_uuids (list[str]): uuids for the processed items that
+                  were projects
+        """
+        saved_items = []
+        project_uuids = []
+
+        async with self.session_gen() as session:
+            for item in items:
+                xml = item["xml"]
+                uuid = item["uuid"]
+                domain = item["domain"]
+                if item["item_type"] == "project":
+                    project_uuids.append(uuid)
+                reason = ""
+                date = ""
+                success = True
+                # All items have their individual success bool
+                try:
+                    date = await self._save_item(
+                        session, domain, uuid, xml)
+                    await session.commit()
+                except ProjectDBError as e:
+                    success = False
+                    reason = str(e)
+                    await session.rollback()
+
+                ret = {
+                    "success": success,
+                    "reason": reason,
+                    "domain": domain,
+                    "date": date,
+                    "uuid": uuid}
+                saved_items.append(ret)
+        return saved_items, project_uuids
+
+    async def _save_item(self, session: AsyncSession, domain: str,
+                         uuid: str, item_xml: str) -> str:
         # Extract some information
         try:
             # NOTE: The client might send us garbage
@@ -394,22 +441,22 @@ class SQLDatabase:
         match item_type:
             case "project":
                 await self._save_project_item(
-                    domain, uuid, item_xml, timestamp)
+                    session, domain, uuid, item_xml, timestamp)
             case "macro":
                 await self._save_macro_item(
-                    uuid, item_xml, timestamp)
+                    session, uuid, item_xml, timestamp)
             case "scene":
                 await self._save_scene_item(
-                    uuid, item_xml, timestamp)
+                    session, uuid, item_xml, timestamp)
             case "device_server":
                 await self._save_device_server_item(
-                    uuid, item_xml, timestamp)
+                    session, uuid, item_xml, timestamp)
             case "device_instance":
                 await self._save_device_instance_item(
-                    uuid, item_xml, timestamp)
+                    session, uuid, item_xml, timestamp)
             case "device_config":
                 await self._save_device_config_item(
-                    uuid, item_xml, timestamp)
+                    session, uuid, item_xml, timestamp)
             case _:
                 raise ProjectDBError(
                     f"Saving of items of type '{item_type}' not supported")
@@ -825,251 +872,258 @@ class SQLDatabase:
             await session.commit()
 
     async def _save_project_item(
-            self, domain: str, uuid: str, xml: str, timestamp: str):
+            self, session: AsyncSession, domain: str, uuid: str,
+            xml: str, timestamp: str):
         project_xml = etree.fromstring(xml)
         date = datetime_from_str(timestamp)
 
         # Save the project attributes
         project_id = None  # the id of the updated or new project
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(ProjectDomain).where(ProjectDomain.name == domain))
-            project_domain = result.first()
-            # domain is expected to correspond to a valid domain.
-            assert project_domain is not None
 
-            result = await session.exec(
-                select(Project).where(Project.uuid == uuid))
-            project = result.first()
+        result = await session.exec(
+            select(ProjectDomain).where(ProjectDomain.name == domain))
+        project_domain = result.first()
+        # domain is expected to correspond to a valid domain.
+        assert project_domain is not None
 
-            attrs = project_xml.attrib
-            if not project:
-                # There's still no record for the project in the DB
-                trashed = get_trashed(attrs.get('is_trashed'))
-                project = Project(
-                    uuid=uuid,
-                    name=attrs['simple_name'],
-                    is_trashed=trashed,
-                    date=date,
-                    project_domain_id=project_domain.id)
-                session.add(project)
-                # The flush sequence is needed for the case of a
-                # new project. A new project only gets its ID after being
-                # stored in the database. This is a save marker
-                await session.flush()
-            else:
-                # There's a record for the project in the DB - update its
-                # attributes from the data in the xml
-                project.name = attrs['simple_name']
-                project.is_trashed = get_trashed(attrs['is_trashed'])
-                project.date = date
-                project.project_domain_id = project_domain.id
-                session.add(project)
+        result = await session.exec(
+            select(Project).where(Project.uuid == uuid))
+        project = result.first()
 
-            # Save the children references to the project and
-            # their relative order. For each child type, the items of that
-            # type currently linked to the project must be first unlinked
-            # to the project.
-            project_elements = (
-                project_xml.getchildren()[0].getchildren()[0]
-                if project_xml.getchildren()
-                and project_xml.getchildren()[0].getchildren() else None)
+        attrs = project_xml.attrib
+        if not project:
+            # There's still no record for the project in the DB
+            trashed = get_trashed(attrs.get('is_trashed'))
+            project = Project(
+                uuid=uuid,
+                name=attrs['simple_name'],
+                is_trashed=trashed,
+                date=date,
+                project_domain_id=project_domain.id)
+            session.add(project)
+            # The flush sequence is needed for the case of a
+            # new project. A new project only gets its ID after being
+            # stored in the database. This is a save marker
+            await session.flush()
+        else:
+            # There's a record for the project in the DB - update its
+            # attributes from the data in the xml
+            project.name = attrs['simple_name']
+            project.is_trashed = get_trashed(attrs['is_trashed'])
+            project.date = date
+            project.project_domain_id = project_domain.id
+            session.add(project)
 
-            group_map = {}
-            if project_elements is not None:
-                group_map = {child.tag.lower(): child
-                             for child in project_elements.getchildren()}
+        # Save the children references to the project and
+        # their relative order. For each child type, the items of that
+        # type currently linked to the project must be first unlinked
+        # to the project.
+        project_elements = (
+            project_xml.getchildren()[0].getchildren()[0]
+            if project_xml.getchildren()
+            and project_xml.getchildren()[0].getchildren() else None)
 
-            # several child elements
-            macro_group = group_map.get("macros", None)
-            scene_group = group_map.get("scenes", None)
-            servers_group = group_map.get("servers", None)
-            subprojects_group = group_map.get("subprojects", None)
+        group_map = {}
+        if project_elements is not None:
+            group_map = {child.tag.lower(): child
+                         for child in project_elements.getchildren()}
 
-            project_id = project.id
+        # several child elements
+        macro_group = group_map.get("macros", None)
+        scene_group = group_map.get("scenes", None)
+        servers_group = group_map.get("servers", None)
+        subprojects_group = group_map.get("subprojects", None)
 
-            # --- Macros ---
-            result = await session.exec(
-                select(Macro).where(Macro.project_id == project_id))
-            existing = result.all()
-            for macro in existing:
-                macro.project_id = None
-                macro.order = 0
+        project_id = project.id
+
+        # --- Macros ---
+        result = await session.exec(
+            select(Macro).where(Macro.project_id == project_id))
+        existing = result.all()
+        for macro in existing:
+            macro.project_id = None
+            macro.order = 0
+            session.add(macro)
+
+        macro_index = 0
+        if macro_group is not None:
+            for macro_elem in macro_group.getchildren():
+                macro_uuid = macro_elem.getchildren()[0].text
+                result = await session.exec(
+                    select(Macro).where(Macro.uuid == macro_uuid))
+                macro = result.first()
+                if not macro:
+                    raise ProjectDBError(
+                        f'Macro with uuid "{macro_uuid}" not found in the '
+                        'database. Cannot link the macro to project '
+                        f'"{project.name}" ({project.uuid})')
+                macro.project_id = project_id
+                macro.order = macro_index
                 session.add(macro)
+                macro_index += 1
 
-            macro_index = 0
-            if macro_group is not None:
-                for macro_elem in macro_group.getchildren():
-                    macro_uuid = macro_elem.getchildren()[0].text
-                    result = await session.exec(
-                        select(Macro).where(Macro.uuid == macro_uuid))
-                    macro = result.first()
-                    if not macro:
-                        raise ProjectDBError(
-                            f'Macro with uuid "{macro_uuid}" not found in the '
-                            'database. Cannot link the macro to project '
-                            f'"{project.name}" ({project.uuid})')
-                    macro.project_id = project_id
-                    macro.order = macro_index
-                    session.add(macro)
-                    macro_index += 1
+        # --- Scenes ---
+        result = await session.exec(
+            select(Scene).where(Scene.project_id == project_id))
+        existing = result.all()
+        for scene in existing:
+            scene.project_id = None
+            scene.order = 0
+            session.add(scene)
 
-            # --- Scenes ---
-            result = await session.exec(
-                select(Scene).where(Scene.project_id == project_id))
-            existing = result.all()
-            for scene in existing:
-                scene.project_id = None
-                scene.order = 0
+        if scene_group is not None:
+            scene_index = 0
+            for scene_element in scene_group.getchildren():
+                scene_uuid = (
+                    scene_element.getchildren()[0].text
+                    if len(scene_element.getchildren()) > 0 else None)
+                # The legacy unit tests had the scene UUID as an attribute
+                # of a <xml> tag
+                if (scene_uuid is None
+                        and "uuid" in scene_element.attrib.keys()):
+                    scene_uuid = scene_element.attrib['uuid']
+
+                result = await session.exec(
+                    select(Scene).where(Scene.uuid == scene_uuid))
+                scene = result.first()
+                if not scene:
+                    raise ProjectDBError(
+                        f'Scene with uuid "{scene_uuid}" not found in the '
+                        'database. Cannot link the scene to project '
+                        f'"{project.name}" ({project.uuid})')
+                scene.project_id = project_id
+                scene.order = scene_index
                 session.add(scene)
+                scene_index += 1
 
-            if scene_group is not None:
-                scene_index = 0
-                for scene_element in scene_group.getchildren():
-                    scene_uuid = (
-                        scene_element.getchildren()[0].text
-                        if len(scene_element.getchildren()) > 0 else None)
-                    # The legacy unit tests had the scene UUID as an attribute
-                    # of a <xml> tag
-                    if (scene_uuid is None
-                            and "uuid" in scene_element.attrib.keys()):
-                        scene_uuid = scene_element.attrib['uuid']
+        # --- Servers ---
 
-                    result = await session.exec(
-                        select(Scene).where(Scene.uuid == scene_uuid))
-                    scene = result.first()
-                    if not scene:
-                        raise ProjectDBError(
-                            f'Scene with uuid "{scene_uuid}" not found in the '
-                            'database. Cannot link the scene to project '
-                            f'"{project.name}" ({project.uuid})')
-                    scene.project_id = project_id
-                    scene.order = scene_index
-                    session.add(scene)
-                    scene_index += 1
+        result = await session.exec(
+            select(DeviceServer).where(
+                DeviceServer.project_id == project_id))
+        existing = result.all()
+        # erase order and reference
+        for server in existing:
+            server.project_id = None
+            server.order = 0
+            session.add(server)
 
-            # --- Servers ---
-
-            result = await session.exec(
-                select(DeviceServer).where(
-                    DeviceServer.project_id == project_id))
-            existing = result.all()
-            # erase order and reference
-            for server in existing:
-                server.project_id = None
-                server.order = 0
+        if servers_group is not None:
+            server_index = 0
+            for server_element in servers_group.getchildren():
+                server_uuid = server_element.getchildren()[0].text
+                result = await session.exec(
+                    select(DeviceServer).where(
+                        DeviceServer.uuid == server_uuid))
+                server = result.first()
+                if not server:
+                    raise ProjectDBError(
+                        f'Server with uuid "{server_uuid}" not found in '
+                        'the database. Cannot link the server to project'
+                        f'"{project.name}" ({project.uuid})')
+                server.project_id = project_id
+                server.order = server_index
                 session.add(server)
+                server_index += 1
 
-            if servers_group is not None:
-                server_index = 0
-                for server_element in servers_group.getchildren():
-                    server_uuid = server_element.getchildren()[0].text
-                    result = await session.exec(
-                        select(DeviceServer).where(
-                            DeviceServer.uuid == server_uuid))
-                    server = result.first()
-                    if not server:
-                        raise ProjectDBError(
-                            f'Server with uuid "{server_uuid}" not found in '
-                            'the database. Cannot link the server to project'
-                            f'"{project.name}" ({project.uuid})')
-                    server.project_id = project_id
-                    server.order = server_index
-                    session.add(server)
-                    server_index += 1
+        # --- Subprojects ---
 
-            # --- Subprojects ---
+        # Initially all the previously saved subproject are to be
+        # potentially removed
+        # Note: subprojects are only a reference to projects, not real
+        #       entities stored in the database like scenes and macros.
+        result = await session.exec(
+            select(ProjectSubproject).where(
+                ProjectSubproject.project_id == project_id))
+        existing = result.all()
+        subprojects_to_delete = {
+            subproject.subproject_id for subproject in existing}
 
-            # Initially all the previously saved subproject are to be
-            # potentially removed
-            # Note: subprojects are only a reference to projects, not real
-            #       entities stored in the database like scenes and macros.
+        # Iterate over the subprojects to be saved
+        if subprojects_group is not None:
+            subproject_index = 0
+            for sub_element in subprojects_group.getchildren():
+                subproject_uuid = sub_element.getchildren()[0].text
+                result = await session.exec(
+                    select(Project).where(
+                        Project.uuid == subproject_uuid))
+                subproject = result.first()
+                if not subproject:
+                    raise ProjectDBError(
+                        f'Subproject with uuid "{server_uuid}" not found '
+                        'in the database. Cannot link the subproject to '
+                        f'project "{project.name}" ({project.uuid})')
+                # Search for the subproject among the current projects, and
+                # either add it, update it or leave it in the list of
+                # subproject to be removed
+                if subproject.id in subprojects_to_delete:
+                    # The project was in the DB and should be kept - just
+                    # update it
+                    subprojects_to_delete.remove(subproject.id)
+                    query = select(ProjectSubproject).where(
+                        ProjectSubproject.project_id == project_id,
+                        ProjectSubproject.subproject_id == subproject.id)
+                    result = await session.exec(query)
+                    subproject_update = result.first()
+                    if subproject_update:
+                        subproject_update.order = subproject_index
+                    session.add(subproject_update)
+                else:
+                    # The project wasn't in the DB - add it
+                    subproject_new = ProjectSubproject(
+                        project_id=project_id,
+                        subproject_id=subproject.id,
+                        order=subproject_index)
+                    session.add(subproject_new)
+                subproject_index += 1
+
+        # Remove the subprojects that were in the DB before but shouldn't
+        # be there after the save
+        for subproject_id in subprojects_to_delete:
             result = await session.exec(
                 select(ProjectSubproject).where(
-                    ProjectSubproject.project_id == project_id))
-            existing = result.all()
-            subprojects_to_delete = {
-                subproject.subproject_id for subproject in existing}
+                    ProjectSubproject.project_id == project_id,
+                    ProjectSubproject.subproject_id == subproject_id))
+            to_delete = result.first()
+            if to_delete:
+                await session.delete(to_delete)
 
-            # Iterate over the subprojects to be saved
-            if subprojects_group is not None:
-                subproject_index = 0
-                for sub_element in subprojects_group.getchildren():
-                    subproject_uuid = sub_element.getchildren()[0].text
-                    result = await session.exec(
-                        select(Project).where(
-                            Project.uuid == subproject_uuid))
-                    subproject = result.first()
-                    if not subproject:
-                        raise ProjectDBError(
-                            f'Subproject with uuid "{server_uuid}" not found '
-                            'in the database. Cannot link the subproject to '
-                            f'project "{project.name}" ({project.uuid})')
-                    # Search for the subproject among the current projects, and
-                    # either add it, update it or leave it in the list of
-                    # subproject to be removed
-                    if subproject.id in subprojects_to_delete:
-                        # The project was in the DB and should be kept - just
-                        # update it
-                        subprojects_to_delete.remove(subproject.id)
-                        query = select(ProjectSubproject).where(
-                            ProjectSubproject.project_id == project_id,
-                            ProjectSubproject.subproject_id == subproject.id)
-                        result = await session.exec(query)
-                        subproject_update = result.first()
-                        if subproject_update:
-                            subproject_update.order = subproject_index
-                        session.add(subproject_update)
-                    else:
-                        # The project wasn't in the DB - add it
-                        subproject_new = ProjectSubproject(
-                            project_id=project_id,
-                            subproject_id=subproject.id,
-                            order=subproject_index)
-                        session.add(subproject_new)
-                    subproject_index += 1
+        await session.flush()
 
-            # Remove the subprojects that were in the DB before but shouldn't
-            # be there after the save
-            for subproject_id in subprojects_to_delete:
-                result = await session.exec(
-                    select(ProjectSubproject).where(
-                        ProjectSubproject.project_id == project_id,
-                        ProjectSubproject.subproject_id == subproject_id))
-                to_delete = result.first()
-                if to_delete:
-                    await session.delete(to_delete)
-
-            await session.commit()
-
-    async def _save_macro_item(self, uuid: str, xml: str, timestamp: str):
+    async def _save_macro_item(self, session: AsyncSession, uuid: str,
+                               xml: str, timestamp: str):
         macro_obj = etree.fromstring(xml)
         macro_name = macro_obj.attrib["simple_name"]
         # In MySQL the macro bodies are not Base64 encoded
-        macro_body = base64.b64decode(macro_obj.getchildren()[0].text)
+        macro_body = base64.b64decode(
+            macro_obj.getchildren()[0].text).decode('utf-8')
 
         date = datetime_from_str(timestamp)
 
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(Macro).where(Macro.uuid == uuid))
-            macro = result.first()
-            if macro:
-                # A macro is being updated
-                macro.name = macro_name
-                macro.date = date
-                macro.body = macro_body
-            else:
-                # The macro is new
-                macro = Macro(
-                    uuid=uuid,
-                    name=macro_name,
-                    date=date,
-                    body=macro_body)
-            session.add(macro)
-            await session.commit()
+        result = await session.exec(
+            select(Macro).where(Macro.uuid == uuid))
+        macro = result.first()
+        if macro:
+            # A macro is being updated
+            macro.name = macro_name
+            macro.date = date
+            macro.body = macro_body
+        else:
+            # The macro is new
+            macro = Macro(
+                # the association to a project is done later when the project
+                # item itself is being saved during an operation to save all
+                # the modified items in a project
+                project_id=None,
+                uuid=uuid,
+                name=macro_name,
+                date=date,
+                body=macro_body)
+        session.add(macro)
+        await session.flush()
 
-    async def _save_scene_item(self, uuid: str, xml: str, timestamp: str):
+    async def _save_scene_item(self, session: AsyncSession,
+                               uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         scene_obj = etree.fromstring(xml)
         scene_name = scene_obj.attrib["simple_name"]
@@ -1077,39 +1131,38 @@ class SQLDatabase:
             etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
             if len(scene_obj.getchildren()) > 0 else "")
 
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(Scene).where(Scene.uuid == uuid))
-            scene = result.first()
-            if scene:
-                # A scene is being updated
+        result = await session.exec(
+            select(Scene).where(Scene.uuid == uuid))
+        scene = result.first()
+        if scene:
+            # A scene is being updated
 
-                # Remove all the scene links originated from the scene
-                query_links = (
-                    select(SceneLinkedScene)
-                    .where(SceneLinkedScene.scene_id == scene.id))
-                result_links = await session.exec(query_links)
-                links = result_links.all()
-                for link in links:
-                    await session.delete(link)
+            # Remove all the scene links originated from the scene
+            query_links = (
+                select(SceneLinkedScene)
+                .where(SceneLinkedScene.scene_id == scene.id))
+            result_links = await session.exec(query_links)
+            links = result_links.all()
+            for link in links:
+                await session.delete(link)
 
-                scene.name = scene_name
-                scene.date = date
-                scene.svg_data = scene_svg_data
-            else:
-                # The scene is new
-                scene = Scene(
-                    uuid=uuid,
-                    name=scene_name,
-                    date=date,
-                    svg_data=scene_svg_data)
-            session.add(scene)
-            await session.commit()
-            if scene.id is None:
-                await session.refresh(scene)
-            await self._save_scene_links(scene)
+            scene.name = scene_name
+            scene.date = date
+            scene.svg_data = scene_svg_data
+        else:
+            # The scene is new
+            scene = Scene(
+                uuid=uuid,
+                name=scene_name,
+                date=date,
+                svg_data=scene_svg_data)
+        session.add(scene)
+        await session.flush()
+        if scene.id is None:
+            await session.refresh(scene)
+        await self._save_scene_links(session, scene)
 
-    async def _save_scene_links(self, scene: Scene):
+    async def _save_scene_links(self, session: AsyncSession, scene: Scene):
         target_uuids = get_scene_links(scene)
         for uuid in target_uuids:
             target_scene = await self._get_scene_from_uuid(uuid)
@@ -1119,24 +1172,25 @@ class SQLDatabase:
                     f"Target scene with UUID '{uuid}' doesn't exist in "
                     f"the database. Skipping scene link registration.")
                 continue
-            async with self.session_gen() as session:
-                try:
-                    linked_scene = SceneLinkedScene(
-                        scene_id=scene.id,
-                        linked_scene_id=target_scene.id)
-                    session.add(linked_scene)
-                    await session.commit()
-                except IntegrityError:
-                    # A scene can have multiple scene links to the same scene.
-                    # An attempt to insert the second repeated link will
-                    # violate the unique constraint for the combination of
-                    # source and target scene of the link. This is not an error
-                    # and can be ignored. The unique constraint should be kept
-                    # though as it prevents storage of repeated information.
-                    await session.rollback()
+
+            # A scene can have multiple scene links to the same scene, but
+            # in the database, to comply with the non-repetition constraints,
+            # multiple occurrences of repeated links in a scene are registered
+            # only once.
+            result = await session.exec(
+                select(SceneLinkedScene)
+                .where(SceneLinkedScene.scene_id == scene.id)
+                .where(SceneLinkedScene.linked_scene_id == target_scene.id))
+            existing_link = result.first()
+            if not existing_link:
+                linked_scene = SceneLinkedScene(
+                    scene_id=scene.id,
+                    linked_scene_id=target_scene.id)
+                session.add(linked_scene)
+                await session.flush()
 
     async def _save_device_config_item(
-            self, uuid: str, xml: str, timestamp: str):
+            self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         config_obj = etree.fromstring(xml)
         config_name = config_obj.attrib["simple_name"]
@@ -1144,29 +1198,27 @@ class SQLDatabase:
             etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
             if len(config_obj.getchildren()) > 0 else "")
 
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(DeviceConfig).where(DeviceConfig.uuid == uuid))
-            config = result.first()
-            if config:
-                # A device config is being updated
-                config.name = config_name
-                config.config_data = config_data
-                config.date = date
-            else:
-                # A new device config
-                config = DeviceConfig(
-                    uuid=uuid,
-                    name=config_name,
-                    config_data=config_data,
-                    date=date)
+        result = await session.exec(
+            select(DeviceConfig).where(DeviceConfig.uuid == uuid))
+        config = result.first()
+        if config:
+            # A device config is being updated
+            config.name = config_name
+            config.config_data = config_data
+            config.date = date
+        else:
+            # A new device config
+            config = DeviceConfig(
+                uuid=uuid,
+                name=config_name,
+                config_data=config_data,
+                date=date)
 
-            session.add(config)
-            await session.flush()
-            await session.commit()
+        session.add(config)
+        await session.flush()
 
     async def _save_device_instance_item(
-            self, uuid: str, xml: str, timestamp: str):
+            self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         # XXX: Why is the uuid not taken here?
         date = datetime_from_str(timestamp)
         instance_element = etree.fromstring(xml)
@@ -1178,60 +1230,59 @@ class SQLDatabase:
         config_objs = instance_tag.getchildren()
 
         # Insert or update the device instance in the DB
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(DeviceInstance).where(DeviceInstance.uuid == uuid))
-            instance = result.first()
-            if instance:
-                # Updates the device instance
-                instance.name = instance_id
-                instance.class_id = class_id
-                instance.date = date
-                session.add(instance)
-            else:
-                # The device instance must be added to the DB
-                instance = DeviceInstance(
-                    uuid=uuid,
-                    name=instance_id,
-                    class_id=class_id,
-                    date=date)
-                session.add(instance)
-                await session.flush()
+        result = await session.exec(
+            select(DeviceInstance).where(DeviceInstance.uuid == uuid))
+        instance = result.first()
+        if instance:
+            # Updates the device instance
+            instance.name = instance_id
+            instance.class_id = class_id
+            instance.date = date
+            session.add(instance)
+        else:
+            # The device instance must be added to the DB
+            instance = DeviceInstance(
+                uuid=uuid,
+                name=instance_id,
+                class_id=class_id,
+                date=date)
+            session.add(instance)
+            await session.flush()
 
-            # Saves the device configs linked to the device instance that
-            # has been just saved. First the currently linked configs
-            # must be unlinked
+        # Saves the device configs linked to the device instance that
+        # has been just saved. First the currently linked configs
+        # must be unlinked
+        result = await session.exec(
+            select(DeviceConfig).where(
+                DeviceConfig.device_instance_id == instance.id))
+        existing = result.all()
+        for config in existing:
+            config.device_instance_id = None
+            config.order = 0
+            session.add(config)
+
+        config_index = 0
+        for config_obj in config_objs:
+            config_obj_uuid = config_obj.attrib["uuid"]
             result = await session.exec(
                 select(DeviceConfig).where(
-                    DeviceConfig.device_instance_id == instance.id))
-            existing = result.all()
-            for config in existing:
-                config.device_instance_id = None
-                config.order = 0
-                session.add(config)
+                    DeviceConfig.uuid == config_obj_uuid))
+            config = result.first()
+            if not config:
+                raise ProjectDBError(
+                    f'Device config with uuid "{config_obj_uuid}" not '
+                    "found in the database. Cannot link the config to "
+                    f'instance "{instance.name}" ({instance.uuid})')
+            config.device_instance_id = instance.id
+            config.order = config_index
+            config.is_active = (active_uuid == config_obj_uuid)
+            config_index += 1
+            session.add(config)
 
-            config_index = 0
-            for config_obj in config_objs:
-                config_obj_uuid = config_obj.attrib["uuid"]
-                result = await session.exec(
-                    select(DeviceConfig).where(
-                        DeviceConfig.uuid == config_obj_uuid))
-                config = result.first()
-                if not config:
-                    raise ProjectDBError(
-                        f'Device config with uuid "{config_obj_uuid}" not '
-                        "found in the database. Cannot link the config to "
-                        f'instance "{instance.name}" ({instance.uuid})')
-                config.device_instance_id = instance.id
-                config.order = config_index
-                config.is_active = (active_uuid == config_obj_uuid)
-                config_index += 1
-                session.add(config)
-
-            await session.commit()
+        await session.flush()
 
     async def _save_device_server_item(
-            self, uuid: str, xml: str, timestamp: str):
+            self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
         server_obj = etree.fromstring(xml)
         server_name = server_obj.attrib["simple_name"]
@@ -1240,53 +1291,52 @@ class SQLDatabase:
         instance_elements = (server_tag.getchildren() if server_tag is not None
                              else [])
 
-        async with self.session_gen() as session:
-            result = await session.exec(
-                select(DeviceServer).where(DeviceServer.uuid == uuid))
-            server = result.first()
-            if server:
-                # An existing device server is being saved
-                server.name = server_name
-                server.date = date
-                session.add(server)
-            else:
-                # A new device server is being saved
-                server = DeviceServer(
-                    uuid=uuid,
-                    name=server_name,
-                    date=date)
-                session.add(server)
-                await session.flush()
+        result = await session.exec(
+            select(DeviceServer).where(DeviceServer.uuid == uuid))
+        server = result.first()
+        if server:
+            # An existing device server is being saved
+            server.name = server_name
+            server.date = date
+            session.add(server)
+        else:
+            # A new device server is being saved
+            server = DeviceServer(
+                uuid=uuid,
+                name=server_name,
+                date=date)
+            session.add(server)
+            await session.flush()
 
-            # Saves the device instances linked to the device server just saved
-            # First unlinks all the currently linked device instances.
+        # Saves the device instances linked to the device server just saved
+        # First unlinks all the currently linked device instances.
+        result = await session.exec(
+            select(DeviceInstance).where(
+                DeviceInstance.device_server_id == server.id))
+        existing = result.all()
+        for instance in existing:
+            instance.device_server_id = None
+            instance.order = 0
+            session.add(instance)
+
+        instance_index = 0
+        for instance_element in instance_elements:
+            instance_element_uuid = instance_element.attrib["uuid"]
             result = await session.exec(
                 select(DeviceInstance).where(
-                    DeviceInstance.device_server_id == server.id))
-            existing = result.all()
-            for instance in existing:
-                instance.device_server_id = None
-                instance.order = 0
-                session.add(instance)
+                    DeviceInstance.uuid == instance_element_uuid))
+            instance = result.first()
+            if not instance:
+                raise ProjectDBError(
+                    f'Device with uuid "{instance_element_uuid}" not '
+                    "found in the database. Cannot link the instance to "
+                    f'server "{server.name}" ({server.uuid})')
+            instance.device_server_id = server.id
+            instance.order = instance_index
+            instance_index += 1
+            session.add(instance)
 
-            instance_index = 0
-            for instance_element in instance_elements:
-                instance_element_uuid = instance_element.attrib["uuid"]
-                result = await session.exec(
-                    select(DeviceInstance).where(
-                        DeviceInstance.uuid == instance_element_uuid))
-                instance = result.first()
-                if not instance:
-                    raise ProjectDBError(
-                        f'Device with uuid "{instance_element_uuid}" not '
-                        "found in the database. Cannot link the instance to "
-                        f'server "{server.name}" ({server.uuid})')
-                instance.device_server_id = server.id
-                instance.order = instance_index
-                instance_index += 1
-                session.add(instance)
-
-            await session.commit()
+        await session.flush()
 
     async def add_domain(self, domain: str):
         if await self.domain_exists(domain):
