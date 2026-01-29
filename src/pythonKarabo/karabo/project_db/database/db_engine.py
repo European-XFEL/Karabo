@@ -20,7 +20,6 @@ import os
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine, async_sessionmaker, create_async_engine)
-from sqlalchemy.pool import NullPool
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 DB_POOL_RECYCLE_SECS: int = int(os.environ.get(
@@ -60,7 +59,6 @@ def create_local_engine(db_name: str) -> tuple[
     db_engine = create_async_engine(
         f"sqlite+aiosqlite:///{db_name}",
         echo=False,
-        poolclass=NullPool,
         isolation_level=None,
         connect_args={"timeout": 30})
 
@@ -68,7 +66,7 @@ def create_local_engine(db_name: str) -> tuple[
         bind=db_engine,
         expire_on_commit=False,
         class_=AsyncSession,
-        autoflush=True,
+        autoflush=False,
         autocommit=False,
     )
 

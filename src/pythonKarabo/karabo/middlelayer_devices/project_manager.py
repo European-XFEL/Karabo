@@ -30,6 +30,7 @@ from karabo.middlelayer import (
     KaraboError, Node, Overwrite, Signal, Slot, String, TypeHash, VectorString,
     decodeXML, instantiate, slot)
 from karabo.native import read_project_model
+from karabo.native.data import dictToHash
 from karabo.project_db import (
     ExistDbNode, LocalNode, ProjectDBError, RemoteNode)
 
@@ -171,39 +172,10 @@ class ProjectManager(Device):
 
     async def _save_items(self, items):
         """Internally used method to store items in the project database"""
-        saved_items = []
-        project_uuids = []
-        async with self.db_handle as db_session:
-            for item in items:
-                xml = item["xml"]
-                uuid = item["uuid"]
+        async with self.db_handle as database:
+            saved_items, project_uuids = await database.save_items(items)
 
-                # XXX: be backward compatible (<2.8.0)!
-                # Also stored in xml
-                item_type = item.get("item_type", "unknown")
-                if item_type == "project":
-                    project_uuids.append(uuid)
-
-                domain = item["domain"]
-                reason = ""
-                date = ""
-                success = True
-                # All items have their individual success bool
-                try:
-                    date = await db_session.save_item(
-                        domain, uuid, xml, True)
-                except ProjectDBError as e:
-                    success = False
-                    reason = str(e)
-
-                ret = Hash(
-                    "success", success,
-                    "reason", reason,
-                    "domain", domain,
-                    "date", date,
-                    "uuid", uuid)
-                saved_items.append(ret)
-
+        saved_items = HashList([dictToHash(item) for item in saved_items])
         return saved_items, project_uuids
 
     @slot

@@ -15,5 +15,5 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
 from .util import (
-    create_device, create_hierarchy, create_trashed_project,
+    MACRO_BODY, create_device, create_hierarchy, create_trashed_project,
     create_unattached_scenes, generate_uuid)
