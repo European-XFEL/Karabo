@@ -70,6 +70,7 @@ async def sql_database():
 
     db_init = SQLDatabase(local=True, db_name=path)
     await db_init.initialize()
+    await db_init.add_domain("LOCAL")
     # Create test data
     async with db_init as db:
         _, device_config_uuid_map, scene_uuids = await create_hierarchy(db)

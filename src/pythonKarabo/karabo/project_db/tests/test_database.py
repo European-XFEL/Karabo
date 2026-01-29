@@ -26,7 +26,8 @@ from karabo.project_db.database import SQLDatabase
 from karabo.project_db.utils import (
     DATE_FORMAT, ProjectDBError, make_xml_if_needed)
 
-from .utils import create_hierarchy, create_trashed_project, generate_uuid
+from .utils import (
+    MACRO_BODY, create_hierarchy, create_trashed_project, generate_uuid)
 
 
 @pytest_asyncio.fixture(loop_scope="module")
@@ -52,6 +53,9 @@ async def test_project_interface(database, subtests):
         with subtests.test(msg='test_save_item'):
             from xml.sax.saxutils import escape
 
+            await db.add_domain("LOCAL")
+            assert await db.domain_exists("LOCAL")
+
             # The '&' in the project name tests if the XML is being properly
             # escaped by the ProjectDB backend while loading items. We escape
             # the invalid XML before saving because that is what a well behaved
@@ -72,6 +76,19 @@ async def test_project_interface(database, subtests):
             doctree = etree.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "device_server"
             assert doctree.get('simple_name') == NAME
+
+            xml_rep = (
+                f'<xml uuid="{testproject2}" simple_name="simpleMacro" '
+                f'description="" item_type="macro">{MACRO_BODY}</xml>')
+            await db.save_item("LOCAL", testproject2, xml_rep)
+
+            res = await db.load_item(
+                "LOCAL", [{"uuid": testproject2,
+                           "item_type": "macro"}])
+            assert res[0]['uuid'] == testproject2
+            doctree = etree.fromstring(res[0]['xml'])
+            assert doctree.get('item_type') == "macro"
+            assert doctree.get('simple_name') == "simpleMacro"
 
             # An attempt to save an item with an invalid name must be rejected
             # An unescaped '&' in the project name at save time yields an
@@ -235,7 +252,12 @@ async def test_project_interface(database, subtests):
 async def test_save_check_modification(database, subtests):
     proj_uuid = generate_uuid()
     async with database as db:
+
         with subtests.test(msg='test_save_item'):
+
+            await db.add_domain("LOCAL")
+            assert await db.domain_exists("LOCAL")
+
             date = "2011-11-01 09:00:52"
             # The MySQL back-end doesn't accept project items with no
             # name or no type - originally this test's xml only had 'uuid'

@@ -87,7 +87,11 @@ def emit_scene_xml(scene: Scene) -> str:
 
 
 def emit_macro_xml(macro: Macro) -> str:
-    encoded = base64.b64encode(macro.body.encode('utf-8')).decode()
+    if isinstance(macro.body, str):
+        body_bytes = macro.body.encode('utf-8')
+    else:
+        body_bytes = macro.body
+    encoded = base64.b64encode(body_bytes).decode()
     macro_body = f'<macro>{encoded}</macro>'
     return _wrap_xml(
         uuid=macro.uuid,
