@@ -183,9 +183,13 @@ def _fill_scenes_menu(menu, project_controller):
     menu.addAction(cinema_action)
     menu.addSeparator()
     menu.addAction(move_action)
+    if get_config()["development"]:
+        remove_all_action = QAction(icons.delete, 'Delete all scenes', menu)
+        remove_all_action.triggered.connect(
+            partial(_delete_all_scenes, project_controller))
+        menu.addAction(remove_all_action)
     menu.addSeparator()
     menu.addAction(about_action)
-
     if not scene_allowed:
         _add_disabled_tooltip(menu)
 
@@ -448,6 +452,11 @@ def _create_cinema_link(project_model=None, parent=None):
     wizard = CinemaWizardController(project_model=project_model,
                                     parent=parent)
     wizard.run()
+
+
+def _delete_all_scenes(project_controller=None):
+    project = project_controller.model
+    project.scenes[:] = []
 
 
 def _add_server(project_controller, parent=None):
