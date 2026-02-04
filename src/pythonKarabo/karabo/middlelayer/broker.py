@@ -74,10 +74,7 @@ class Connector:
         else:
             self.topic = getpass.getuser()
         self._lock = None
-
-    def detach(self):
-        """Detach the connector from the eventloop"""
-        self._lock = None
+        self._lock_count = 0
 
     def set_parameters(
             self, urls: str | None = None, topic: str | None = None):
@@ -109,8 +106,15 @@ class Connector:
         """
         if self._lock is None:
             self._lock = Lock()
+
+        self._lock_count += 1
         async with self._lock:
-            yield
+            try:
+                yield
+            finally:
+                self._lock_count -= 1
+                if self._lock_count == 0:
+                    self._lock = None
 
     async def get_connection(self):
         """Retrieve or establish the singleton connection."""
