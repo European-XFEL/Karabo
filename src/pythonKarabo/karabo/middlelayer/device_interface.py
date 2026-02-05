@@ -61,14 +61,8 @@ def listMotors(matchPattern=None):
                   deviceId's containing the matchPattern.
     Interface
     ---------
-    A full abstract motor interface provides the following:
-
-    - Properties: actualPosition, targetPosition, isCWLimit, isCCWLimit
-
-      Optionally, if provided, there will be: isSWLimitHigh, isSWLimitLow,
-      velocity, backlash
-
-    - Commands: move, stop
+    The Karabo 'motor' interface is described in the documentation
+    'Device Interfaces' section.
 
     Returns
     -------
@@ -88,17 +82,8 @@ def listMultiAxisMotors(matchPattern=None):
                   deviceId's containing the matchPattern.
     Interface
     ---------
-    A MultiAxisMotor contains full abstract motor interface in nodes.
-    All nodes are specified in the ``axes`` property.
-
-    Each node contains the following properties:
-
-    - Properties: actualPosition, targetPosition, isCWLimit, isCCWLimit
-
-      Optionally, if provided, there will be: isSWLimitHigh, isSWLimitLow,
-      velocity, backlash
-
-    - Commands: move, stop
+     The Karabo 'multiAxisMotor' interface is described in the
+     documentation 'Device Interfaces' section.
 
     Returns
     -------
