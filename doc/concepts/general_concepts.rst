@@ -51,6 +51,10 @@ inherit from a base class in the respective API, ensuring that a common core fun
 in terms of inter-device communication, data types, self-description and logging is
 provided.
 
+For some categories of devices (e.g. motors, cameras) standard :ref:`_device_interfaces` have
+been defined, in order to harmonize them and make possible abstract definition of procedures
+or higher level processes.
+
 Device Slots
 ++++++++++++
 
