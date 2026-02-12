@@ -624,8 +624,14 @@ class LogBookPreview(QDialog):
 
         zoom_out_action = QAction(icons.zoomOut, "Zoom Out", self)
         zoom_out_action.triggered.connect(self.zoom_out)
+
+        zoom_fit_view = QAction(icons.zoomFitView, "Fit to View", self)
+        zoom_fit_view.triggered.connect(self._fit_in_view)
+
         zoom_toolbar.addAction(zoom_in_action)
         zoom_toolbar.addAction(zoom_out_action)
+        zoom_toolbar.addAction(zoom_fit_view)
+
         size = QSize(23, 23)
         zoom_toolbar.setIconSize(size)
         zoom_toolbar.add_expander()
