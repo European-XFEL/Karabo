@@ -51,9 +51,6 @@ inherit from a base class in the respective API, ensuring that a common core fun
 in terms of inter-device communication, data types, self-description and logging is
 provided.
 
-For some categories of devices (e.g. motors, cameras) standard :ref:`_device_interfaces` have
-been defined, in order to harmonize them and make possible abstract definition of procedures
-or higher level processes.
 
 Device Slots
 ++++++++++++
@@ -558,6 +555,16 @@ to be enforced. Instead state transition is programmatically driven using
 
 The available states are consistent across the distributed system and defined in the
 *states* enumerator. Details can be found in Section :ref:`states`.
+
+
+.. _karabo_device_interfaces
+
+Karabo Device Interfaces
+========================
+
+For some categories of devices (e.g. motors, cameras) standard :ref:`device_interfaces` have
+been defined, in order to harmonize them and make possible abstract definition of procedures
+or higher level processes.
 
 
 .. _data_types:

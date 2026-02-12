@@ -30,26 +30,26 @@ Device states
 The read-only ``state`` parameter (present by default in all Karabo devices) must take one of the following
 values in the circumstances described:
 
-  * ``ON`` - The motor is powered and idle.
-  * ``OFF`` - The motor is not powered.
-  * ``DISABLED`` - A motor is fully functioanl, but cannot be controlled by the Karabo device
-    (e.g. is part of a coupled motion group, or controlled by a local i/f)
-  * ``MOVING`` - When a motor is performing a move operation.
+* ``ON`` - The motor is powered and idle.
+* ``OFF`` - The motor is not powered.
+* ``DISABLED`` - A motor is fully functioanl, but cannot be controlled by the Karabo device
+  (e.g. is part of a coupled motion group, or controlled by a local i/f)
+* ``MOVING`` - When a motor is performing a move operation.
 
 On top of that, it can assume the states commonly used by Karabo Device
 
-  * ``UNKNOWN`` - The Karabo device has no connection to the hardware
-  * ``INIT`` - The Karabo device has not be initialized yet.
-  * ``ERROR`` - An error has been reported by the HW or anyway detected.
-  * ``INTERLOCKED`` - The motor cannot be operated due to interlock condition
-  * ``INTERLOCK_BROKEN`` - The interlock condition has been manually disabled.
-  * ``CHANGING`` - the motor device is in a generic transien state.
+* ``UNKNOWN`` - The Karabo device has no connection to the hardware
+* ``INIT`` - The Karabo device has not be initialized yet.
+* ``ERROR`` - An error has been reported by the HW or anyway detected.
+* ``INTERLOCKED`` - The motor cannot be operated due to interlock condition
+* ``INTERLOCK_BROKEN`` - The interlock condition has been manually disabled.
+* ``CHANGING`` - the motor device is in a generic transien state.
 
 The device may also implement the following motor-specific states:
 
-  * ``STOPPED`` - the motor was stopped in an unexpected way (emegency stop).
-  * ``STOPPING`` - the motor is slowing down after a stop command.
-  * ``HOMING`` - the motor is performing a 'home' procedure.
+* ``STOPPED`` - the motor was stopped in an unexpected way (emegency stop).
+* ``STOPPING`` - the motor is slowing down after a stop command.
+* ``HOMING`` - the motor is performing a 'home' procedure.
 
 Other state values should not be used (e.g. ``ROTATING``, ``MOVING_LEFT`` etc. )
 
@@ -122,18 +122,21 @@ features:
     to the motor. The device state changes to ``OFF`` state.
 
 * Velocity
+
   * ``actualVelocity``: a read-only floating point number exposing the current velocity, expressed in
     the same units of the position values per second.
+
   * ``targetVelocity``: a read-write floating point number expressing the desired velocity for the movements.
 
 * Epsilon
-  * ``epsilonActualPosition``: the minimum change to trigger an update of the `actualPositionValue`.[#event_driven]_
+
+  * ``epsilonActualPosition``: the minimum change to trigger an update of the `actualPositionValue`. [#event_driven]_
   * ``epsilonActualVelcocity``: the minimum change to trigger an update of the `actualVelocityValue`.
 
 * Deadband
 
-  * ``deadband``: a numberspecifying the motor deadband, if this is implemented. The value
-     must be expressed in the same units of target and actual position.
+  * ``deadband``: a number specifying the motor deadband, if this is implemented. The value
+    must be expressed in the same units of target and actual position.
 
 * Backlash
 
@@ -141,14 +144,11 @@ features:
   * ``enableBacklashCompensation``: a boolean enabling/disabling the backlash compensation.
 
 * Homing
+
   * ``home``: a slot to initiate a homing (sometimes called referencing) procedure. The device
     state changes to ``HOMING``
 
 * Coupled Motion
-
-..
-  We should consider rephrasing the master/slave pattern to e.g. parent/child or similar.
-  However, this should be done in parallel on the PLC side...
 
   * ``coupling``: a 'node' containing all the coupling related parameters.
   * ``isConfigurableAsSlave``: a read-only boolean that tells wheter the motor can be part of
@@ -160,6 +160,11 @@ features:
   * ``masterDevice``: the Karabo ID of the coupled group master (parent) device.
   * ``numerator``: the numerator of the coupling ratio expressed as a fraction.
   * ``denominator``: the denominator of the coupling ratio expressed as a fraction.
+
+..
+  We should consider rephrasing the master/slave pattern to e.g. parent/child or similar.
+  However, this should be done in parallel on the PLC side...
+
 
 .. _multi_axis_motor_interface:
 
