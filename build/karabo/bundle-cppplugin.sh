@@ -63,20 +63,31 @@ rm -rf $PACKAGEDIR
 # Start fresh
 mkdir -p $PACKAGEDIR
 
-find $DISTDIR/$CONF/$PLATFORM -maxdepth 1 -type f -name \*.so -exec cp {} $PACKAGEDIR \;
+# Copy shared library and includes to PACKAGEDIR
+if [ -d $DISTDIR/$CONF/$PLATFORM ]; then
+    find $DISTDIR/$CONF/$PLATFORM -maxdepth 1 -type f -name \*.so -exec cp {} $PACKAGEDIR \;
+    [ -d $DISTDIR/$CONF/$PLATFORM/include ] && cp -r $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR
+else
+    echo -e "\nUnknown location for project shared library\n"
+    exit 1
+fi
 
 # run custom script
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
 cd $PACKAGEDIR
-safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz *.so"
-
+if [ -d include ]; then
+    safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz *.so include"
+else
+    safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz *.so"
+fi
 # Create installation script
 echo -e '#!/bin/bash\n'"VERSION=$REPO_TAG\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 # Clean up
-safeRunCommand "rm -f ${PACKAGENAME}.tar.gz *.so"
+safeRunCommand "rm -rf ${PACKAGENAME}.tar.gz $PACKAGEDIR/*.so"
+[ -d $PACKAGEDIR/include ] && safeRunCommand "rm -rf $PACKAGEDIR/include"
 
 echo
 echo "Created package: ${PACKAGEDIR%/*}/$INSTALLSCRIPT"
