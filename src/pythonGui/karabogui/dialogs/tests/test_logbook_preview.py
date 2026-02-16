@@ -1,6 +1,6 @@
 import pytest
 from qtpy.QtCore import QPoint, Qt
-from qtpy.QtGui import QColor, QFont
+from qtpy.QtGui import QColor, QFont, QPixmap
 from qtpy.QtTest import QTest
 from qtpy.QtWidgets import (
     QDialog, QGraphicsLineItem, QGraphicsPixmapItem, QGraphicsRectItem,
@@ -11,6 +11,7 @@ from karabogui.binding.api import DeviceClassProxy, build_binding
 from karabogui.dialogs.logbook_drawing_tools import (
     CropTool, LineTool, RectTool, TextTool)
 from karabogui.dialogs.logbook_preview import LogBookPreview
+from karabogui.dialogs.screen_capture_dialog import ScreenCaptureDialog
 from karabogui.panels.api import ConfigurationPanel
 from karabogui.singletons.api import get_config
 from karabogui.singletons.configuration import Configuration
@@ -337,3 +338,14 @@ def test_concurrency(dialog):
 
     dialog._event_destinations(h_list)
     assert destination_widget.combo_stream.count() == 1
+
+
+def test_with_pixmap(gui_app):
+    pixmap = QPixmap(300, 200)
+    pixmap.fill(Qt.blue)
+
+    panel = ScreenCaptureDialog()
+    dialog = LogBookPreview(pixmap=pixmap, parent=panel)
+    canvas = dialog.canvas
+    assert len(canvas.items()) == 1
+    assert canvas.pixmap_item.toImage() == pixmap.toImage()

@@ -260,15 +260,17 @@ class Canvas(QGraphicsScene):
 class LogBookPreview(QDialog):
     """A Dialog to preview the data to the LogBook"""
 
-    def __init__(self, parent=None):
+    def __init__(self, pixmap=None, parent=None):
         super().__init__(parent=parent)
         self.setModal(False)
         uic.loadUi(get_dialog_ui("logbook.ui"), self)
 
         self.action_group_draw = {}
         self._topics = {}
-
-        self.pixmap = parent.grab()
+        if pixmap is not None:
+            self.pixmap = pixmap
+        else:
+            self.pixmap = parent.grab()
         self.combo_datatype.addItem(LOGBOOK_IMAGE)
         if parent.info() is not None:
             self.combo_datatype.addItem(LOGBOOK_DATA)
@@ -564,6 +566,7 @@ class LogBookPreview(QDialog):
         width_scale = transform.m11()
         height_scale = transform.m22()
         zooming_factor = ((width_scale + height_scale) / 2) * 100
+        zooming_factor = max(zooming_factor, MIN_ZOOM_FACTOR)
         self.zoom_factor_edit.setText(str(round(zooming_factor, 1)))
 
     def _create_destination_widget(self):
