@@ -40,7 +40,8 @@ from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ApplicationConfigurationDialog, ClientTopologyDialog,
     DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo,
-    ProjectTopologyDialog, UpdateDialog, UserSessionDialog, get_pkg_version)
+    ProjectTopologyDialog, ScreenCaptureDialog, UpdateDialog,
+    UserSessionDialog, get_pkg_version)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -470,6 +471,12 @@ class MainWindow(QMainWindow):
         self.tbUserSession.setStatusTip(text)
         self.tbUserSession.triggered.connect(self.onTemporarySession)
 
+        text = "Capture Screen to Logbook"
+        self.captureScreen = QAction(icons.logbook, f"&{text}")
+        self.captureScreen.setToolTip(text)
+        self.captureScreen.setStatusTip(text)
+        self.captureScreen.triggered.connect(self.show_screen_capture)
+
         self.agAccessLevel = QActionGroup(self)
         self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
 
@@ -640,6 +647,7 @@ class MainWindow(QMainWindow):
         mToolsMenu = menuBar.addMenu("&Tools")
         mToolsMenu.addAction(self.acCheckProject)
         mToolsMenu.addAction(self.acNpy2CSV)
+        mToolsMenu.addAction(self.captureScreen)
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -664,6 +672,7 @@ class MainWindow(QMainWindow):
 
         toolbar.addWidget(self.tbAccessLevel)
         toolbar.addAction(self.tbUserSession)
+        toolbar.addAction(self.captureScreen)
 
         self.notification_banner = MainWindowBanner()
 
@@ -1097,3 +1106,8 @@ class MainWindow(QMainWindow):
     def _on_update_gui_extensions(self):
         self.update_extensions_action.setVisible(False)
         self.onCheckUpdates()
+
+    @Slot()
+    def show_screen_capture(self):
+        dialog = ScreenCaptureDialog(parent=self)
+        dialog.show()

@@ -44,6 +44,7 @@ from .proxies_dialog import ProxiesDialog
 from .reactive_login_dialog import UserSessionDialog
 from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
 from .scene_link_dialog import SceneLinkDialog
+from .screen_capture_dialog import ScreenCaptureDialog
 from .sticker_dialog import GREY, StickerDialog
 from .textdialog import TextDialog
 from .time_detail_dialog import RequestTimeDialog
