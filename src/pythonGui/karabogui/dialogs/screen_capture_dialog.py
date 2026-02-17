@@ -2,7 +2,8 @@ from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, Slot
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import (
-    QApplication, QDialog, QDialogButtonBox, QLabel, QWidget)
+    QApplication, QDialog, QDialogButtonBox, QGraphicsDropShadowEffect, QLabel,
+    QWidget)
 
 from karabogui.const import IS_LINUX_SYSTEM
 from karabogui.dialogs.logbook_preview import LogBookPreview
@@ -12,12 +13,9 @@ from karabogui.dialogs.utils import get_dialog_ui
 class ScreenNumberPopoup(QWidget):
     def __init__(self, screen, screen_number, parent=None):
         super().__init__(parent=parent)
-        self.screen = screen
-        self.screen_number = screen_number
-
         # Show at the middle of the screen
         qtRectangle = self.frameGeometry()
-        centerPoint = self.screen.availableGeometry().center()
+        centerPoint = screen.availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
 
@@ -40,7 +38,12 @@ class ScreenNumberPopoup(QWidget):
         font.setBold(True)
         label.setFont(font)
 
-        label.setStyleSheet("color: white;")
+        effect = QGraphicsDropShadowEffect(label)
+        effect.setOffset(0, 0)
+        effect.setBlurRadius(4)
+        effect.setColor(Qt.black)
+        label.setGraphicsEffect(effect)
+        label.setStyleSheet("color: white; background: transparent;")
 
         self.resize(300, 200)
         label.resize(self.size())
