@@ -357,15 +357,15 @@ namespace karabind {
 
                     switch (arity) {
                         case 0:
-                            return prepareTuple0(*body);
+                            return prepareTuple0(body);
                         case 1:
-                            return prepareTuple1(*body);
+                            return prepareTuple1(body);
                         case 2:
-                            return prepareTuple2(*body);
+                            return prepareTuple2(body);
                         case 3:
-                            return prepareTuple3(*body);
+                            return prepareTuple3(body);
                         case 4:
-                            return prepareTuple4(*body);
+                            return prepareTuple4(body);
                         default:
                             throw KARABO_SIGNALSLOT_EXCEPTION(
                                   "Too many arguments send as response (max 4 are currently supported");
@@ -386,33 +386,33 @@ namespace karabind {
             }
 
            private:
-            py::tuple prepareTuple0(const karabo::data::Hash& body) {
+            py::tuple prepareTuple0(karabo::data::Hash::Pointer body) {
                 return py::make_tuple();
             }
 
-            py::tuple prepareTuple1(const karabo::data::Hash& body) {
-                py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
+            py::tuple prepareTuple1(karabo::data::Hash::Pointer body) {
+                py::object a1 = hashwrap::get(body, "a1");
                 return py::make_tuple(a1);
             }
 
-            py::tuple prepareTuple2(const karabo::data::Hash& body) {
-                py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
-                py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
+            py::tuple prepareTuple2(karabo::data::Hash::Pointer body) {
+                py::object a1 = hashwrap::get(body, "a1");
+                py::object a2 = hashwrap::get(body, "a2");
                 return py::make_tuple(a1, a2);
             }
 
-            py::tuple prepareTuple3(const karabo::data::Hash& body) {
-                py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
-                py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
-                py::object a3 = wrapper::deepCopyHashLike(hashwrap::get(body, "a3"));
+            py::tuple prepareTuple3(karabo::data::Hash::Pointer body) {
+                py::object a1 = hashwrap::get(body, "a1");
+                py::object a2 = hashwrap::get(body, "a2");
+                py::object a3 = hashwrap::get(body, "a3");
                 return py::make_tuple(a1, a2, a3);
             }
 
-            py::tuple prepareTuple4(const karabo::data::Hash& body) {
-                py::object a1 = wrapper::deepCopyHashLike(hashwrap::get(body, "a1"));
-                py::object a2 = wrapper::deepCopyHashLike(hashwrap::get(body, "a2"));
-                py::object a3 = wrapper::deepCopyHashLike(hashwrap::get(body, "a3"));
-                py::object a4 = wrapper::deepCopyHashLike(hashwrap::get(body, "a4"));
+            py::tuple prepareTuple4(karabo::data::Hash::Pointer body) {
+                py::object a1 = hashwrap::get(body, "a1");
+                py::object a2 = hashwrap::get(body, "a2");
+                py::object a3 = hashwrap::get(body, "a3");
+                py::object a4 = hashwrap::get(body, "a4");
                 return py::make_tuple(a1, a2, a3, a4);
             }
         };
@@ -422,13 +422,11 @@ namespace karabind {
            public:
             explicit AsyncReplyWrap(SignalSlotable* signalSlotable)
                 : karabo::xms::SignalSlotable::AsyncReply(signalSlotable) {}
-
             void replyPy0() const {
                 py::gil_scoped_release release;
                 // Call inherited operator(..) - no GIL since that synchronously sends a message:
                 (*this)();
             }
-
             void replyPy1(const py::object& a1) const {
                 // Convert Python object to std::any - may involve a copy :-(
                 std::any a1Any;
