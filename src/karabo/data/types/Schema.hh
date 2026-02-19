@@ -57,22 +57,6 @@ namespace karabo {
             WRITE = 1 << 2,
         };
 
-        inline AccessType operator|(AccessType __a, AccessType __b) {
-            return AccessType(static_cast<int>(__a) | static_cast<int>(__b));
-        }
-
-        inline AccessType& operator|=(AccessType& __a, AccessType __b) {
-            return __a = __a | __b;
-        }
-
-        inline AccessType operator&(AccessType __a, AccessType __b) {
-            return AccessType(static_cast<int>(__a) & static_cast<int>(__b));
-        }
-
-        inline AccessType& operator&=(AccessType& __a, AccessType __b) {
-            return __a = __a & __b;
-        }
-
         enum class DaqDataType {
             PULSE = 0,
             TRAIN = 1,
@@ -159,7 +143,7 @@ namespace karabo {
             Hash m_hash;
 
             // Filter
-            AccessType m_currentAccessMode;
+            int m_currentAccessMode; // can be an OR of several AccessType
             std::string m_currentState;
             int m_currentAccessLevel;
 
@@ -177,11 +161,11 @@ namespace karabo {
              * assembles the configuration
              */
             struct AssemblyRules {
-                AccessType m_accessMode;
+                int m_accessMode;
                 std::string m_state;
                 int m_accessLevel;
 
-                AssemblyRules(const AccessType& accessMode = INIT | WRITE | READ, const std::string& state = "",
+                AssemblyRules(const int accessMode = INIT | WRITE | READ, const std::string& state = "",
                               const int accessLevel = -1)
                     : m_accessMode(accessMode), m_state(state), m_accessLevel(accessLevel) {}
             };
