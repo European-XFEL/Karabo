@@ -23,8 +23,8 @@ from karabind import (
 from karabo.bound import (
     IMAGEDATA_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, AccessLevel, AccessType, ArchivePolicy,
-    Assignment, DaqDataType, Hash, Logger, MetricPrefix, NodeType, Schema,
-    Types, Unit, Validator, fullyEqual)
+    AssemblyRules, Assignment, DaqDataType, Hash, Logger, MetricPrefix,
+    NodeType, Schema, Types, Unit, Validator, fullyEqual)
 from karabo.common.states import State
 
 
@@ -1031,3 +1031,122 @@ def test_overwrite_tags():
             .setNewTags((1, 2))
             .commit()
         )
+
+
+def test_subSchema():
+    schema = cppGraphicsRenderer1SchemaTest()
+    alias = 1
+    (
+        OVERWRITE_ELEMENT(schema).key("rectangle.c")
+        .setNewAlias(alias)
+        .commit()
+    )
+    sub = schema.subSchema("rectangle")
+    assert sub.has('b')
+    assert sub.has('c')
+    assert sub.keyHasAlias("c")
+    assert sub.aliasHasKey(alias)
+    assert sub.getKeyFromAlias(alias) == "c"
+    assert sub.getAliasFromKey("c") == alias
+    assert sub.getRootName() == ""
+
+    sub = schema.subSchema("rectangle", "b")  # filter for tag "b"
+    assert sub.has("b")
+    assert not sub.has("c")
+    assert not sub.aliasHasKey(alias)
+
+    # Now testing 'by rules':
+    rules = AssemblyRules(AccessType.READ | AccessType.WRITE | AccessType.INIT)
+    sub = schema.subSchemaByRules(rules)
+    finalPaths = sub.getParameterHash().getPaths()
+    assert len(finalPaths) == 15
+
+    # Require state ON or non-defined
+    rules = AssemblyRules(AccessType.READ | AccessType.WRITE | AccessType.INIT,
+                          "ON")
+    sub = schema.subSchemaByRules(rules)
+    assert not sub.has("color")
+    # But all else since only "color" is reconfigurable for state OFF
+    finalPaths = sub.getParameterHash().getPaths()
+    assert len(finalPaths) == 14
+
+    # Check rules are preserved
+    subRules = sub.getAssemblyRules()
+    assert rules.m_accessLevel == subRules.m_accessLevel
+    assert rules.m_accessMode == subRules.m_accessMode
+    assert rules.m_state == subRules.m_state
+    # ...and alias as well
+    assert sub.keyHasAlias("rectangle.c")
+    assert sub.aliasHasKey(alias)
+    assert "rectangle.c" == sub.getKeyFromAlias(alias)
+    assert alias == sub.getAliasFromKey("rectangle.c")
+    assert schema.getRootName() == sub.getRootName()
+
+    rules = AssemblyRules(AccessType.READ | AccessType.WRITE | AccessType.INIT,
+                          "", int(Schema.OPERATOR))
+    sub = schema.subSchemaByRules(rules)
+    assert not sub.has("antiAlias")
+
+    # But all else is left since "antiAlias" is the only expert access level
+    # (defaults are user or observer)
+    finalPaths = sub.getParameterHash().getPaths()
+    assert len(finalPaths) == 14
+
+    rules = AssemblyRules(AccessType.READ)
+    sub = schema.subSchemaByRules(rules)
+    # print(sub)
+    # Something is still readOnly...
+    assert not sub.empty()
+
+    rules = AssemblyRules(AccessType.INIT | AccessType.READ)
+    sub = schema.subSchemaByRules(rules)
+    assert sub.has("antiAlias")
+    assert sub.has("rectangle.b")
+    assert sub.has("rectangle.c")
+    assert sub.has("circle.radius")
+
+    # All else is WRITE (i.e. reconfigurable)
+    finalPaths = sub.getParameterHash().getPaths()
+    assert len(finalPaths) == 12
+
+    # Test subSchemaByPaths
+    # ... extend schema ...
+    (
+        OVERWRITE_ELEMENT(schema).key("color")
+        .setNewOptions("red, yellow, blue")
+        .commit()
+    )
+    sub = schema.subSchemaByPaths({"color",
+                                   "circle",
+                                   "rectangle.c"})
+    # Check that all the paths (and no more) are there
+    assert sub.has("color")
+    assert sub.has("circle")
+    assert sub.has("circle.radius")
+    assert sub.has("rectangle")
+    assert not sub.has("rectangle.b")
+    assert sub.has("rectangle.c")
+    assert 10 == len(sub.getPaths())
+    assert 10 < len(schema.getPaths())
+
+    # Check whether attributes are there
+    assert sub.getDefaultValue("color") == 'red'
+    assert len(sub.getTags("color")) == 1
+    assert sub.getDisplayedName("color") == "Color"
+    assert sub.getOptions("color") == ["red", "yellow", "blue"]
+    assert sub.isAssignmentOptional("color")
+    assert sub.isAccessReconfigurable("color")
+
+    assert sub.getUnit("circle.radius") == Unit.METER
+    assert sub.getUnitSymbol("circle.radius") == "m"
+    assert sub.getMetricPrefix("circle.radius") == MetricPrefix.MILLI
+    assert sub.getMetricPrefixSymbol("circle.radius") == "m"
+    assert sub.getMinExc("circle.radius") == 0.
+    assert sub.getMaxExc("circle.radius") == 100.
+
+    # Test alias and root name
+    assert sub.keyHasAlias("rectangle.c")
+    assert sub.aliasHasKey(alias)
+    assert sub.getKeyFromAlias(alias) == "rectangle.c"
+    assert alias == sub.getAliasFromKey("rectangle.c")
+    assert schema.getRootName() == sub.getRootName()

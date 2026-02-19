@@ -62,7 +62,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         py::class_<Schema::AssemblyRules>(m, "AssemblyRules")
               .def(py::init<>())
-              .def(py::init<AccessType const&, std::string const&, const int>(), py::arg("accessMode") = 7,
+              .def(py::init<int const&, std::string const&, const int>(), py::arg("accessMode") = 7,
                    py::arg("state") = "", py::arg("accessLevel") = -1)
               .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
               .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
@@ -177,7 +177,7 @@ void exportPyUtilSchema(py::module_& m) {
               .export_values()
               .finalize();
 
-        py::native_enum<Schema::AccessLevel>(s, "AccessLevel", "enum.Enum")
+        py::native_enum<Schema::AccessLevel>(s, "AccessLevel", "enum.IntEnum")
               .value("OBSERVER", Schema::OBSERVER)
               .value("OPERATOR", Schema::OPERATOR)
               .value("EXPERT", Schema::EXPERT)
@@ -831,6 +831,11 @@ void exportPyUtilSchema(py::module_& m) {
               "subSchemaByRules",
               [](Schema& self, const Schema::AssemblyRules& rules) { return self.subSchemaByRules(rules); },
               py::arg("assemblyRules"));
+
+        s.def(
+              "subSchemaByPaths",
+              [](Schema& self, const std::set<std::string>& paths) { return self.subSchemaByPaths(paths); },
+              py::arg("setOfPaths"));
 
         s.def(
               "setDaqDataType",
