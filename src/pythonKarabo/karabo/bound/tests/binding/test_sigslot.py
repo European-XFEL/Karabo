@@ -20,9 +20,10 @@ import uuid
 from contextlib import nullcontext as does_not_raise
 from functools import partial
 
+import numpy as np
 import pytest
 
-from karabo.bound import EventLoop, Hash, SignalSlotable
+from karabo.bound import EventLoop, Hash, ImageData, SignalSlotable, VectorHash
 
 
 @pytest.fixture(scope="module")
@@ -848,7 +849,12 @@ def test_sigslot_asyncreply(eventLoopFixt):
         def replyer():
             nonlocal called
             called = i + j
-            aReply(i, j)
+            img = ImageData(np.arange(20000, dtype=np.int16).reshape(100, 200))
+            nda = np.array([[1, 2, 3], [4, 5, 6]], np.int32)
+            h = Hash("nda", nda,
+                     "vec", VectorHash([Hash("i", i), Hash("j", j)]))
+            g = Hash("img", img)
+            aReply(h, g)
 
         # Call replyer on event loop
         EventLoop.post(replyer)
@@ -915,8 +921,16 @@ def test_sigslot_asyncreply(eventLoopFixt):
     req = alice.request(bobId, "asyncSlot2", 5, 7)
     res = req.waitForReply(to)
     assert 2 == len(res)
-    assert 5 == res[0]
-    assert 7 == res[1]
+    # First etalon array
+    nda = np.array([[1, 2, 3], [4, 5, 6]], np.int32)
+    assert nda.all() == res[0]['nda'].all()
+    vec = res[0]["vec"]  # VectorHash
+    assert len(vec) == 2
+    assert vec[0]["i"] == 5
+    assert vec[1]["j"] == 7
+    # Check ImageData content ...
+    arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
+    assert arr.all() == res[1]['img'].getData().all()
     assert 12 == called
 
     called = -1

@@ -76,6 +76,32 @@ namespace karabind {
             return wrapper::castAnyToPy(node.getValueAsAny());
         }
 
+        py::object getRef(karabo::data::Hash::Pointer self, const std::string& path, const std::string& sep) {
+            using namespace karabo::data;
+            Hash::Node& node = self->getNode(path, sep.at(0));
+            if (node.getType() == Types::HASH) {
+                std::shared_ptr<Hash> hp = std::shared_ptr<Hash>(&node.getValue<Hash>(), [](const Hash*) {});
+                if (node.hasAttribute(KARABO_HASH_CLASS_ID)) {
+                    const std::string& classId = node.getAttribute<std::string>(KARABO_HASH_CLASS_ID);
+                    if (classId == "NDArray") {
+                        return py::cast(self).attr("_get_ndarray_")(*hp);
+                    }
+                    if (classId == "ImageData") {
+                        using namespace karabo::xms;
+                        const ImageData& imgData = reinterpret_cast<const ImageData&>(*hp);
+                        return py::cast(
+                              std::shared_ptr<ImageData>(new ImageData(imgData), std::default_delete<ImageData>()));
+                    }
+                }
+                return py::cast(self).attr("_getref_hash_")(hp);
+            }
+            if (node.getType() == Types::VECTOR_HASH) {
+                std::vector<Hash>* vhp = &node.getValue<std::vector<Hash>>();
+                return py::cast(self).attr("_getref_vector_hash_")(vhp);
+            }
+            return wrapper::castAnyToPy(node.getValueAsAny());
+        }
+
         py::object getRefAttributesByNode(karabo::data::Hash::Node& self) {
             using namespace karabo::data;
             auto hp = std::shared_ptr<Hash::Attributes>(&self.getAttributes(), [](const Hash::Attributes*) {});
@@ -102,6 +128,15 @@ namespace karabind {
                 return default_return;
             }
             return getRef(const_cast<karabo::data::Hash&>(self), path, separator);
+        }
+
+        py::object get(karabo::data::Hash::Pointer self, const std::string& path, const std::string& separator,
+                       const py::object& default_return) {
+            // This implements the standard Python dictionary behavior for get()
+            if (!self->has(path, separator.at(0))) {
+                return default_return;
+            }
+            return getRef(self, path, separator);
         }
 
         const karabo::data::Hash& setPyDictAsHash(karabo::data::Hash& self, const py::dict& dictionary,
@@ -954,110 +989,6 @@ namespace karabind {
                 throw KARABO_PARAMETER_EXCEPTION("Failed to access PyCode object to deduce number of arguments.");
             }
             return result;
-        }
-
-
-        karabo::data::Hash deepCopy_r(const karabo::data::Hash& h) {
-            karabo::data::Hash r;
-            // iterate through all entries of the Hash. If the value of the Hash::Node at it
-            // is not of a Hash type we insert into our result Hash r, if not we recursivly
-            // call deepCopy_r to copy the internal structure
-            // We make sure to maintain attributes
-            for (karabo::data::Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                if (it->getType() == karabo::data::Types::HASH) {
-                    karabo::data::Hash::Node& n = r.set(it->getKey(), deepCopy_r(it->getValue<karabo::data::Hash>()));
-                    n.setAttributes(it->getAttributes());
-                } else if (it->getType() == karabo::data::Types::VECTOR_HASH) {
-                    const std::vector<karabo::data::Hash>& v = it->getValue<std::vector<karabo::data::Hash>>();
-                    karabo::data::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::data::Hash>());
-                    std::vector<karabo::data::Hash>& vc = n.getValue<std::vector<karabo::data::Hash>>();
-                    vc.reserve(v.size());
-                    for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                        vc.push_back(deepCopy_r(*vit));
-                    }
-                    n.setAttributes(it->getAttributes());
-                } else if (it->getType() == karabo::data::Types::HASH_POINTER) {
-                    karabo::data::Hash::Node& n =
-                          r.set(it->getKey(), deepCopy_r(*(it->getValue<karabo::data::Hash::Pointer>())));
-                    n.setAttributes(it->getAttributes());
-                } else if (it->getType() == karabo::data::Types::VECTOR_HASH_POINTER) {
-                    const std::vector<karabo::data::Hash::Pointer>& v =
-                          it->getValue<std::vector<karabo::data::Hash::Pointer>>();
-                    karabo::data::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::data::Hash>());
-                    std::vector<karabo::data::Hash>& vc = n.getValue<std::vector<karabo::data::Hash>>();
-                    vc.reserve(v.size());
-                    for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                        vc.push_back(deepCopy_r(**vit));
-                    }
-                    n.setAttributes(it->getAttributes());
-                } else { // if no Hash type we do not need to recurse
-                    r.setNode(it);
-                }
-            }
-            return r;
-        }
-
-
-        py::object deepCopyHashLike(const py::object& obj) {
-            using namespace karabo::data;
-            // we only check for Hash typed objects, which basically means obj
-            // contains a Hash::Node, a Hash, a vector of Hashes or pointers to Hashes
-            if (py::isinstance<Hash::Node&>(obj)) {
-                // Hash::Node case - check type information of the value and deep copy for aforementioned
-                // Hash types
-                const karabo::data::Hash::Node& node = obj.cast<Hash::Node&>();
-                if (node.getType() == Types::HASH) {
-                    return py::cast(deepCopy_r(node.getValue<Hash>()));
-                } else if (node.getType() == Types::VECTOR_HASH) {
-                    const std::vector<Hash>& v = node.getValue<std::vector<Hash>>();
-                    std::vector<Hash> vc;
-                    vc.reserve(v.size());
-                    for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                        vc.push_back(deepCopy_r(*vit));
-                    }
-                    return py::cast(vc);
-                } else if (node.getType() == Types::HASH_POINTER) {
-                    return py::cast(deepCopy_r(*node.getValue<Hash::Pointer>()));
-                } else if (node.getType() == Types::VECTOR_HASH_POINTER) {
-                    const std::vector<Hash::Pointer>& v = node.getValue<std::vector<Hash::Pointer>>();
-                    std::vector<Hash> vc;
-                    vc.reserve(v.size());
-                    for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                        vc.push_back(deepCopy_r(**vit));
-                    }
-                    return py::cast(vc);
-                } else { // if no Hash like object was found we just return the object
-                    return obj;
-                }
-                // obj contains a Hash
-            } else if (py::isinstance<Hash&>(obj)) {
-                const Hash& hash = obj.cast<Hash&>();
-                return py::cast(deepCopy_r(hash));
-                // obj contains a Hash::Pointer
-            } else if (py::isinstance<Hash::Pointer&>(obj)) {
-                const Hash::Pointer& hp = obj.cast<Hash::Pointer&>();
-                return py::cast(deepCopy_r(*hp));
-                // obj contains a vector<Hash>
-            } else if (py::isinstance<std::vector<Hash>&>(obj)) {
-                const std::vector<Hash>& v = obj.cast<std::vector<Hash>&>();
-                std::vector<karabo::data::Hash> vc;
-                vc.reserve(v.size());
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                    vc.push_back(deepCopy_r(*vit));
-                }
-                return py::cast(vc);
-                // final scenario to deep copy: vector<Hash::Pointer>
-            } else if (py::isinstance<std::vector<Hash::Pointer>&>(obj)) {
-                const std::vector<Hash::Pointer> v = obj.cast<std::vector<Hash::Pointer>>();
-                std::vector<Hash> vc;
-                vc.reserve(v.size());
-                for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
-                    vc.push_back(deepCopy_r(**vit));
-                }
-                return py::cast(vc);
-            } else { // nothing to deep-copy
-                return obj;
-            }
         }
 
 

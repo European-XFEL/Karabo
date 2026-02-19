@@ -96,6 +96,9 @@ namespace karabind {
         py::object getRef(karabo::data::Hash& self, const std::string& path, const std::string& sep)
               __attribute__((visibility("default")));
 
+        py::object getRef(karabo::data::Hash::Pointer self, const std::string& path, const std::string& sep)
+              __attribute__((visibility("default")));
+
         py::object getRefAttributesByNode(karabo::data::Hash::Node& self) __attribute__((visibility("default")));
 
         py::object getRefAttributes(karabo::data::Hash& self, const std::string& path, const std::string& sep)
@@ -106,6 +109,9 @@ namespace karabind {
               __attribute__((visibility("default")));
 
         py::object get(const karabo::data::Hash& self, const std::string& path, const std::string& separator = ".",
+                       const py::object& default_return = py::none()) __attribute__((visibility("default")));
+
+        py::object get(karabo::data::Hash::Pointer self, const std::string& path, const std::string& separator = ".",
                        const py::object& default_return = py::none()) __attribute__((visibility("default")));
 
         const karabo::data::Hash& setPyDictAsHash(karabo::data::Hash& self, const py::dict& dictionary, const char sep)
@@ -299,10 +305,6 @@ namespace karabind {
          *
          */
         size_t numArgs(const py::object& o);
-
-        karabo::data::Hash deepCopy_r(const karabo::data::Hash& h);
-
-        py::object deepCopyHashLike(const py::object& o);
 
     } /* namespace wrapper */
 
