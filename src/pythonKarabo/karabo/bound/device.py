@@ -21,6 +21,7 @@ import socket
 import sys
 import threading
 import time
+import traceback
 from typing import Any
 
 from karabind import (
@@ -437,9 +438,9 @@ class PythonDevice:
             try:
                 self.startInitialFunctions()
             except Exception as e:
-                msg = f"{repr(e)} in initialisation"
-                self.logger.error(msg)
-                self.set("status", msg)
+                self.logger.error('Error in initialisation:\n'
+                                  + ''.join(traceback.format_exception(e)))
+                self.set("status", f"{repr(e)} in initialisation")
                 self._sigslot.call("", "slotKillDevice")
 
         EventLoop.post(wrapInitialFunctions)
