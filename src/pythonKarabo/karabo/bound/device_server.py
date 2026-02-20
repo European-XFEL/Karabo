@@ -319,8 +319,7 @@ class DeviceServer:
                         m += "decorator @KARABO_CONFIGURATION_BASE_CLASS."
                     logs.append(("error", m))
 
-        instInfo = Hash("deviceClasses",
-                        [classid for classid in self.availableDevices.keys()])
+        instInfo = Hash("deviceClasses", list(self.availableDevices))
 
         return instInfo, logs
 
