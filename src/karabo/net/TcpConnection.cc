@@ -142,7 +142,7 @@ namespace karabo {
             INT32_ELEMENT(expected)
                   .key("keepalive.interval")
                   .displayedName("Interval")
-                  .description("Interval between probes keep-alive probes (TCP_KEEPINTVL)")
+                  .description("Interval between keep-alive probes (TCP_KEEPINTVL)")
                   .unit(karabo::data::Unit::SECOND)
                   .assignmentOptional()
                   .defaultValue(5) // Linux default is 75
@@ -153,7 +153,7 @@ namespace karabo {
                   .key("keepalive.numProbes")
                   .displayedName("Number of Probes")
                   .description(
-                        "Number of ot acknowledged probes after that the connection is considered dead (TCP_KEEPCNT)")
+                        "Number of not acknowledged probes after that the connection is considered dead (TCP_KEEPCNT)")
                   .unit(karabo::data::Unit::COUNT)
                   .assignmentOptional()
                   .defaultValue(5) // Linux default is 9
