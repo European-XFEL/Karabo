@@ -134,7 +134,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         info["user"] = getpass.getuser()
         info["lang"] = "python"
         info["log"] = self.log.level
-        info.merge(self.deviceClassesHash())
+        info["deviceClasses"] = self.getClasses()
 
         serverFlags = 0
         for flag in self.serverFlags.value:
@@ -207,12 +207,6 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         self.logger.debug("with the following configuration:\n%s", hash)
 
         return classId, deviceId, config
-
-    def deviceClassesHash(self):
-        classes = self.getClasses()
-        if classes:
-            return Hash("deviceClasses", list(classes))
-        return Hash()
 
     def _generateDefaultDeviceId(self, devClassId):
         self.instanceCount += 1
@@ -431,6 +425,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
                 self.plugin_errors[ep.name] = details
 
     def getClasses(self) -> list:
+        """Return the list of plugins configured for this device server"""
         classes = list(self.plugins)
         return classes
 
