@@ -20,7 +20,7 @@ import socket
 import sys
 import traceback
 from asyncio import (
-    all_tasks, gather, get_event_loop, set_event_loop, sleep, wait_for)
+    all_tasks, gather, get_event_loop, set_event_loop, shield, sleep, wait_for)
 from collections import ChainMap
 from contextlib import suppress
 from enum import Enum
@@ -121,6 +121,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
         self.deviceId = self._deviceId_ = self.serverId
         self.deviceInstanceMap = {}
 
+        self._device_futures = {}
         self.plugins = {}
         self.plugin_errors = {}
         self.pid = os.getpid()
@@ -497,10 +498,24 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
 
     slotKillServer = slot(slotKillServer, passMessage=True)
 
-    def addChild(self, deviceId, child):
-        self.deviceInstanceMap[deviceId] = child
+    async def waitLocalDevice(self, deviceId: str):
+        """Wait and get a local device"""
+        device = self.deviceInstanceMap.get(deviceId)
+        if device is not None:
+            return device
 
-    def removeChild(self, deviceId):
+        loop = get_event_loop()
+        future = self._device_futures.setdefault(
+            deviceId, loop.create_future())
+        return await shield(future)
+
+    def addChild(self, deviceId: str, child):
+        self.deviceInstanceMap[deviceId] = child
+        future = self._device_futures.pop(deviceId, None)
+        if future is not None and not future.done():
+            future.set_result(child)
+
+    def removeChild(self, deviceId: str):
         self.deviceInstanceMap.pop(deviceId, None)
 
     @slot

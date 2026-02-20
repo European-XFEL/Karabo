@@ -177,6 +177,10 @@ class Device(InjectMixin, SignalSlotable):
         server = super().device_server
         return server.deviceInstanceMap.get(instanceId)
 
+    async def waitLocalDevice(self, instanceId: str):
+        server = super().device_server
+        return await server.waitLocalDevice(instanceId)
+
     def __init__(self, configuration):
         self.__timeServerId = configuration.pop("__timeServerId", "None")
         super().__init__(configuration)
