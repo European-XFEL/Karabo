@@ -1391,6 +1391,36 @@ TEST_F(TestSignalSlotable, testRegisterSlotTwice) {
     _loopFunction(__FUNCTION__, [] { _testRegisterSlotTwice(); });
 }
 
+static void _testUnregisterSlot() {
+    auto instance = std::make_shared<SignalSlotable>("instance");
+    instance->start();
+
+    // Just test registration again - and that registered slot can be called
+    bool isCalled = false;
+    auto slot = [&isCalled]() { isCalled = true; };
+    instance->registerSlot(slot, "slot");
+
+    EXPECT_NO_THROW(instance->request("", "slot").timeout(slotCallTimeout).receive());
+    EXPECT_TRUE(isCalled);
+
+    // Now we try to unregister (non-)existing slots
+    EXPECT_FALSE(instance->unregisterSlot("slot_not_registered"));
+    EXPECT_TRUE(instance->unregisterSlot("slot"));
+
+    // Verify that unregistered slot is not available anymore
+    std::string exceptionMsg;
+    try {
+        instance->request("", "slot").timeout(slotCallTimeout).receive();
+    } catch (const karabo::data::RemoteException& e) {
+        exceptionMsg = e.userFriendlyMsg();
+    }
+    EXPECT_TRUE(exceptionMsg.find("has no slot 'slot'") != std::string::npos) << exceptionMsg;
+}
+
+
+TEST_F(TestSignalSlotable, testUnregisterSlot) {
+    _loopFunction(__FUNCTION__, [] { _testUnregisterSlot(); });
+}
 
 static void _testAsyncConnectInputChannel() {
     using karabo::data::Hash;

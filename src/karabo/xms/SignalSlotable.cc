@@ -581,7 +581,7 @@ namespace karabo {
                                                << "': " << e.what() << "\nmessage body: " << *body;
                 }
             }
-            removeSlot(replyId);
+            unregisterTemporarySlot(replyId);
             // Now check whether someone is synchronously waiting for us and if yes wake him up
             std::shared_ptr<BoostMutexCond> bmc;
             {
@@ -1738,10 +1738,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::removeSlot(const std::string& unmangledSlotFunction) {
+        void SignalSlotable::unregisterTemporarySlot(const std::string& unmangledSlotFunction) {
+            // Code duplication with the below to avoid need to run mangleSlotFunction twice or lock the mutex twice
+
             // handle noded slots
-            const std::pair<bool, std::string> needMangle = mangleSlotFunction(unmangledSlotFunction);
-            const std::string& mangledSlotFunction = (needMangle.first ? needMangle.second : unmangledSlotFunction);
+            const auto& [needMangle, mangled] = mangleSlotFunction(unmangledSlotFunction);
+            const std::string& mangledSlotFunction = (needMangle ? mangled : unmangledSlotFunction);
 
             std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
@@ -1749,6 +1751,16 @@ namespace karabo {
             m_receiveAsyncErrorHandles.erase(mangledSlotFunction);
         }
 
+        bool SignalSlotable::unregisterSlot(const std::string& unmangledSlotFunction) {
+            // Code duplication with the above to avoid need to run mangleSlotFunction twice or lock the mutex twice
+
+            // handle noded slots
+            const auto& [needMangle, mangled] = mangleSlotFunction(unmangledSlotFunction);
+            const std::string& mangledSlotFunction = (needMangle ? mangled : unmangledSlotFunction);
+
+            std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
+            return m_slotInstances.erase(mangledSlotFunction);
+        }
 
         bool SignalSlotable::hasSignal(const std::string& signalFunction) const {
             std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
@@ -2562,7 +2574,7 @@ namespace karabo {
             if (e) return; // Timer got cancelled.
 
             // Remove the slot with function name replyId, as the message took too long
-            removeSlot(replyId);
+            unregisterTemporarySlot(replyId);
             std::string msg("Timeout of asynchronous request with id '" + replyId + "'");
             if (errorHandler) {
                 try {

@@ -418,6 +418,15 @@ namespace karabo {
                               const std::string& funcName);
 
             /**
+             * @brief Unregister slot previously registered
+             *
+             * @param funcName name under which slot was previuosly registered (unmangled for 'dots')
+             *
+             * @return whether a slot with the given name was previously registered
+             */
+            bool unregisterSlot(const std::string& funcName);
+
+            /**
              * Create and register an InputChannel together with handlers
              *
              * @param channelName name of the channel, e.g. its path in the schema
@@ -1013,7 +1022,7 @@ namespace karabo {
             SlotInstancePointer getSlot(const std::string& unmangledSlotFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
-            void removeSlot(const std::string& unmangledSlotFunction);
+            void unregisterTemporarySlot(const std::string& unmangledSlotFunction);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSignal(const std::string& signalFunction) const;
