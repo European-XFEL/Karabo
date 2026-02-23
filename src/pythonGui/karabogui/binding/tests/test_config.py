@@ -32,7 +32,8 @@ from karabogui.testing import (
 from ..api import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, build_binding, extract_configuration,
-    extract_edits, extract_init_configuration, extract_online_edits)
+    extract_edits, extract_init_configuration, extract_online_edits,
+    get_config_changes)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -357,3 +358,14 @@ def test_extract_reconfigurable_configuration():
     assert "node.bar" not in extracted
     # Assignment.INTERNAL property not considered!
     assert "internal" not in extracted
+
+
+def test_get_config_changes():
+    old = Hash("name", "karabo", "version", 3)
+    new = Hash("name", "karabo", "version", 3, "category", "scada")
+
+    changes_old, changes_new = get_config_changes(old, new, project=True)
+    assert changes_old["category"] == "Missing from offline configuration"
+
+    changes_old, changes_new = get_config_changes(old, new, project=False)
+    assert changes_old["category"] == "Missing from runtime configuration"
