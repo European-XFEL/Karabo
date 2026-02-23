@@ -314,8 +314,10 @@ def get_config_changes(old, new, project):
         if isinstance(old_value, (bytes, bytearray)):
             continue
         if old_value is None and new_value is not None:
-            if not project:
-                changes_old[key] = "Missing from configuration"
+            if project:
+                changes_old[key] = "Missing from offline configuration"
+            else:
+                changes_old[key] = "Missing from runtime configuration"
             changes_new[key] = new_value
         elif old_value is not None and new_value is None:
             changes_old[key] = old_value
