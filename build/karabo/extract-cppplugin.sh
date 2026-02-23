@@ -100,6 +100,12 @@ echo -n " Extracting files, please wait..."
 SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
 tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacking the file $0"
 echo  " unpacking finished successfully"
+# Post-processing... copy include hierarchy if needed
+if [ -d $installDir/include ]; then
+    cp -r $installDir/include/* $KARABO/extern/include/.
+    rm -rf $installDir/include
+    echo "Copy package include file(s) into $KARABO/extern/include"
+fi
 echo
 echo " Package was successfully installed to: $installDir"
 echo
