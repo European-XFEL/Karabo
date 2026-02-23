@@ -163,12 +163,12 @@ _PANELS = {
 SETTINGS_TITLE = '&Application Settings'
 GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
-PAGES_FW_LINK = "https://karabo.pages.xfel.eu/Framework/"
+PAGES_FW_LINK = "https://karabo.pages.xfel.eu/Framework/public"
 
-PAGES_LINK = "https://karabodevices.pages.xfel.eu"
+PAGES_LINK = "https://karabodevices3.pages.xfel.eu"
 PAGES_MACRO_LINK = f"{PAGES_LINK}/howtomacro/"
-PAGES_GUI_LINK = f"{PAGES_LINK}/howtogui/"
-KEYBOARD_SHORTCUTS = f"{PAGES_LINK}/howtogui/keyboard_shortcuts.html"
+PAGES_GUI_LINK = "https://karabo.pages.xfel.eu/howtogui/"
+KEYBOARD_SHORTCUTS = f"{PAGES_GUI_LINK}/keyboard_shortcuts.html"
 
 
 class MainWindow(QMainWindow):
