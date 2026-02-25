@@ -144,9 +144,9 @@ C++ Framework
 C++ Standard
 -------------
 
-Since Karabo 2.20, C++17 usage is supported for framework code.
-Any depending packages should follow and upgrade to C++17 since it cannot be
-guaranteed that C++17 features are avoided in framework header files.
+Since Karabo 3.0, C++20 usage is supported for framework code.
+Any depending packages should follow and upgrade to C++20 since it cannot be
+guaranteed that C++20 features are avoided in framework header files.
 
 Additionally, the following guidelines are suggested:
 
@@ -156,26 +156,16 @@ Additionally, the following guidelines are suggested:
 
 - Don’t use `auto` to indicate straight forward types, e.g. `auto i = 4;`
 
-- Existing code does not need to be refactored for C++11 feature usage alone.
+- Existing code does not need to be refactored for C++20 feature usage alone.
   E.g. if you happen to refactor something anyway, feel free to replace iterators
   with `auto` if it aids readability. You do not specifically have to refactor
   otherwise working code though.
 
-- Except if in well contained parts of the code, do **not** use
-  `std::shared_ptr`, but continue to use `boost::shared_ptr`.
-
-- In general, if a `boost` and a `std`-library feature coexist
-  (smart pointers, mutexes, bind, etc.), continue to use the boost implementation
-  as we have done previously, especially if there is a risk that your new code
-  needs to interact with existing code.
-
 - When using more „advanced“ features, like late return type declaration
   (`->decltype(foo)`), variadic templates or reference forwarding, add a short
-  comment to these lines to aid people less experienced with C++11 features in
+  comment to these lines to aid people less experienced with C++11/20 features in
   the review.
 
-- We currently do not encourage to use C++11-introduced numerical types, e.g.
-  `uint64_t` as the Karabo type system has not been fully prepared for them.
 
 C++ Structure
 --------------
