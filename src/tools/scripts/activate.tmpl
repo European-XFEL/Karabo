@@ -156,6 +156,9 @@ if [ -n "$ZSH_VERSION" ] ; then
     bashcompinit
 fi
 
+# Fix `clear` command in the terminal by setting back the terminal info database
+export TERMINFO_DIRS=/usr/share/terminfo:/lib/terminfo:/etc/terminfo
+
 if [ -n "$BASH"  -o -n "$ZSH_VERSION" ]; then
     complete -W"--help -h" -F karabo_complete karabo-check
     complete -W"--help -h" -F karabo_complete karabo-start
