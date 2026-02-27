@@ -85,7 +85,4 @@ class DisplayWebCamGraph(BaseBindingController):
     def value_update(self, proxy):
         self._image_node.set_value(proxy.value)
 
-        if not self._image_node.is_valid:
-            return
-
         self._plot.setData(self._image_node.get_data())

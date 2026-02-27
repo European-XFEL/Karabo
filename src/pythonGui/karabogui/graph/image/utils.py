@@ -14,7 +14,8 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from functools import partial
+from functools import cache, partial
+from pathlib import Path
 
 import numpy as np
 from qtpy.QtCore import QPointF, QRectF
@@ -26,6 +27,7 @@ from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.const import ICON_SIZE
 
 GRADIENT_ICON_SIZE = (50, ICON_SIZE)
+UNSUPPORTED_IMAGE = Path(__file__).parent / "data" / "unsupported_image.npy"
 
 
 def get_transformation(actual_array, dim=0):
@@ -257,3 +259,44 @@ def get_level_limits(image):
 
     # No limits found!
     return None
+
+
+@cache
+def karabo_invalid_image():
+    return np.load(UNSUPPORTED_IMAGE)
+
+
+def write_invalid_image():
+    """Create an image (ndarray) with a text on it. This image will be shown on
+     image widgets for invalid images (eg: with unsupported encodings).
+
+    This is supposed to run only once as Console script. To make it as
+    console script, it  is required to add a line to the [project.scripts]
+    block of pyproject.toml file.
+
+    generate-invalid-image = "karabogui.graph.image.utils:write_invalid_image"
+
+    """
+    def _create_image(text: str) -> np.ndarray:
+        try:
+            import cv2
+        except ImportError:
+            print("'opencv-python' is required to generate this image")
+            return
+
+        width = height = 500
+        image = np.zeros((height, width), dtype=np.uint8)
+        x_offset = 10
+        y_offset = height // 2
+        pos = (x_offset, y_offset)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        color = (255, 0, 0)
+        font_scale = 1
+        thickness = 2
+        image = cv2.putText(
+            image, text, pos, font, font_scale, color, thickness)
+        return image
+
+    text = "Unsupported Image Encoding"
+    np.save(UNSUPPORTED_IMAGE, _create_image(text))
+    print(f"Image with text '{text}' is generated : '{UNSUPPORTED_IMAGE}'")

@@ -186,7 +186,7 @@ class DisplayDetectorGraph(BaseBindingController):
 
     def _update_image(self):
         # Get region to plot
-        np_image = self._image_node.get_slice(self._axis, self._cell)
+        np_image = self._image_node.get_data(self._axis, self._cell)
         self._plot.set_image(np_image)
 
     def _change_model(self, content):
@@ -196,9 +196,6 @@ class DisplayDetectorGraph(BaseBindingController):
 
     def value_update(self, proxy):
         self._image_node.set_value(proxy.value)
-
-        if not self._image_node.is_valid:
-            return
 
         # Hide the slider when there's no multiple images
         self._frame_slider.setVisible(self._image_node.dim_z != 0)

@@ -41,5 +41,5 @@ from .tools.toolbar import AuxPlotsToolset
 from .utils import (
     beam_profile_table_html, bytescale, create_colormap_menu,
     create_icon_from_colormap, ensure_finite_levels, get_transformation,
-    levels_almost_equal, rescale)
+    karabo_invalid_image, levels_almost_equal, rescale)
 from .viewbox import KaraboImageViewBox
