@@ -104,9 +104,6 @@ class DisplayImageGraph(BaseBindingController):
         image_data = proxy.value
         self._image_node.set_value(image_data)
 
-        if not self._image_node.is_valid:
-            return
-
         array = self._image_node.get_data()
 
         # Enable/disable some widget features depending on the encoding
