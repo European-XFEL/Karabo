@@ -1109,5 +1109,11 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def show_screen_capture(self):
+        if os.environ.get("XDG_SESSION_TYPE") == "wayland":
+            messagebox.show_information(
+                "Your machine is using a display protocol (Wayland) that "
+                "does not allow apps to capture the screen.",
+                parent=self)
+            return
         dialog = ScreenCaptureDialog(parent=self)
         dialog.show()
