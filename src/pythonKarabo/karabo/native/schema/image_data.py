@@ -15,22 +15,14 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import numpy
 
-from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
-    AccessMode, DaqDataType, Encoding, Hash, NodeType, Unit, dtype_from_number)
+    AccessMode, DaqDataType, Encoding, Hash, NodeType, Unit, dtype_from_number,
+    number_from_dtype)
 
 from .basetypes import ImageData, NoneValue
 from .configurable import Configurable
 from .descriptors import Bool, Int32, Simple, Type, VectorUInt64
 from .ndarray import NDArray
-
-
-def convert_dtype(dtype):
-    dstr = dtype.str
-    if dstr not in Type.strs:
-        dstr = dtype.newbyteorder().str
-
-    return Type.strs[dstr].number
 
 
 class ImageNode(Configurable):
@@ -152,7 +144,7 @@ class Image(Type):
         schema = ImageNode.getClassSchema(device, state).hash
         schema["pixels.shape", "defaultValue"] = numpy.array(
             self.shape, dtype=numpy.uint64)
-        schema["pixels.type", "defaultValue"] = convert_dtype(self.dtype)
+        schema["pixels.type", "defaultValue"] = number_from_dtype(self.dtype)
         schema["pixels.isBigEndian", "defaultValue"] = self.dtype.str[0] == ">"
 
         # Set the attribute defaultValues!
@@ -223,40 +215,4 @@ class Image(Type):
         return data
 
     def toDataAndAttrs(self, data):
-        if not isinstance(data, ImageData):
-            raise TypeError("The `Image` element requires an `ImageData` "
-                            "object for initialization, but got {} "
-                            "instead".format(type(data)))
-        attrs = {}
-        if data.timestamp is not None:
-            attrs = data.timestamp.toDict()
-
-        # Set the attributes of the image data!
-        h = Hash()
-        h.setElement("dims", data.dims, attrs)
-        h.setElement("encoding", data.encoding, attrs)
-        h.setElement("roiOffsets", data.roiOffsets, attrs)
-        h.setElement("binning", data.binning, attrs)
-        h.setElement("rotation", data.rotation, attrs)
-        h.setElement("bitsPerPixel", data.bitsPerPixel, attrs)
-        h.setElement("flipX", data.flipX, attrs)
-        h.setElement("flipY", data.flipY, attrs)
-
-        # Finally, set the NDArray Hash!
-        pixels = Hash()
-        pixels.setElement("type", convert_dtype(data.dtype), attrs)
-        pixels.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
-        shape = numpy.array(
-            data.shape, dtype=numpy.uint64)
-        pixels.setElement("shape", shape, attrs)
-        pixels.setElement("data", data.value.data, attrs)
-
-        # Mark this as a Custom Hash Type element `NDArray`
-        array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
-        array_attrs.update(**attrs)
-        h.setElement("pixels", pixels, array_attrs)
-
-        # Mark this as a Custom Hash Type element `ImageData`
-        image_attrs = {KARABO_HASH_CLASS_ID: "ImageData"}
-        image_attrs.update(**attrs)
-        return h, image_attrs
+        return data.toDataAttrs()

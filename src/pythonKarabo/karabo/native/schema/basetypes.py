@@ -30,8 +30,9 @@ import numpy
 import pint
 import tabulate
 
+from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
-    Encoding, Hash, HashList, HashType, MetricPrefix, Unit)
+    Encoding, Hash, HashList, HashType, MetricPrefix, Unit, number_from_dtype)
 
 from ..weak import Weak
 
@@ -477,6 +478,42 @@ class ImageData(KaraboValue):
         }
 
         return data
+
+    def toDataAttrs(self) -> tuple[Hash, dict]:
+        """Return the Data and Attributes"""
+        attrs = {}
+        if self.timestamp is not None:
+            attrs = self.timestamp.toDict()
+
+        # Set the attributes of the image data!
+        h = Hash()
+        h.setElement("dims", self.dims, attrs)
+        h.setElement("encoding", self.encoding, attrs)
+        h.setElement("roiOffsets", self.roiOffsets, attrs)
+        h.setElement("binning", self.binning, attrs)
+        h.setElement("rotation", self.rotation, attrs)
+        h.setElement("bitsPerPixel", self.bitsPerPixel, attrs)
+        h.setElement("flipX", self.flipX, attrs)
+        h.setElement("flipY", self.flipY, attrs)
+
+        # Finally, set the NDArray Hash!
+        pixels = Hash()
+        pixels.setElement("type", number_from_dtype(self.dtype), attrs)
+        pixels.setElement("isBigEndian", self.dtype.str[0] == ">", attrs)
+        shape = numpy.array(
+            self.shape, dtype=numpy.uint64)
+        pixels.setElement("shape", shape, attrs)
+        pixels.setElement("data", self.value.data, attrs)
+
+        # Mark this as a Custom Hash Type element `NDArray`
+        array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
+        array_attrs.update(**attrs)
+        h.setElement("pixels", pixels, array_attrs)
+
+        # Mark this as a Custom Hash Type element `ImageData`
+        image_attrs = {KARABO_HASH_CLASS_ID: "ImageData"}
+        image_attrs.update(**attrs)
+        return h, image_attrs
 
 
 class TableValue(KaraboValue):
