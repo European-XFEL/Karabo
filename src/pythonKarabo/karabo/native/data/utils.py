@@ -21,6 +21,34 @@ import tabulate
 from .hash import Hash, HashList, HashListFormat
 from .typenums import HashType
 
+__NUMBER_TO_NUMPYTYPE = {
+    HashType.VectorBool.value: np.bool_,
+    HashType.VectorInt8.value: np.int8,
+    HashType.VectorUInt8.value: np.uint8,
+    HashType.VectorInt16.value: np.int16,
+    HashType.VectorUInt16.value: np.uint16,
+    HashType.VectorInt32.value: np.int32,
+    HashType.VectorUInt32.value: np.uint32,
+    HashType.VectorInt64.value: np.int64,
+    HashType.VectorUInt64.value: np.uint64,
+    HashType.VectorFloat.value: np.float32,
+    HashType.VectorDouble.value: np.float64,
+
+    HashType.Bool.value: np.bool_,
+    HashType.Int8.value: np.int8,
+    HashType.UInt8.value: np.uint8,
+    HashType.Int16.value: np.int16,
+    HashType.UInt16.value: np.uint16,
+    HashType.Int32.value: np.int32,
+    HashType.UInt32.value: np.uint32,
+    HashType.Int64.value: np.int64,
+    HashType.UInt64.value: np.uint64,
+    HashType.Float.value: np.float32,
+    HashType.Double.value: np.float64,
+}
+
+__NUMPYTYPE_TO_NUMBER = {v: k for k, v in __NUMBER_TO_NUMPYTYPE.items()}
+
 
 def dtype_from_number(number):
     """Return the dtype object matching the Karabo Types number
@@ -32,45 +60,21 @@ def dtype_from_number(number):
     return np.dtype(numpy_from_number(number))
 
 
+def number_from_dtype(dtype):
+    """Return the Karabo Types number from a numpy dtype
+
+    >> numpy_from_number(dtype('uint64'))
+    >> 18
+    """
+    return __NUMPYTYPE_TO_NUMBER[dtype.type]
+
+
 def numpy_from_number(number, default=np.object_):
     """Return the numpy dtype class matching the Karabo Types number
-
-    In case of missing numpy definition, returns an the `default`.
     >> numpy_from_number(16)
     >> numpy.int64
     """
-
-    _TYPE = {
-        HashType.VectorBool: np.bool_,
-        HashType.VectorInt8: np.int8,
-        HashType.VectorUInt8: np.uint8,
-        HashType.VectorInt16: np.int16,
-        HashType.VectorUInt16: np.uint16,
-        HashType.VectorInt32: np.int32,
-        HashType.VectorUInt32: np.uint32,
-        HashType.VectorInt64: np.int64,
-        HashType.VectorUInt64: np.uint64,
-        HashType.VectorFloat: np.float32,
-        HashType.VectorDouble: np.float64,
-
-        HashType.Bool: np.bool_,
-        HashType.Int8: np.int8,
-        HashType.UInt8: np.uint8,
-        HashType.Int16: np.int16,
-        HashType.UInt16: np.uint16,
-        HashType.Int32: np.int32,
-        HashType.UInt32: np.uint32,
-        HashType.Int64: np.int64,
-        HashType.UInt64: np.uint64,
-        HashType.Float: np.float32,
-        HashType.Double: np.float64,
-    }
-    try:
-        h_type = HashType(number)
-    except Exception:
-        return default
-
-    return _TYPE.get(h_type, default)
+    return __NUMBER_TO_NUMPYTYPE.get(number, default)
 
 
 def get_array_data(data, path=None, squeeze=True):

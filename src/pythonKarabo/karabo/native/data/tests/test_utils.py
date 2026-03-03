@@ -21,7 +21,7 @@ import pytest
 from ..hash import Hash, HashList
 from ..utils import (
     HashListFormat, create_html_hash, dictToHash, dtype_from_number,
-    get_array_data, get_image_data, hashToDict)
+    get_array_data, get_image_data, hashToDict, number_from_dtype)
 
 
 class HashHtmlParser(HTMLParser):
@@ -100,6 +100,19 @@ def test_numpy_number():
     assert dtype == np.uint64
     dtype = dtype_from_number(55)
     assert dtype == np.object_
+
+
+def test_number_numpy():
+    assert 0 == number_from_dtype(np.dtype(np.bool_))
+    assert 0 == number_from_dtype(np.dtype(np.bool))
+    assert 4 == number_from_dtype(np.dtype(np.int8))
+    assert 6 == number_from_dtype(np.dtype(np.uint8))
+    assert 8 == number_from_dtype(np.dtype(np.int16))
+    assert 10 == number_from_dtype(np.dtype(np.uint16))
+    assert 12 == number_from_dtype(np.dtype(np.int32))
+    assert 14 == number_from_dtype(np.dtype(np.uint32))
+    assert 16 == number_from_dtype(np.dtype(np.int64))
+    assert 18 == number_from_dtype(np.dtype(np.uint64))
 
 
 def test_get_image_data():

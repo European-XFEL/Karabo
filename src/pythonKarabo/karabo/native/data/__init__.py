@@ -29,6 +29,6 @@ from .timestamp import Timestamp, daysAgo, hoursAgo, minutesAgo
 from .typenums import HASH_TYPE_TO_XML_TYPE, XML_TYPE_TO_HASH_TYPE, HashType
 from .utils import (
     create_html_hash, dictToHash, dtype_from_number, get_array_data,
-    get_image_data, hashToDict, numpy_from_number)
+    get_image_data, hashToDict, number_from_dtype, numpy_from_number)
 from .xml_reader import XMLParser, decodeXML, loadFromFile
 from .xml_writer import encodeXML, saveToFile, writeXML
