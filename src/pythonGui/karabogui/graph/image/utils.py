@@ -186,44 +186,74 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
     return rescaled
 
 
-def bytescale(data, cmin=None, cmax=None, low=0, high=255):
-    """ Byte scales an array (data).
+class ByteScaler:
 
-    Byte scaling means converting the input data to `uint8` dtype and scaling
-    the range to ``(low, high)`` (default 0-255).
-    """
-    high = round(high)
-    low = round(low)
+    def __init__(self):
+        self._buffer = None
+        self._out_buffer = None
+        self._shape = None
 
-    if high > 255:
-        raise ValueError(f"high `{high}` should be less than or equal to 255.")
-    if low < 0:
-        raise ValueError(f"low `{low}` should be greater than or equal to 0.")
-    if high < low:
-        raise ValueError(f"high `{high}` should be greater than or equal to "
-                         f"low `{low}`.")
+    def _check_buffers(self, data):
+        if self._shape != data.shape:
+            self._buffer = np.empty(data.shape, dtype=np.float32)
+            self._out_buffer = np.empty(data.shape, dtype=np.uint8)
+            self._shape = data.shape
 
-    if cmin is None:
-        cmin = data.min()
-    else:
-        cmin = float(cmin)
+    def scale(self, data, cmin, cmax, low=0, high=255):
+        high = round(high)
+        low = round(low)
+        if high > 255:
+            raise ValueError(
+                f"high `{high}` should be less than or equal to 255.")
+        if low < 0:
+            raise ValueError(
+                f"low `{low}` should be greater than or equal to 0.")
+        if high < low:
+            raise ValueError(
+                f"high `{high}` should be greater than or equal to "
+                f"low `{low}`.")
+        if cmin is None:
+            cmin = data.min()
+        else:
+            cmin = float(cmin)
+        if cmax is None:
+            cmax = data.max()
+        else:
+            cmax = float(cmax)
 
-    if cmax is None:
-        cmax = data.max()
-    else:
-        cmax = float(cmax)
+        self._check_buffers(data)
+        np.copyto(self._buffer, data, casting='unsafe')
+        cscale = cmax - cmin if cmax != cmin else 1.0
+        scale_factor = float(high - low) / cscale
+        self._buffer -= cmin
+        self._buffer *= scale_factor
+        self._buffer += (float(low) + 0.5)
+        np.clip(self._buffer, low, high, out=self._buffer)
+        np.copyto(self._out_buffer, self._buffer, casting='unsafe')
 
-    cscale = cmax - cmin
-    if cscale < 0:
-        raise ValueError(f"cmax {cmax} should be larger than cmin {cmin}.")
-    elif cscale == 0:
-        cscale = 1
+        return self._out_buffer
 
-    scale = float(high - low) / cscale
-    bytedata = (data - cmin) * scale + low
-    bytedata.clip(low, high, out=bytedata)
-    bytedata += 0.5
-    return bytedata.astype(np.uint8)
+
+def scale_levels(image_min, image_max, cmin, cmax,
+                 low=0, high=255) -> tuple[int, int]:
+    """Calculate new color ranges [image_min, image_max] considering the
+       overall range
+     """
+    cmin = float(cmin)
+    cmax = float(cmax)
+    cscale = cmax - cmin if cmax != cmin else 1.0
+    scale_factor = float(high - low) / cscale
+
+    def transform(val):
+        res = (val - cmin) * scale_factor + low + 0.5
+        if res < low:
+            res = low
+
+        if res > high:
+            res = high
+        return np.uint8(res)
+
+    return transform(image_min), transform(image_max)
 
 
 def ensure_finite_levels(levels, default_min=0, default_max=255):
@@ -277,6 +307,7 @@ def write_invalid_image():
     generate-invalid-image = "karabogui.graph.image.utils:write_invalid_image"
 
     """
+
     def _create_image(text: str) -> np.ndarray:
         try:
             import cv2

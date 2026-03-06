@@ -39,7 +39,7 @@ from .roll_image import RollImage
 from .tools.picker import PickerController
 from .tools.toolbar import AuxPlotsToolset
 from .utils import (
-    beam_profile_table_html, bytescale, create_colormap_menu,
+    ByteScaler, beam_profile_table_html, create_colormap_menu,
     create_icon_from_colormap, ensure_finite_levels, get_transformation,
     karabo_invalid_image, levels_almost_equal, rescale)
 from .viewbox import KaraboImageViewBox

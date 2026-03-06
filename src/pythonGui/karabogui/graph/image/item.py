@@ -22,7 +22,7 @@ from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseTool
 
-from .utils import bytescale, map_rect_to_transform
+from .utils import ByteScaler, map_rect_to_transform, scale_levels
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
 NULL_COLOR = QColor(255, 255, 255, 70)
@@ -54,7 +54,7 @@ class KaraboImageItem(GraphicsObject):
         self.lut = None
         self.image = None
         self.qimage = None
-
+        self.scaler = ByteScaler()
         self.clickTools = {MouseTool.Picker}
         self.levels = None
         # We have row-major
@@ -318,13 +318,13 @@ class KaraboImageItem(GraphicsObject):
                 image_min, image_max = image.min(), image.max()
                 # Calculate new color ranges with the ratio of the image
                 # extrema and the preset levels.
-                low, high = bytescale(np.array([image_min, image_max]),
-                                      cmin=level_min, cmax=level_max,
-                                      low=low, high=high)
+                low, high = scale_levels(
+                    image_min, image_max, cmin=level_min, cmax=level_max,
+                    low=low, high=high)
             # 4. Rescale values to 0-255 relative to the image min/max
             # for the QImage
-            image = bytescale(image, cmin=image_min, cmax=image_max,
-                              low=low, high=high)
+            image = self.scaler.scale(
+                image, cmin=image_min, cmax=image_max, low=low, high=high)
 
             # 6. Create QImage
             qimage = self._build_qimage(image,
@@ -351,7 +351,7 @@ class KaraboImageItem(GraphicsObject):
             self._slice_rect = QRectF(0, 0, *reversed(image.shape[:2]))
             self.qimage = self._build_qimage(image, img_format)
 
-    def _build_qimage(self, image, img_format):
+    def _build_qimage(self, image: np.ndarray, img_format: QImage.Format):
         # Transpose image array to match axis orientation.
         if self.axisOrder == "col-major":
             image = image.transpose((1, 0, 2)[:image.ndim]).copy()
@@ -359,12 +359,16 @@ class KaraboImageItem(GraphicsObject):
         ny, nx = image.shape[:2]
         if img_format in (QImage.Format_Indexed8, QImage.Format_RGB888):
             stride = image.strides[0]
-            return QImage(image, nx, ny, stride, img_format)
+            qimage = QImage(image.data, nx, ny, stride, img_format)
+            qimage.ndarray = image
+            return qimage
 
-        qimage = QImage(image, nx, ny, img_format)
+        qimage = QImage(image.data, nx, ny, img_format)
+        qimage.ndarray = image
         if img_format == QImage.Format_ARGB32:
             # Swap the RGB values to BGR. Seems like Qt uses BGR color space
             qimage = qimage.rgbSwapped()
+            qimage.ndarray = image
         return qimage
 
     def paint(self, p, *args):
