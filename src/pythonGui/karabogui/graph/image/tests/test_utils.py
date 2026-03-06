@@ -17,7 +17,7 @@
 import numpy as np
 import pytest
 
-from karabogui.graph.image.api import bytescale, rescale
+from karabogui.graph.image.api import ByteScaler, rescale
 
 SIZE = 10
 LOW, HIGH = (-10.0, 10.0)
@@ -56,45 +56,52 @@ def test_rescale():
 def test_bytescale():
     """Test the `bytescale` function of the image utils"""
 
+    bytescale = ByteScaler()
     min_level, max_level = (0, 127)
     image = np.linspace(min_level, max_level, endpoint=True,
                         num=SIZE, dtype=np.uint8)
 
-    bytescaled = bytescale(image, cmin=min_level, cmax=max_level,
-                           low=min_level, high=max_level)
+    bytescaled = bytescale.scale(
+        image, cmin=min_level, cmax=max_level,
+        low=min_level, high=max_level)
     np.testing.assert_almost_equal(image, bytescaled,
                                    decimal=PRECISION_TOLERANCE)
 
-    bytescaled = bytescale(image, cmin=min_level, cmax=max_level,
-                           low=5, high=100)
+    bytescaled = bytescale.scale(
+        image, cmin=min_level, cmax=max_level,
+        low=5, high=100)
     assert bytescaled[0] == 5
     assert bytescaled[-1] == 100
 
-    bytescaled = bytescale(image, cmin=None, cmax=None,
-                           low=5, high=100)
+    bytescaled = bytescale.scale(
+        image, cmin=None, cmax=None,
+        low=5, high=100)
     assert bytescaled[0] == 5
     assert bytescaled[-1] == 100
 
     image = np.linspace(min_level, max_level, endpoint=True,
                         num=SIZE, dtype=np.uint32)
-    bytescaled = bytescale(image, cmin=min_level, cmax=max_level,
-                           low=5, high=100)
+    bytescaled = bytescale.scale(image, cmin=min_level, cmax=max_level,
+                                 low=5, high=100)
     assert bytescaled[0] == 5
     assert bytescaled[-1] == 100
 
     image = np.linspace(min_level, max_level, endpoint=True,
                         num=SIZE, dtype=np.float32)
-    bytescaled = bytescale(image, cmin=min_level, cmax=max_level,
-                           low=5, high=100)
+    bytescaled = bytescale.scale(
+        image, cmin=min_level, cmax=max_level,
+        low=5, high=100)
     assert bytescaled[0] == 5
     assert bytescaled[-1] == 100
 
     with pytest.raises(ValueError):
         # No negative low allowed
-        bytescale(image, cmin=min_level, cmax=max_level,
-                  low=-5, high=100)
+        bytescale.scale(
+            image, cmin=min_level, cmax=max_level,
+            low=-5, high=100)
 
     with pytest.raises(ValueError):
         # High must be higher than low
-        bytescale(image, cmin=min_level, cmax=max_level,
-                  low=127, high=100)
+        bytescale.scale(
+            image, cmin=min_level, cmax=max_level,
+            low=127, high=100)
