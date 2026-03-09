@@ -51,6 +51,11 @@ class AxisItem(PgAxisItem):
         self.enableAutoSIPrefix(False)
         if showValues:
             self.setStyle(**self.axisStyle)
+        else:
+            # PyQtGraph - BUG: Make sure the AxisItem is visible even tho
+            # new values are shown
+            self.fixedWidth = 1
+            self.fixedHeight = 1
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
