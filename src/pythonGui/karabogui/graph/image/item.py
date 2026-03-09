@@ -359,16 +359,16 @@ class KaraboImageItem(GraphicsObject):
         ny, nx = image.shape[:2]
         if img_format in (QImage.Format_Indexed8, QImage.Format_RGB888):
             stride = image.strides[0]
-            qimage = QImage(image.data, nx, ny, stride, img_format)
+            qimage = QImage(image.ctypes.data, nx, ny, stride, img_format)
             qimage.ndarray = image
             return qimage
 
-        qimage = QImage(image.data, nx, ny, img_format)
-        qimage.ndarray = image
+        qimage = QImage(image.ctypes.data, nx, ny, img_format)
         if img_format == QImage.Format_ARGB32:
             # Swap the RGB values to BGR. Seems like Qt uses BGR color space
             qimage = qimage.rgbSwapped()
-            qimage.ndarray = image
+
+        qimage.ndarray = image
         return qimage
 
     def paint(self, p, *args):
