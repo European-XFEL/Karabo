@@ -92,6 +92,9 @@ void exportPyUtilHash(py::module_& m) {
             allowing only unique keys on a given tree-level.
         )pbdoc");
 
+    // The following statements require #include <pybind11/stl_bind.h> & PYBIND11_MAKE_OPAQUE
+    auto vh = py::bind_vector<std::vector<Hash>>(m, "VectorHash");
+
     py::native_enum<Hash::MergePolicy>(h, "HashMergePolicy", "enum.Enum",
                                        "This enumeration defines possible options when merging 2 hashes.")
           .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
@@ -656,8 +659,8 @@ void exportPyUtilHash(py::module_& m) {
               }
               self.merge(other, policy, selectedPathsCpp, separator.at(0));
           },
-          py::arg("hash"), py::arg("policy") = Hash::REPLACE_ATTRIBUTES, py::arg("selectedPaths") = py::none(),
-          py::arg("sep") = cStringSep,
+          py::arg("hash"), py::arg_v("policy", Hash::REPLACE_ATTRIBUTES, "HashMergePolicy.REPLACE_ATTRIBUTES"),
+          py::arg("selectedPaths") = py::none(), py::arg("sep") = cStringSep,
           R"pbdoc(
             h.merge(h2) <==> h += h2  :  merging 'h2' into 'h'.
 
@@ -1066,9 +1069,6 @@ void exportPyUtilHash(py::module_& m) {
         oss << ">";
         return oss.str();
     });
-
-    // The following statements require #include <pybind11/stl_bind.h> & PYBIND11_MAKE_OPAQUE
-    auto vh = py::bind_vector<std::vector<Hash>>(m, "VectorHash");
 
     vh.def("__copy__", [](const std::vector<Hash>& self) {
         std::vector<py::object> vhc;

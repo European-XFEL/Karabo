@@ -298,7 +298,8 @@ returned, the data will be dropped.
                         channel->initialize(dataSchema);
                         return py::cast(channel);
                     },
-                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"), py::arg("dataSchema") = Schema());
+                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"),
+                    py::arg_v("dataSchema", Schema(), "Schema()"));
     }
 
     {

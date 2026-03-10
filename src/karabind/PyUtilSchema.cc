@@ -77,11 +77,6 @@ void exportPyUtilSchema(py::module_& m) {
 
         py::class_<Schema, std::shared_ptr<Schema>> s(m, "Schema");
 
-        s.def(py::init<>());
-
-        s.def(py::init<std::string const&, Schema::AssemblyRules const&>(), py::arg("root"),
-              py::arg("rules") = Schema::AssemblyRules());
-
         py::native_enum<AccessType>(s, "AccessType", "enum.IntEnum")
               .value("INIT", AccessType::INIT)
               .value("READ", AccessType::READ)
@@ -195,6 +190,11 @@ void exportPyUtilSchema(py::module_& m) {
               .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
               .export_values()
               .finalize();
+
+        s.def(py::init<>());
+
+        s.def(py::init<std::string const&, Schema::AssemblyRules const&>(), py::arg("root"),
+              py::arg_v("rules", Schema::AssemblyRules(), "Schema.AssemblyRules()"));
 
         // s.def(py::self_ns::str(py::self));
         s.def("__str__", [](const Schema& self) {

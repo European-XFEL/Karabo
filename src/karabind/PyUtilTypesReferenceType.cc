@@ -75,8 +75,5 @@ void exportPyUtilTypesReferenceType(py::module_& m) {
           .value("VECTOR_HASH_POINTER", PyTypes::VECTOR_HASH_POINTER)
           .export_values();
 
-    py::class_<PyTypes>(m, "TypesClass")
-          .def_static("toType", &PyTypes::to, py::arg("Python_types"))
-          .def_static("fromType", &PyTypes::from, py::arg("C++_types"))
-          .def_static("category", &PyTypes::category, py::arg("C++_types int"));
+    py::class_<PyTypes>(m, "TypesClass").def_static("category", &PyTypes::category, py::arg("type"));
 }

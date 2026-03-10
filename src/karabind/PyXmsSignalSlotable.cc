@@ -483,12 +483,12 @@ namespace karabind {
 
         virtual ~SignalSlotableWrap() {}
 
-        static std::shared_ptr<SignalSlotableWrap> create(
-              const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-              const karabo::data::Hash& connectionParameters = karabo::data::Hash(), int heartbeatInterval = 10,
-              const karabo::data::Hash& instanceInfo = karabo::data::Hash()) {
-            return std::shared_ptr<SignalSlotableWrap>(
-                  new SignalSlotableWrap(instanceId, connectionParameters, heartbeatInterval, instanceInfo));
+        static py::object create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
+                                 const karabo::data::Hash& connectionParameters = karabo::data::Hash(),
+                                 int heartbeatInterval = 10,
+                                 const karabo::data::Hash& instanceInfo = karabo::data::Hash()) {
+            return py::cast(std::shared_ptr<SignalSlotableWrap>(
+                  new SignalSlotableWrap(instanceId, connectionParameters, heartbeatInterval, instanceInfo)));
         }
 
         void start() {
@@ -683,14 +683,18 @@ void exportPyXmsSignalSlotable(py::module_& m) {
           .def(py::init<const std::string&, const karabo::data::Hash&, const int>())
           .def(py::init<const std::string&, const karabo::data::Hash&, const int, const karabo::data::Hash&>())
           .def_static("create", &SignalSlotableWrap::create, py::arg("instanceId"),
-                      py::arg("connectionParameters") = karabo::data::Hash(), py::arg("heartbeatInterval") = 10,
-                      py::arg("instanceInfo") = karabo::data::Hash(),
+                      py::arg_v("connectionParameters", karabo::data::Hash(), "Hash()"),
+                      py::arg("heartbeatInterval") = 10, py::arg_v("instanceInfo", karabo::data::Hash(), "Hash()"),
                       "\nUse this factory method to create SignalSlotable object with given 'instanceId', "
                       "'connectionParameters', 'heartbeatInterval' and 'instanceInfo'.\n"
                       "Example:\n\tss = SignalSlotable.create('a')\n")
           .def("start", &SignalSlotableWrap::start)
-          .def("getSenderInfo", &SignalSlotable::getSenderInfo, py::arg("slotFunction"),
-               py::return_value_policy::reference_internal)
+          .def(
+                "getSenderInfo",
+                [](SignalSlotable& self, const std::string& slotFunction) {
+                    return py::cast(self.getSenderInfo(slotFunction));
+                },
+                py::arg("slotFunction"), py::return_value_policy::reference_internal)
           .def("getInstanceId", &SignalSlotable::getInstanceId)
           .def("updateInstanceInfo", &SignalSlotable::updateInstanceInfo, py::arg("update"), py::arg("remove") = false)
           .def("getInstanceInfo", &SignalSlotable::getInstanceInfo)
@@ -831,7 +835,8 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 [](SignalSlotable& self, const std::string& channelName, const Hash& config, const Schema& dataSchema) {
                     return self.createOutputChannel(channelName, config, dataSchema);
                 },
-                py::arg("channelName"), py::arg("configuration"), py::arg("dataSchema") = Schema())
+                py::arg("channelName"), py::arg("configuration"),
+                py::arg_v("dataSchema", karabo::data::Schema(), "Schema()"))
           .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy, py::arg("channelName"),
                py::arg("configuration"), py::arg("onData") = py::none(), py::arg("onInput") = py::none(),
                py::arg("onEndOfStream") = py::none(), py::arg("connectionTracker") = py::none())

@@ -36,7 +36,7 @@ namespace py = pybind11;
                 },                                                                                               \
                 "Get list of classIds of all C++ classes derived from given C++ base class \"" #baseClass "\".") \
           .def_static("getSchema", &karabo::data::Configurator<baseClass>::getSchema, py::arg("classId"),        \
-                      py::arg("rules") = karabo::data::Schema::AssemblyRules(),                                  \
+                      py::arg_v("rules", karabo::data::Schema::AssemblyRules(), "Schema.AssemblyRules()"),       \
                       "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass      \
                       "\" using assembly \"rules\"")
 
@@ -53,7 +53,7 @@ namespace py = pybind11;
                 "create",                                                                                              \
                 (std::shared_ptr<baseClass>(*)(std::string const&, karabo::data::Hash const&, bool const)) &           \
                       karabo::data::Configurator<baseClass>::create,                                                   \
-                py::arg("classId"), py::arg("input") = karabo::data::Hash(), py::arg("validate") = true,               \
+                py::arg("classId"), py::arg_v("input", karabo::data::Hash(), "Hash()"), py::arg("validate") = true,    \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \
                 "\"" #baseClass                                                                                        \
                 "\" using \"input\" configuration.\n"                                                                  \
@@ -62,7 +62,7 @@ namespace py = pybind11;
                 "createNode",                                                                                          \
                 (std::shared_ptr<baseClass>(*)(const std::string&, std::string const&, karabo::data::Hash const&,      \
                                                bool const))(&karabo::data::Configurator<baseClass>::createNode),       \
-                py::arg("nodeName"), py::arg("classId"), py::arg("input") = karabo::data::Hash(),                      \
+                py::arg("nodeName"), py::arg("classId"), py::arg_v("input", karabo::data::Hash(), "Hash()"),           \
                 py::arg("validate") = true,                                                                            \
                 "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class " \
                 "\"" #baseClass                                                                                        \

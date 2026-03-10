@@ -648,9 +648,9 @@ void exportPyCoreDeviceClient(py::module_& m) {
                     py::gil_scoped_release release;
                     return self->registerChannelMonitor(channelName, handlers, inputChannelConfig);
                 },
-                py::arg("channelName"), py::arg("dataHandler") = py::none(), py::arg("inputChannelCfg") = Hash(),
-                py::arg("eosHandler") = py::none(), py::arg("inputHandler") = py::none(),
-                py::arg("statusTracker") = py::none(),
+                py::arg("channelName"), py::arg("dataHandler") = py::none(),
+                py::arg_v("inputChannelCfg", karabo::data::Hash(), "Hash()"), py::arg("eosHandler") = py::none(),
+                py::arg("inputHandler") = py::none(), py::arg("statusTracker") = py::none(),
                 "Register a handler to monitor defined output channel.\n\n"
                 "Internally, an InputChannel is created and configured.\n"
                 "@param channelName identifies the channel as a concatenation of the id of\n"

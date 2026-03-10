@@ -59,18 +59,20 @@ void exportPyUtilSchemaElement(py::module_& m) {
         py::class_<DefValue>(m, "DefaultValueBYTEARRAY")
               .def(
                     "defaultValue",
-                    [](DefValue& self, const py::object& val) -> ByteArrayElement& {
+                    [](DefValue& self, const py::object& val) {
                         auto value = wrapper::copyPyToByteArray(val);
-                        return self.defaultValue(value);
+                        return py::cast(self.defaultValue(value));
                     },
-                    py::arg("defaultValue"))
+                    py::arg("defaultValue"), py::return_value_policy::reference_internal)
               .def(
                     "defaultValueFromString",
-                    [](DefValue& self, const std::string& valstr) -> ByteArrayElement& {
-                        return self.defaultValueFromString(valstr);
+                    [](DefValue& self, const std::string& valstr) {
+                        return py::cast(self.defaultValueFromString(valstr));
                     },
-                    py::arg("defaultValue"))
-              .def("noDefaultValue", [](DefValue& self) -> ByteArrayElement& { return self.noDefaultValue(); });
+                    py::arg("defaultValue"), py::return_value_policy::reference_internal)
+              .def(
+                    "noDefaultValue", [](DefValue& self) { return py::cast(self.noDefaultValue()); },
+                    py::return_value_policy::reference_internal);
     }
 
 

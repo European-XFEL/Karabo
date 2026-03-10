@@ -19,8 +19,8 @@ import numpy as np
 import pytest
 
 from karabo.bound import (
-    Hash, HashMergePolicy, HashNode as Node, Types, VectorHash, fullyEqual,
-    similar)
+    Hash, HashMergePolicy, HashNode as Node, Types, TypesClass, VectorHash,
+    fullyEqual, similar)
 
 # Test "clear", "empty", "getKeys", "keys", "getValues", "values",
 #      "getPaths", "paths", "set", "__setitem__", "setAs", "get",
@@ -99,6 +99,9 @@ def test_getset():
     assert h.getType('b.c.d.e.f') == Types.DOUBLE
     assert h.getType('p.e.r.f') == Types.VECTOR_DOUBLE
 
+    # Test "TypesClass.category"
+    assert TypesClass.category(h.getType('b.c.d.e.f')) == Types.SIMPLE
+    assert TypesClass.category(h.getType('p.e.r.f')) == Types.SEQUENCE
     # Test "isType"
     assert h.isType('a', Types.STRING)
     assert h.isType('c.c.c.c', Types.BOOL)

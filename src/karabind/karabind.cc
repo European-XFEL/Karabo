@@ -26,8 +26,6 @@ namespace py = pybind11;
 void exportPyUtilClassInfo(py::module_&);              // PyUtilClassInfo.cc
 void exportPyUtilTypesReferenceType(py::module_&);     // PyUtilTypesReferenceType.cc
 void exportPyUtilTimestamp(py::module_&);              // PyUtilTimestamp.cc
-void exportPyUtilTimeDuration(py::module_&);           // PyUtilTimeDuration.cc
-void exportPyUtilTimeId(py::module_&);                 // PyUtilTimeId.cc
 void exportPyUtilHashAttributes(py::module_&);         // PyUtilHashAttributes.cc
 void exportPyUtilDims(py::module_&);                   // PyUtilDims.cc
 void exportPyUtilHashNode(py::module_&);               // PyUtilHashNode.cc
@@ -36,7 +34,6 @@ void exportPyUtilHash(py::module_&);                   // PyUtilHash.cc
 void exportPyUtilAlarmConditionElement(py::module_&);  // PyUtilAlarmElement.cc
 void exportPyUtilStateElement(py::module_&);           // PyUtilStateElement.cc
 void exportPyUtilDateTimeString(py::module_&);         // PyUtilDateTimeString.cc
-void exportPyUtilEpochstamp(py::module_&);             // PyUtilEpochstamp.cc
 void exportPyUtilException(py::module_&);              // PyUtilException.cc
 void exportPyUtilSchema(py::module_&);                 // PyUtilSchema.cc
 void exportPyUtilSchemaElement(py::module_&);          // PyUtilSchemaElement.cc (simple & vector)
@@ -71,6 +68,11 @@ void exportPyKarabindTestUtilities(py::module_&); // ConfigurationTestClasses.[c
 // Build one big module, 'karabind.so', similar to how we build 'karathon' module
 
 PYBIND11_MODULE(karabind, m) {
+    // NOTE: the order below is IMPORTANT!
+    // pybind11 should know how to convert C++ type to python (for instance, karabo::data::Hash -> karabind.Hash).
+    // It means that definitions should processed before use case.  Since we split binding code into number of
+    // `exportXXXX` files, we have to make sure they are called in proper order.
+    //
     // util
     exportPyUtilClassInfo(m);
     exportPyUtilTypesReferenceType(m);
@@ -78,17 +80,14 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilHashNode(m);
     exportPyUtilNDArray(m);
     exportPyUtilHash(m);
-    exportPyUtilEpochstamp(m);
     exportPyUtilException(m);
-    exportPyUtilTimestamp(m);
-    exportPyUtilTimeDuration(m);
-    exportPyUtilTimeId(m);
+    exportPyUtilTimestamp(m); // Epochstamp, TimeDuration, TimeId, Timestamp
     exportPyUtilDateTimeString(m);
     exportPyUtilDims(m);
-    exportPyUtilAlarmConditionElement(m);
-    exportPyUtilStateElement(m);
     exportPyUtilSchema(m);
     exportPyUtilSchemaElement(m);
+    exportPyUtilAlarmConditionElement(m);
+    exportPyUtilStateElement(m);
     exportPyUtilSchemaNodeElement(m);
     exportPyUtilSchemaOverwriteElement(m);
     exportPyUtilSchemaTableElement(m);
@@ -98,21 +97,21 @@ PYBIND11_MODULE(karabind, m) {
     // io
     exportPyIoFileToolsAll(m);
 
-    // xms
-    exportPyXmsImageDataElement(m);
-    exportPyXmsSignalSlotable(m);
-    exportPyXmsSlotElement(m);
-    exportPyXmsInputOutputChannel(m);
-
-    // core
-    exportPyCoreDeviceClient(m);
-
     // log
     exportPyLogLogger(m);
 
     // net
     exportPyNetEventLoop(m);
     exportPyNetConnectionChannel(m);
+
+    // xms
+    exportPyXmsInputOutputChannel(m);
+    exportPyXmsImageDataElement(m);
+    exportPyXmsSlotElement(m);
+    exportPyXmsSignalSlotable(m);
+
+    // core
+    exportPyCoreDeviceClient(m);
 
     // exportPyKarabindTestUtilities
     exportPyKarabindTestUtilities(m);
