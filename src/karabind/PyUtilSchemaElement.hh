@@ -134,33 +134,45 @@ struct ReadOnlySpecificVectorWrap {
 // BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
 ///////////////////////////////////////////////////////////////////////////
 
-#define KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(U, EType, e)                                                      \
-    {                                                                                                         \
-        typedef DefaultValue<U, EType> DefValue;                                                              \
-        py::class_<DefValue>(m, "DefaultValue" #e)                                                            \
-              .def("defaultValue", &DefValue::defaultValue, py::arg("defaultValue"),                          \
-                   py::return_value_policy::reference_internal)                                               \
-              .def("defaultValueFromString", &DefValue::defaultValueFromString, py::arg("defaultValue"),      \
-                   py::return_value_policy::reference_internal)                                               \
-              .def("noDefaultValue", &DefValue::noDefaultValue, py::return_value_policy::reference_internal); \
+#define KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(U, EType, e)                                                               \
+    {                                                                                                                  \
+        typedef DefaultValue<U, EType> DefValue;                                                                       \
+        py::class_<DefValue>(m, "DefaultValue" #e)                                                                     \
+              .def(                                                                                                    \
+                    "defaultValue", [](DefValue& self, EType val) { return py::cast(self.defaultValue(val)); },        \
+                    py::arg("defaultValue"), py::return_value_policy::reference_internal)                              \
+              .def(                                                                                                    \
+                    "defaultValueFromString",                                                                          \
+                    [](DefValue& self, const std::string& val) { return py::cast(self.defaultValueFromString(val)); }, \
+                    py::arg("defaultValue"), py::return_value_policy::reference_internal)                              \
+              .def(                                                                                                    \
+                    "noDefaultValue", [](DefValue& self) { return py::cast(self.noDefaultValue()); },                  \
+                    py::return_value_policy::reference_internal);                                                      \
     }
 
 ///////////////////////////////////////////////////////////////////////////
 // DefaultValue<VectorElement<T>, std::vector<T> >
 ///////////////////////////////////////////////////////////////////////////
 
-#define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(T, e)                                                                  \
-    {                                                                                                             \
-        typedef std::vector<T> VType;                                                                             \
-        typedef karabo::data::VectorElement<T> U;                                                                 \
-        typedef karabo::data::DefaultValue<U, VType> DefValueVec;                                                 \
-        py::class_<DefValueVec>(m, "DefaultValueVector" #e)                                                       \
-              .def("defaultValue", &DefaultValueVectorWrap<T>::defaultValue, py::arg("pyList"),                   \
-                   py::return_value_policy::reference_internal)                                                   \
-              .def("defaultValueFromString", &DefValueVec::defaultValueFromString, py::arg("defaultValueString"), \
-                   py::return_value_policy::reference_internal)                                                   \
-              .def("noDefaultValue", (U & (DefValueVec::*)())(&DefValueVec::noDefaultValue),                      \
-                   py::return_value_policy::reference_internal);                                                  \
+#define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(T, e)                                                          \
+    {                                                                                                     \
+        typedef std::vector<T> VType;                                                                     \
+        typedef karabo::data::VectorElement<T> U;                                                         \
+        typedef karabo::data::DefaultValue<U, VType> DefValueVec;                                         \
+        py::class_<DefValueVec>(m, "DefaultValueVector" #e)                                               \
+              .def(                                                                                       \
+                    "defaultValue",                                                                       \
+                    [](DefValueVec& self, const VType& val) { return py::cast(self.defaultValue(val)); }, \
+                    py::arg("pyList"), py::return_value_policy::reference_internal)                       \
+              .def(                                                                                       \
+                    "defaultValueFromString",                                                             \
+                    [](DefValueVec& self, const std::string& val) {                                       \
+                        return py::cast(self.defaultValueFromString(val));                                \
+                    },                                                                                    \
+                    py::arg("defaultValueString"), py::return_value_policy::reference_internal)           \
+              .def(                                                                                       \
+                    "noDefaultValue", [](DefValueVec& self) { return py::cast(self.noDefaultValue()); },  \
+                    py::return_value_policy::reference_internal);                                         \
     }
 
 /////////////////////////////////////////////////////////////

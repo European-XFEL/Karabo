@@ -64,18 +64,22 @@ using namespace std;
 void exportPyXmsSlotElement(py::module_& m) {
     py::class_<SlotElementBase<SLOT_ELEMENT>, PySlotElementBase> sl(m, "SlotElementBase");
 
+    py::class_<SLOT_ELEMENT, SlotElementBase<SLOT_ELEMENT>> elem(m, "SLOT_ELEMENT");
+
     sl.def(py::init<Schema&>(), py::arg("expected"));
 
-    sl.def("allowedStates", [](py::args args) {
-        std::vector<karabo::data::State> states;
-        SLOT_ELEMENT& self = args[0].cast<SLOT_ELEMENT&>();
-        for (unsigned int i = 1; i < py::len(args); ++i) {
-            const std::string state = args[i].attr("name").cast<std::string>();
-            states.push_back(karabo::data::State::fromString(state));
-        }
-        self.allowedStates(states);
-        return args[0];
-    });
+    sl.def(
+          "allowedStates",
+          [](SLOT_ELEMENT& self, py::args args) {
+              std::vector<karabo::data::State> states;
+              for (unsigned int i = 0; i < py::len(args); ++i) {
+                  const std::string state = args[i].attr("name").cast<std::string>();
+                  states.push_back(karabo::data::State::fromString(state));
+              }
+              self.allowedStates(states);
+              return py::cast(self);
+          },
+          py::return_value_policy::reference_internal);
 
     sl.def("commit", &SlotElementBase<SLOT_ELEMENT>::commit, py::return_value_policy::reference_internal);
 
@@ -98,30 +102,27 @@ void exportPyXmsSlotElement(py::module_& m) {
 
     sl.def("expertAccess", &SlotElementBase<SLOT_ELEMENT>::expertAccess, py::return_value_policy::reference_internal);
 
-    { // karabo::xms::SLOT_ELEMENT
-        py::class_<SLOT_ELEMENT, SlotElementBase<SLOT_ELEMENT>> elem(m, "SLOT_ELEMENT");
+    // karabo::xms::SLOT_ELEMENT
+    elem.def(py::init<karabo::data::Schema&>(), py::arg("expected"));
 
-        elem.def(py::init<karabo::data::Schema&>(), py::arg("expected"));
+    elem.def("commit", &SLOT_ELEMENT::commit);
 
-        elem.def("commit", &SLOT_ELEMENT::commit);
-
-        elem.def(
-              "tags",
-              [](SLOT_ELEMENT& self, const py::object& o, const std::string& sep) {
-                  if (py::isinstance<py::str>(o)) {
-                      const std::string& stags = o.cast<std::string>();
-                      self.tags(fromString<std::string, std::vector>(stags, sep));
-                  } else if (py::isinstance<py::sequence>(o)) {
-                      std::vector<std::string> vtags;
-                      for (auto t : o) {
-                          vtags.push_back(t.cast<std::string>());
-                      }
-                      self.tags(vtags);
-                  } else {
-                      throw KARABO_NOT_SUPPORTED_EXCEPTION("Valid tag types are 'str' or sequence if str");
+    elem.def(
+          "tags",
+          [](SLOT_ELEMENT& self, const py::object& o, const std::string& sep) {
+              if (py::isinstance<py::str>(o)) {
+                  const std::string& stags = o.cast<std::string>();
+                  self.tags(fromString<std::string, std::vector>(stags, sep));
+              } else if (py::isinstance<py::sequence>(o)) {
+                  std::vector<std::string> vtags;
+                  for (auto t : o) {
+                      vtags.push_back(t.cast<std::string>());
                   }
-                  return self;
-              },
-              py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal);
-    }
+                  self.tags(vtags);
+              } else {
+                  throw KARABO_NOT_SUPPORTED_EXCEPTION("Valid tag types are 'str' or sequence if str");
+              }
+              return self;
+          },
+          py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal);
 }

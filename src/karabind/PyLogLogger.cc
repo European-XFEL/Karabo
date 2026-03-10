@@ -106,7 +106,7 @@ void exportPyLogLogger(py::module_& m) {
               .finalize();
 
         lgr.def_static("expectedParameters", &Logger::expectedParameters, py::arg("schema"));
-        lgr.def_static("configure", &Logger::configure, py::arg("config") = Hash());
+        lgr.def_static("configure", &Logger::configure, py::arg_v("config", Hash(), "Hash()"));
         lgr.def_static("useConsole", &Logger::useConsole, py::arg("logger") = "", py::arg("inheritSinks") = true);
         lgr.def_static("useFile", &Logger::useFile, py::arg("logger") = "", py::arg("inheritSinks") = true);
         lgr.def_static("useCache", &Logger::useCache, py::arg("logger") = "", py::arg("inheritSinks") = true);

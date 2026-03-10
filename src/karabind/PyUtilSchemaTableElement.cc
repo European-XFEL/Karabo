@@ -42,7 +42,7 @@ void exportPyUtilSchemaTableElement(py::module_& m) {
         py::class_<DefTableElement>(m, "DefaultValueTableElement")
               .def(
                     "defaultValue",
-                    [](DefTableElement& self, const py::object& obj) -> TableElement& {
+                    [](DefTableElement& self, const py::object& obj) {
                         if (py::isinstance<py::sequence>(obj)) {
                             std::vector<Hash> v;
                             auto vo = obj.cast<std::vector<py::object>>();
@@ -54,14 +54,16 @@ void exportPyUtilSchemaTableElement(py::module_& m) {
                                           "Default value for TableElement should sequence of Hash or VectorHash");
                                 }
                             }
-                            return self.defaultValue(v);
+                            return py::cast(self.defaultValue(v));
                         } else {
                             throw KARABO_PYTHON_EXCEPTION(
                                   "Python type of the defaultValue of TableElement must be a list");
                         }
                     },
                     py::arg("pyList"), py::return_value_policy::reference_internal)
-              .def("noDefaultValue", &DefTableElement::noDefaultValue, py::return_value_policy::reference_internal);
+              .def(
+                    "noDefaultValue", [](DefTableElement& self) { return py::cast(self.noDefaultValue()); },
+                    py::return_value_policy::reference_internal);
     }
 
     {

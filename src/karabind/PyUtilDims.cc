@@ -59,7 +59,7 @@ using namespace std;
 
 
 void exportPyUtilDims(py::module_& m) {
-    py::class_<Dims>(m, "_DimsIntern");
+    py::class_<Dims>(m, "_DimsIntern").def(py::init<>());
 
     // ----- parent ------v
     py::class_<DimsWrap, Dims> d(m, "Dims");

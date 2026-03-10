@@ -152,28 +152,28 @@ void exportPyIoFileTools(py::module_& m) {
 
     m.def(saveFuncName.c_str(),
           (void (*)(T const&, std::string const&, karabo::data::Hash const&))(&karabo::data::saveToFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
+          py::arg("object"), py::arg("filename"), py::arg_v("config", karabo::data::Hash(), "Hash()"));
 
     m.def(loadFileName.c_str(), &karabind::loadFromFileWrap<T>::loadWrap, py::arg("filename"),
-          py::arg("config") = karabo::data::Hash());
+          py::arg_v("config", karabo::data::Hash(), "Hash()"));
 }
 
 
 void exportPyIoFileTools1(py::module_& m) {
     m.def("saveToFile", (void (*)(Schema const&, string const&, Hash const&))(&karabo::data::saveToFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
+          py::arg("object"), py::arg("filename"), py::arg_v("config", karabo::data::Hash(), "Hash()"));
 
     m.def("saveToFile", (void (*)(Hash const&, string const&, Hash const&))(&karabo::data::saveToFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
+          py::arg("object"), py::arg("filename"), py::arg_v("config", karabo::data::Hash(), "Hash()"));
 
     m.def("loadFromFile", &karabind::loadFromFileWrap<Hash>::loadWrap, py::arg("filename"),
-          py::arg("config") = karabo::data::Hash());
+          py::arg_v("config", karabo::data::Hash(), "Hash()"));
 
     m.def("loadFromFile", (void (*)(Hash&, string const&, Hash const&))(&karabo::data::loadFromFile), py::arg("object"),
-          py::arg("filename"), py::arg("config") = karabo::data::Hash());
+          py::arg("filename"), py::arg_v("config", karabo::data::Hash(), "Hash()"));
 
     m.def("loadFromFile", (void (*)(Schema&, string const&, Hash const&))(&karabo::data::loadFromFile),
-          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::data::Hash());
+          py::arg("object"), py::arg("filename"), py::arg_v("config", karabo::data::Hash(), "Hash()"));
 }
 
 

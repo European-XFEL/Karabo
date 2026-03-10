@@ -44,7 +44,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
     {
         py::class_<ImageData, std::shared_ptr<ImageData>> img(m, "ImageData");
 
-        py::native_enum<Encoding>(img, "Encoding", "enum.Enum")
+        py::native_enum<Encoding>(img, "Encoding", "enum.IntEnum")
               .value("UNDEFINED", Encoding::UNDEFINED)
               .value("GRAY", Encoding::GRAY)
               .value("RGB", Encoding::RGB)
@@ -78,14 +78,15 @@ void exportPyXmsImageDataElement(py::module_& m) {
                     return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), dimensions, encoding,
                                                        bitsPerPixel);
                 }),
-                py::arg("array"), py::arg("dims") = Dims(), py::arg("encoding") = Encoding::UNDEFINED,
-                py::arg("bitsPerPixel") = 0);
+                py::arg("array"), py::arg_v("dims", Dims(), "Dims()"),
+                py::arg_v("encoding", Encoding::UNDEFINED, "Encoding.UNDEFINED"), py::arg("bitsPerPixel") = 0);
 
         // Dimensions are deduced from ndarray
         img.def(py::init([](const py::array& arr, const Encoding encoding, const int bitsPerPixel) {
                     return std::make_shared<ImageData>(wrapper::castPyArrayToND(arr), encoding, bitsPerPixel);
                 }),
-                py::arg("array"), py::arg("encoding") = Encoding::UNDEFINED, py::arg("bitsPerPixel") = 0);
+                py::arg("array"), py::arg_v("encoding", Encoding::UNDEFINED, "Encoding.UNDEFINED"),
+                py::arg("bitsPerPixel") = 0);
 
         img.def("getData", [](const ImageData& self) { return wrapper::castNDArrayToPy(self.getData()); });
 
