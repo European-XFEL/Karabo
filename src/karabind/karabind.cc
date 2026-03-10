@@ -59,8 +59,9 @@ void exportPyCoreDeviceClient(py::module_&); // PyCoreDeviceClient.cc
 void exportPyLogLogger(py::module_&); // PyLogLogger.cc
 
 // net
-void exportPyNetEventLoop(py::module_&);         // PyNetEventLoop.cc
-void exportPyNetConnectionChannel(py::module_&); // PyNetConnectionChannel.cc
+void exportPyNetEventLoop(py::module_&);            // PyNetEventLoop.cc
+void exportPyNetConnectionChannel(py::module_&);    // PyNetConnectionChannel.cc
+void exportPyNetAmqpConnectionClient(py::module_&); // PyNetAmqpConnectionClient.cc
 
 // utilities
 void exportPyKarabindTestUtilities(py::module_&); // ConfigurationTestClasses.[cc,hh]
@@ -103,6 +104,7 @@ PYBIND11_MODULE(karabind, m) {
     // net
     exportPyNetEventLoop(m);
     exportPyNetConnectionChannel(m);
+    exportPyNetAmqpConnectionClient(m);
 
     // xms
     exportPyXmsInputOutputChannel(m);
