@@ -23,19 +23,20 @@ from karabind import (
     VECTOR_CHAR_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_FLOAT_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_INT64_ELEMENT, VECTOR_STRING,
     VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, VECTOR_UINT64_ELEMENT,
-    AssemblyRules, BinarySerializerHash, BinarySerializerSchema, Broker,
-    Category, Channel, ChannelMetaData, ClassInfo, Connection,
-    ConnectionStatus, DateTimeString, DeviceClient as BoundDeviceClient, Dims,
-    Epochstamp, ErrorCode, EventLoop, Hash, HashAttributes, HashAttributesNode,
-    HashFilter, HashNode, ImageData, InputChannel, InputHash, InputSchema,
-    Logger, OutputChannel, OutputHash, OutputSchema, Requestor, Schema,
-    SignalSlotable, SignalSlotableIntern, Slot, SlotElementBase,
-    TextSerializerHash, TextSerializerSchema, TimeDuration, TimeId, Timestamp,
-    Types, TypesClass, Validator, ValidatorValidationRules, VectorHash,
-    VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual,
-    generateAutoStartHash, jsonToHash, loadFromFile, loadHashFromFile,
-    loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile, setDims,
-    similar, startDeviceServer, stopDeviceServer)
+    AmqpConnection, AmqpHashClient, AssemblyRules, BinarySerializerHash,
+    BinarySerializerSchema, Broker, Category, Channel, ChannelMetaData,
+    ClassInfo, Connection, ConnectionStatus, DateTimeString,
+    DeviceClient as BoundDeviceClient, Dims, Epochstamp, ErrorCode, EventLoop,
+    Hash, HashAttributes, HashAttributesNode, HashFilter, HashNode, ImageData,
+    InputChannel, InputHash, InputSchema, Logger, OutputChannel, OutputHash,
+    OutputSchema, Requestor, Schema, SignalSlotable, SignalSlotableIntern,
+    Slot, SlotElementBase, TextSerializerHash, TextSerializerSchema,
+    TimeDuration, TimeId, Timestamp, Types, TypesClass, Validator,
+    ValidatorValidationRules, VectorHash, VectorHashPointer, _DimsIntern,
+    cppNDArray, cppNDArrayCopy, fullyEqual, generateAutoStartHash, jsonToHash,
+    loadFromFile, loadHashFromFile, loadSchemaFromFile, saveHashToFile,
+    saveSchemaToFile, saveToFile, setDims, similar, startDeviceServer,
+    stopDeviceServer)
 
 from ..common.alarm_conditions import AlarmCondition
 from ..common.states import State, StateSignifier

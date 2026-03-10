@@ -45,6 +45,13 @@ void exportPyNetConnectionChannel(py::module_& m) {
 
               .def("getBrokerUrl", &Broker::getBrokerUrl, "Reports the url of the currently connected-to broker")
 
+              .def_static(
+                    "brokersFromEnv", []() -> py::list { return py::cast(Broker::brokersFromEnv()); },
+                    "Get the list of broker URLs from env.var. KARABO_BROKER")
+
+              .def_static("brokerDomainFromEnv", &Broker::brokerDomainFromEnv,
+                          "Get string from env.var. KARABO_BROKER_TOPIC")
+
               .def_static("brokerTypeFromEnv", &Broker::brokerTypeFromEnv)
 
                     KARABO_PYTHON_FACTORY_CONFIGURATOR_NOCREATE(Broker)
