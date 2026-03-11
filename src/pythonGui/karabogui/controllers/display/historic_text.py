@@ -138,6 +138,7 @@ class DisplayHistoricText(BaseBindingController):
         text_widget.setFocusPolicy(Qt.NoFocus)
         text_widget.setFixedHeight(60)
         text_widget.setAlignment(Qt.AlignCenter)
+        text_widget.setReadOnly(True)
         objectName = generateObjectName(widget)
         sheet = ('QWidget#{} {{ background-color : rgba{}; }}'
                  ''.format(objectName, ALL_OK_COLOR))
