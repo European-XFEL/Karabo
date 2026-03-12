@@ -494,7 +494,13 @@ def open_browser(url: str):
         # 'LD_LIBRARY_PATH_ORIG'. Restore the original, unmodified value so
         # that bundled gui pick the browser libraries from the correct
         # location.
-        envs[lp_key] = lp_orig
+        if lp_orig is not None:
+            envs[lp_key] = lp_orig  # restore the original, unmodified value
+        else:
+            # This happens when LD_LIBRARY_PATH was not set.
+            # Remove the env var as a last resort:
+            envs.pop(lp_key, None)
+
         try:
             subprocess.Popen(["xdg-open", url], env=envs,
                              start_new_session=True)
