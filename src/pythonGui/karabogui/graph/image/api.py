@@ -30,6 +30,7 @@ from .aux_plots.profiling.stats import ProfileStats
 from .base import KaraboImageView
 from .colorbar import ColorBarWidget, ColorViewBox
 from .dialogs.levels import LevelsDialog
+from .enums import ColorMode
 from .image_node import KaraboImageNode
 from .item import KaraboImageItem, karabo_default_image
 from .legends.picker import PickerLegend

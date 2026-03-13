@@ -62,9 +62,9 @@ from karabogui.graph.common.api import (
     get_pen_cycler, make_brush, make_pen, rgba_to_hex)
 from karabogui.graph.common.const import DEFAULT_BAR_WIDTH, DEFAULT_PEN_WIDTH
 from karabogui.graph.image.api import (
-    SHOWN_AXES, AuxPlotItem, ColorBarWidget, ColorViewBox, KaraboImageItem,
-    KaraboImageNode, KaraboImagePlot, KaraboImageView, KaraboImageViewBox,
-    RollImage, levels_almost_equal)
+    SHOWN_AXES, AuxPlotItem, ColorBarWidget, ColorMode, ColorViewBox,
+    KaraboImageItem, KaraboImageNode, KaraboImagePlot, KaraboImageView,
+    KaraboImageViewBox, RollImage, levels_almost_equal)
 from karabogui.graph.plots.api import (
     KaraboPlotView, ScatterGraphPlot, TransformDialog, VectorBarGraphPlot,
     generate_baseline, generate_down_sample, get_view_range)
