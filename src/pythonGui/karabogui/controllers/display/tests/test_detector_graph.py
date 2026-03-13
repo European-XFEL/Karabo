@@ -14,16 +14,19 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import numpy as np
 import pytest
 from qtpy.QtWidgets import QGraphicsTextItem
 
 from karabo.native import Encoding
+from karabogui.api import ColorMode
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import Axes
+from karabogui.graph.image.api import karabo_invalid_image
 from karabogui.util import process_qt_events
 
 from ..detector_graph import DisplayDetectorGraph, FrameSlider
@@ -134,6 +137,7 @@ def test_detector_graph_basics(detectorGraphTest):
     assert not frame_slider.isVisible()
     assert controller._axis == Axes.Z
     assert controller._cell == 0
+    assert controller._image_node.color_mode is ColorMode.GRAY
 
     image_hash = get_image_hash(dimZ=5)
     apply_configuration(image_hash, output_proxy.binding)
@@ -162,7 +166,13 @@ def test_detector_graph_yuv_image(detectorGraphTest):
     apply_configuration(image_hash, output_proxy.binding)
 
     image_node = controller._image_node
-    assert image_node.encoding is Encoding.GRAY
+    assert image_node.encoding == Encoding.YUV444
     assert image_node.dim_x == 40
     assert image_node.dim_y == 30
-    assert image_node.dim_z == 0
+    assert image_node.dim_z == 3
+
+    # Verify the actual image shown is karabo_invalid_image
+    plot = controller._plot
+    image = plot.imageItem.image
+    invalid_image = np.copy(karabo_invalid_image())
+    np.testing.assert_array_equal(image, invalid_image, strict=True)

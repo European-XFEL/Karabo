@@ -27,7 +27,8 @@ from karabogui.controllers.api import (
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.graph.common.api import AuxPlots
 from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView, karabo_default_image)
+    ColorMode, KaraboImageNode, KaraboImagePlot, KaraboImageView,
+    karabo_default_image)
 
 
 @register_binding_controller(ui_name="Image Graph",
@@ -76,6 +77,8 @@ class DisplayImageGraph(BaseBindingController):
             undock_action = QAction(icons.undock, "Undock", widget)
             undock_action.triggered.connect(self._undock_graph)
             self._plot.vb.add_action(undock_action)
+
+        self._image_node.set_color_mode(ColorMode.STANDARD)
 
         return widget
 

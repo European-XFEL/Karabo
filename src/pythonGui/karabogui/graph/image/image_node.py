@@ -15,12 +15,13 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
-from traits.api import ArrayOrNone, Enum, HasStrictTraits, Int
+from traits.api import ArrayOrNone, Enum, HasStrictTraits, Int, Set
 
 from karabo.native import Encoding
 from karabogui.controllers.arrays import (
     DIMENSIONS, get_dimensions_and_encoding, get_image_data, get_jpeg_data)
 from karabogui.graph.common.api import Axes
+from karabogui.graph.image.enums import ColorMode
 from karabogui.graph.image.utils import karabo_invalid_image
 
 # Special image dimensions
@@ -28,7 +29,19 @@ YUV422 = 2
 YUV444 = 3
 YUV_TYPES = {Encoding.YUV444, Encoding.YUV422_YUYV,
              Encoding.YUV422_UYVY}
-SUPPORTED_ENCODINGS = {Encoding.RGB, Encoding.GRAY}.union(YUV_TYPES)
+GRAY_ENCODINGS = {Encoding.GRAY}
+STANDARD_ENCODINGS = {Encoding.RGB, *GRAY_ENCODINGS, *YUV_TYPES}
+EXTENDED_COLOR_ENCODINGS = {
+    Encoding.RGBA,
+    Encoding.BGR,
+    Encoding.BGRA,
+    Encoding.BAYER_RG,
+    Encoding.BAYER_BG,
+    Encoding.BAYER_GR,
+    Encoding.BAYER_GB,
+    *YUV_TYPES,
+    }
+
 invalid_image = karabo_invalid_image()
 
 
@@ -37,11 +50,26 @@ class KaraboImageNode(HasStrictTraits):
     dim_y = Int
     dim_z = Int
     encoding = Enum(*Encoding)
+    # color_mode defines the supported encodings by the controller.
+    color_mode = Enum(*ColorMode)
 
     # Internal traits
     _data = ArrayOrNone
+    _supported_encodings = Set(GRAY_ENCODINGS)
+
+    def set_color_mode(self, mode):
+        self.color_mode = mode
 
     def set_value(self, image_node):
+        """
+        Extract the dimensions, encoding, and data from image proxy value and
+        process the data according to the color_mode supported by the
+        controller.
+
+        Parameters:
+            image_node: The image proxy value, from the device.
+        """
+
         dim_x, dim_y, dim_z, encoding = get_dimensions_and_encoding(image_node)
 
         self.dim_x = dim_x if dim_x is not None else 0
@@ -61,19 +89,21 @@ class KaraboImageNode(HasStrictTraits):
 
         data = get_image_data(
             image_node, self.dim_x, self.dim_y, self.dim_z)
-        if encoding == Encoding.YUV422_UYVY:
-            # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
-            # only display "luma" (Y') component in the GUI
-            data = data[:, :, 1]
-            self.dim_z = 0
-            encoding = Encoding.GRAY
-        elif encoding in (Encoding.YUV422_YUYV, Encoding.YUV444):
-            # input image is (y1, u1, y2, v1,  y3, u2, y4, v2, ...) or
-            # (y1, u1, v1,  y2, u2, v2, ...)
-            # only display "luma" (Y') component in the GUI
-            data = data[:, :, 0]
-            self.dim_z = 0
-            encoding = Encoding.GRAY
+        if self.color_mode is ColorMode.STANDARD:
+            # For the 'STANDARD_COLOR' mode, let's display only the luma (Y')
+            # component from the image. For 'GRAY_ONLY' mode, YUV encodings
+            # are not supported. For 'EXTENDED_COLOR_ONLY' we need full data
+            # so that it can be converted.
+            if encoding == Encoding.YUV422_UYVY:
+                # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
+                data = data[:, :, 1]
+                self.dim_z = 0
+            elif encoding in (Encoding.YUV422_YUYV, Encoding.YUV444):
+                # input image is (y1, u1, y2, v1,  y3, u2, y4, v2, ...) or
+                # (y1, u1, v1,  y2, u2, v2, ...)
+                data = data[:, :, 0]
+                self.dim_z = 0
+
         self._data = data
         self.encoding = encoding
 
@@ -120,5 +150,12 @@ class KaraboImageNode(HasStrictTraits):
     def is_valid(self):
         if self.dim_x < 1 or self.dim_y < 1:
             return False
-        # We support only RGB, GRAY and YUV encodings.
-        return self.encoding in SUPPORTED_ENCODINGS
+        return self.encoding in self._supported_encodings
+
+    def _color_mode_changed(self, mode):
+        if mode == ColorMode.GRAY:
+            self._supported_encodings = GRAY_ENCODINGS
+        elif mode == ColorMode.STANDARD:
+            self._supported_encodings = STANDARD_ENCODINGS
+        elif mode == ColorMode.COLOR:
+            self._supported_encodings = EXTENDED_COLOR_ENCODINGS

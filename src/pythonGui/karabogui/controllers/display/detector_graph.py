@@ -27,7 +27,8 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import AuxPlots, Axes
 from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView, karabo_default_image)
+    ColorMode, KaraboImageNode, KaraboImagePlot, KaraboImageView,
+    karabo_default_image)
 from karabogui.util import SignalBlocker
 
 from .util import get_ui_file
@@ -143,6 +144,7 @@ class DisplayDetectorGraph(BaseBindingController):
         self._frame_slider.set_axis(self._axis)
         self._frame_slider.set_cell(self._cell)
 
+        self._image_node.set_color_mode(ColorMode.GRAY)
         return widget
 
     def clear_widget(self):
@@ -197,8 +199,9 @@ class DisplayDetectorGraph(BaseBindingController):
     def value_update(self, proxy):
         self._image_node.set_value(proxy.value)
 
+        valid = self._image_node.is_valid
         # Hide the slider when there's no multiple images
-        self._frame_slider.setVisible(self._image_node.dim_z != 0)
+        self._frame_slider.setVisible(valid and self._image_node.dim_z != 0)
 
         if self._image_node.encoding == Encoding.GRAY:
             slider_max = self._image_node.get_axis_dimension(self._axis)

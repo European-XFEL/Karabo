@@ -24,7 +24,8 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView, karabo_default_image)
+    ColorMode, KaraboImageNode, KaraboImagePlot, KaraboImageView,
+    karabo_default_image)
 
 
 @register_binding_controller(ui_name='WebCam Graph',
@@ -62,6 +63,7 @@ class DisplayWebCamGraph(BaseBindingController):
         widget.add_colormap_action()
         widget.restore({"colormap": self.model.colormap})
 
+        self._image_node.set_color_mode(ColorMode.STANDARD)
         return widget
 
     def clear_widget(self):

@@ -14,8 +14,9 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_raises
 from pyqtgraph import ColorMap
 from qtpy.QtWidgets import QGraphicsTextItem
 
@@ -29,6 +30,7 @@ from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.enums import AuxPlots, MouseTool, ROITool
+from karabogui.graph.image.utils import karabo_invalid_image
 
 from ..image_graph import DisplayImageGraph
 
@@ -279,3 +281,25 @@ def test_save_color_levels(gui_app, image_graph_setup):
 
     model = controller.model
     assert model.color_levels == []
+
+
+def test_unsupported_encodings(gui_app, image_graph_setup):
+    controller, output_proxy, img_proxy = image_graph_setup
+
+    image_hash = get_image_hash(encoding=Encoding.BAYER_BG)
+    apply_configuration(image_hash, output_proxy.binding)
+
+    # For unspported encoding show an invalid image.
+    plot = controller._plot
+    image = plot.imageItem.image
+    invalid_image = np.copy(karabo_invalid_image())
+    assert_array_equal(image, invalid_image, strict=True)
+
+    # For RGB encoding, show the actual image.
+    image_hash = get_image_hash(dimZ=3, encoding=Encoding.RGB)
+    apply_configuration(image_hash, output_proxy.binding)
+
+    plot = controller._plot
+    image = plot.imageItem.image
+    with assert_raises(AssertionError):
+        assert_array_equal(image, invalid_image, strict=True)
