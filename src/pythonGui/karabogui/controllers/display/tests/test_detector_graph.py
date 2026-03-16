@@ -25,7 +25,6 @@ from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
-from karabogui.graph.common.api import Axes
 from karabogui.graph.image.api import karabo_invalid_image
 from karabogui.util import process_qt_events
 
@@ -54,13 +53,13 @@ def test_detector_graph_signals(gui_app):
     # Test combobox
     assert axis.value is None
     cb_axis = frame_slider.cb_axis
-    cb_axis.setCurrentIndex(Axes['Y'].value)
+    cb_axis.setCurrentIndex(1)
     cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
     assert axis.value == 'Y'
 
-    cb_axis.setCurrentIndex(Axes['X'].value)
+    cb_axis.setCurrentIndex(2)
     cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
-    assert axis.value == 'X'
+    assert axis.value == 'Z'
 
     # Test slider
     assert cell.value is None
@@ -135,14 +134,16 @@ def test_detector_graph_basics(detectorGraphTest):
 
     # Assert initial state
     assert not frame_slider.isVisible()
-    assert controller._axis == Axes.Z
+    assert controller._axis == 0
     assert controller._cell == 0
     assert controller._image_node.color_mode is ColorMode.GRAY
 
     image_hash = get_image_hash(dimZ=5)
     apply_configuration(image_hash, output_proxy.binding)
 
-    # Viewing through Z axis
+    # Viewing through X axis
+    frame_slider.axisChanged.emit('X')
+
     image = controller.widget.plot().imageItem.image
     assert image.shape == (30, 40)
     assert frame_slider.sb_cell.maximum() == 4
@@ -154,6 +155,13 @@ def test_detector_graph_basics(detectorGraphTest):
 
     # Change axis, this should change the viewed image
     frame_slider.axisChanged.emit('Y')
+    image = controller.widget.plot().imageItem.image
+    assert image.shape == (30, 5)
+    assert frame_slider.sb_cell.maximum() == 39
+    assert frame_slider.sb_cell.value() == 0
+
+    # Viewing through Z axis
+    frame_slider.axisChanged.emit('Z')
     image = controller.widget.plot().imageItem.image
     assert image.shape == (40, 5)
     assert frame_slider.sb_cell.maximum() == 29

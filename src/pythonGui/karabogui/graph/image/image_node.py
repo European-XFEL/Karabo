@@ -19,8 +19,8 @@ from traits.api import ArrayOrNone, Enum, HasStrictTraits, Int, Set
 
 from karabo.native import Encoding
 from karabogui.controllers.arrays import (
-    DIMENSIONS, get_dimensions_and_encoding, get_image_data, get_jpeg_data)
-from karabogui.graph.common.api import Axes
+    get_dimensions_and_encoding, get_image_data, get_jpeg_data)
+from karabogui.graph.common.api import DetectorAxes
 from karabogui.graph.image.enums import ColorMode
 from karabogui.graph.image.utils import karabo_invalid_image
 
@@ -107,43 +107,43 @@ class KaraboImageNode(HasStrictTraits):
         self._data = data
         self.encoding = encoding
 
-    def get_data(self, stack_axis=None, cell=None):
-        """"""
+    def get_data(self):
         # Get data depending on the image schema and encoding
 
         if self._data is None:
             return np.array([])
         if not self.is_valid:
             return invalid_image
-        if cell is None:
-            cell = 0
-        if stack_axis is not None:
-            return self._get_slice(stack_axis, cell)
-        if self.encoding == Encoding.GRAY:
-            return self._get_slice(DIMENSIONS['Z'], cell)
+        if self.encoding == Encoding.GRAY and self.dim_z:
+            # To show stacked image in the standard controller.
+            return self._data[0, :, :]
         return self._data
 
-    def get_axis_dimension(self, axis):
-        """Return the correct dimension from a given axis"""
-        if axis == Axes.Y:
-            return self.dim_y
-        if axis == Axes.X:
+    def get_detector_axis_dimension(self, axis):
+        """Return the correct dimension from a given axis. For detector image
+        the axis order is (Z, Y, X) where for the other images, it is (X, Y, Z)
+        """
+        if axis == DetectorAxes.Y:
             return self.dim_x
-        if axis == Axes.Z:
+        if axis == DetectorAxes.X:
             return self.dim_z
+        if axis == DetectorAxes.Z:
+            return self.dim_y
         else:
             raise ValueError(f'Invalid axis value: {axis}')
 
-    def _get_slice(self, axis, cell):
+    def get_slice(self, axis, cell):
         """Returns the cell slice from the given axis"""
+        if not self.is_valid:
+            return invalid_image
         if not self.dim_z:
             return self._data
         # Numpy arrays are received as x, y, z
-        if axis == Axes.Y:
+        if axis is DetectorAxes.Z:
             return self._data[cell, :, :]
-        if axis == Axes.X:
+        if axis is DetectorAxes.Y:
             return self._data[:, cell, :]
-        if axis == Axes.Z:
+        if axis is DetectorAxes.X:
             return self._data[:, :, cell]
 
     @property

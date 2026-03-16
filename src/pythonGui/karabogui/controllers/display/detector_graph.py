@@ -25,7 +25,7 @@ from karabo.native import Encoding, Timestamp
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.graph.common.api import AuxPlots, Axes
+from karabogui.graph.common.api import AuxPlots, DetectorAxes
 from karabogui.graph.image.api import (
     ColorMode, KaraboImageNode, KaraboImagePlot, KaraboImageView,
     karabo_default_image)
@@ -44,7 +44,8 @@ class FrameSlider(QWidget):
         uic.loadUi(ui_file, self)
 
         # Populate our axis combobox
-        self.cb_axis.addItems([Axes.X.name, Axes.Y.name, Axes.Z.name])
+        self.cb_axis.addItems([
+            DetectorAxes.X.name, DetectorAxes.Y.name, DetectorAxes.Z.name])
 
         self.cb_axis.currentIndexChanged[str].connect(self.axisChanged.emit)
         self.sl_cell.valueChanged.connect(self.on_slider_moved)
@@ -74,7 +75,7 @@ class FrameSlider(QWidget):
         :param axis: the selected axes
         :type axis: Enum (Axes)
         """
-        self.cb_axis.setCurrentIndex(Axes(axis).value)
+        self.cb_axis.setCurrentIndex(DetectorAxes(axis).value)
 
     def set_cell(self, cell):
         self.sb_cell.setValue(cell)
@@ -97,7 +98,7 @@ class DisplayDetectorGraph(BaseBindingController):
     model = Instance(DetectorGraphModel, args=())
 
     # internal traits
-    _axis = Enum(*Axes)
+    _axis = Enum(*DetectorAxes)
     _cell = Int(0)
 
     _frame_slider = Instance(FrameSlider)
@@ -136,7 +137,7 @@ class DisplayDetectorGraph(BaseBindingController):
         widget.add_transforms_dialog()
 
         # Default axes
-        self._axis = Axes.Z
+        self._axis = DetectorAxes.X
 
         # Restore the model information
         widget.restore(build_graph_config(self.model))
@@ -175,12 +176,13 @@ class DisplayDetectorGraph(BaseBindingController):
         if self._image_node is None:
             return
 
-        self._axis = Axes[axis]
-        self._set_slider_max(self._image_node.get_axis_dimension(self._axis))
+        self._axis = DetectorAxes[axis]
+        self._set_slider_max(self._image_node.get_detector_axis_dimension(
+            self._axis))
         self._frame_slider.reset()
 
     def _cell_changed(self, value):
-        if self._image_node is None:
+        if self._image_node is None or not self._image_node.is_valid:
             return
 
         self._cell = value
@@ -188,7 +190,7 @@ class DisplayDetectorGraph(BaseBindingController):
 
     def _update_image(self):
         # Get region to plot
-        np_image = self._image_node.get_data(self._axis, self._cell)
+        np_image = self._image_node.get_slice(self._axis, self._cell)
         self._plot.set_image(np_image)
 
     def _change_model(self, content):
@@ -204,7 +206,8 @@ class DisplayDetectorGraph(BaseBindingController):
         self._frame_slider.setVisible(valid and self._image_node.dim_z != 0)
 
         if self._image_node.encoding == Encoding.GRAY:
-            slider_max = self._image_node.get_axis_dimension(self._axis)
+            slider_max = self._image_node.get_detector_axis_dimension(
+                self._axis)
             self._set_slider_max(slider_max)
 
         self._update_image()
