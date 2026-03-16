@@ -17,10 +17,11 @@
 from enum import Enum, IntEnum
 
 
-class Axes(IntEnum):
+class DetectorAxes(IntEnum):
+    # Unlike other images, detector image follows a different order of axes.
+    Z = 0
     Y = 1
-    X = 0
-    Z = 2
+    X = 2
 
 
 class AxisType(Enum):

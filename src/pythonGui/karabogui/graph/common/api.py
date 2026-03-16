@@ -26,8 +26,8 @@ from .colors import (
 from .const import get_alarm_string, get_state_string
 from .dialogs.axes_labels import AxesLabelsDialog
 from .enums import (
-    AspectRatio, AuxPlots, Axes, AxisType, ExportTool, MouseMode, MouseTool,
-    ROITool)
+    AspectRatio, AuxPlots, AxisType, DetectorAxes, ExportTool, MouseMode,
+    MouseTool, ROITool)
 from .exporters import ArrayExporter, ImageExporter, PlotDataExporter
 from .legend import CoordsLegend, KaraboLegend
 from .roi.base import KaraboROI
