@@ -20,6 +20,7 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Jul 26, 2012 10:06:25 AM$"
 
 import copy
+import getpass
 import os
 import signal
 import socket
@@ -204,6 +205,7 @@ class DeviceServer:
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["lang"] = "bound"
+        info["user"] = getpass.getuser()
         info["log"] = config.get("log.level")
 
         self.serverFlags = config.get("serverFlags")

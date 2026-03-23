@@ -179,3 +179,13 @@ class TestDeviceServer(BoundDeviceTestCase):
                     cached_log["content"][idx]["message"])
                 idx -= 1
             self.assertTrue(error_msg_found)
+
+        with self.subTest(msg="test server instance info"):
+            req = sigSlot.request(serverId, "slotPing", 0)
+            (info, ) = req.waitForReply(self._max_timeoutMs)
+            self.assertEqual(info["lang"], "bound")
+            self.assertTrue(isinstance(info["karaboVersion"], str))
+            self.assertTrue(isinstance(info["log"], str))
+            self.assertTrue(isinstance(info["user"], str))
+            self.assertTrue(isinstance(info["host"], str))
+            self.assertTrue(isinstance(info["deviceClasses"], list))
