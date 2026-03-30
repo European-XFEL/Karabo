@@ -116,15 +116,11 @@ class Mirrors:
             # Create a configuration file for each platform's packages
             print("needing", channel_name, platforms)
             for pkg_platform, needed_packages in platforms.items():
-                to_write = "blacklist:\n" '    - name: "*"\n' "whitelist:\n"
+                to_write = "include:\n"
 
                 # Whitelist all packages that are not yet mirrored
                 for name, version, build in needed_packages:
-                    to_write += (
-                        f"    - name: {name}\n"
-                        f"      version: '{version}'\n"
-                        f"      build: '{build}'\n"
-                    )
+                    to_write += f"  - \"{name} =={version} {build}\"\n"
                 conf_filename = f"{mirror.norm_name}.yaml"
                 conf_file = op.join(target_dir, conf_filename)
                 with open(conf_file, "w") as f:
@@ -152,9 +148,9 @@ Creating mirror {mirror.name} - {pkg_platform} with the following configuration
 
         print(f"Mirroring channel {mirror.name}...")
         conda_run_command([
-            "conda", "mirror", "--upstream-channel", mirror.original_repo,
-            "--target-directory", target_mirror_directory,
-            "--platform", platform,
+            "conda", "mirror", "--source", mirror.original_repo,
+            "--destination", target_mirror_directory,
+            "--subdir", platform,
             "--config", str(conf_file)],
             env_name="base")
         os.remove(conf_file)
