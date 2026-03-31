@@ -391,7 +391,7 @@ class Builder:
             conda_build_path = os.getenv("WIN_CONDA_ROOT").strip()
             assert conda_build_path, "Conda root must be set in CI variables"
         else:
-            conda_build_path = command_run(["conda", "info", "--root"]).strip()
+            conda_build_path = command_run(["conda", "info", "--base"]).strip()
 
         print("Conda build path", conda_build_path)
         packages_path = op.join(conda_build_path, "conda-bld", target_dir)
@@ -402,7 +402,9 @@ class Builder:
         chdir(target_dir, sftp)
         for entry in os.scandir(packages_path):
             # a package has a filename like packageName-versionTxt.tar.bz2
-            if not entry.name.endswith("tar.bz2"):
+            # in <25.1 and later versions it's .conda
+            if not (entry.name.endswith(".conda") or
+                    entry.name.endswith("tar.bz2")):
                 continue
             try:
                 package_name, tail = entry.name.split("-", 1)
