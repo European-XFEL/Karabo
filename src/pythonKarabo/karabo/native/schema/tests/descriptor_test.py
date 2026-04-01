@@ -446,6 +446,27 @@ class Tests(TestCase):
         conv = d.toKaraboValue(h)
         self.assertTrue(isinstance(conv, NoneValue))
 
+        # Test Validation
+        d = NDArray(shape=(0, 3, 3))
+        # shape is (2, 3, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [1, 2, 3], [3, 4, 5]],
+            [[6, 7, 8], [6, 7, 8], [9, 0, 1]]])
+        assert v is not None
+
+        d = NDArray(shape=((0, 0, 3)))
+        # Shape is (2, 3, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [1, 2, 3], [1, 2, 3]],
+            [[4, 5, 6], [4, 5, 6], [4, 5, 6]],
+        ])
+        assert v is not None
+        # Shape is (2, 2, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [4, 5, 6]],
+            [[7, 8, 9], [0, 1, 2]],
+        ])
+
     def test_image(self):
         d = Image(dtype=UInt8, shape=(2, 2))
         with pytest.raises(ValueError):
@@ -515,6 +536,44 @@ class Tests(TestCase):
         self.assertEqual(schema["dims", "maxSize"], maxSize)
         self.assertEqual(schema["roiOffsets", "maxSize"], maxSize)
         self.assertEqual(schema["binning", "maxSize"], maxSize)
+
+        # Test empty image, will raise None error as before
+        with self.assertRaises(AttributeError):
+            d = Image()
+
+        # Test Validation
+        d = Image(data=ImageData(np.zeros(shape=(0, 3, 3))))
+        # shape is (2, 3, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [1, 2, 3], [3, 4, 5]],
+            [[6, 7, 8], [6, 7, 8], [9, 0, 1]]])
+        assert v is not None
+        # Shape is (3, 3)
+        v = d.toKaraboValue([
+            [[6, 7, 8],
+             [6, 7, 8],
+             [9, 0, 1]]
+            ])
+        assert v is not None
+        # Shape is (2, 3)
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([
+                [1, 2, 3],
+                [4, 5, 6]
+            ])
+
+        d = Image(data=ImageData(np.zeros((0, 0, 3))))
+        # Shape is (2, 3, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [1, 2, 3], [1, 2, 3]],
+            [[4, 5, 6], [4, 5, 6], [4, 5, 6]],
+        ])
+        assert v is not None
+        # Shape is (2, 2, 3)
+        v = d.toKaraboValue([
+            [[1, 2, 3], [4, 5, 6]],
+            [[7, 8, 9], [0, 1, 2]],
+        ])
 
     def test_string(self):
         d = String()

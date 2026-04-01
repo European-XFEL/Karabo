@@ -13,6 +13,8 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+from collections.abc import Callable
+
 import numpy as np
 
 import karabo.common.const as const
@@ -212,3 +214,23 @@ def sanitize_table_schema(schema: Schema, readonly: bool) -> Schema:
             stacklevel=2)
 
     return schema
+
+
+type Shape = tuple[int, ...]
+
+
+def create_shape_validator(expected: Shape) -> Callable[[Shape], bool]:
+    """Create an ndarray shape validator"""
+    if 0 in expected:
+        def match(actual: Shape) -> bool:
+            if len(actual) != len(expected):
+                return False
+            for e, a in zip(expected, actual):
+                if e != 0 and e != a:
+                    return False
+            return True
+        return match
+    else:
+        def match(actual: Shape) -> bool:
+            return actual == expected
+        return match

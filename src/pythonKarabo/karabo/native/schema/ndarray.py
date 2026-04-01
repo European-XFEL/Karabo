@@ -22,6 +22,7 @@ from karabo.native.data import (
 from .basetypes import NoneValue, QuantityValue
 from .configurable import Configurable
 from .descriptors import Bool, ByteArray, Int32, Simple, Type, VectorUInt64
+from .utils import create_shape_validator
 
 
 class ArraySchema(Configurable):
@@ -94,6 +95,7 @@ class NDArray(Type):
             dtype = dtype.numpy
         self.dtype = numpy.dtype(dtype)
         self.shape = tuple(shape)
+        self.validator = create_shape_validator(self.shape)
         super().__init__(**kwargs)
 
     def toSchemaAndAttrs(self, device, state):
@@ -126,7 +128,7 @@ class NDArray(Type):
         if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:
             data = numpy.array(data, dtype=self.dtype)
 
-        if data.shape != self.shape:
+        if not self.validator(data.shape):
             raise ValueError(
                 f"Shape mismatch: expected {self.shape}, "
                 f"but received {data.shape}.")
