@@ -45,7 +45,6 @@ class BaseLayout:
         """
         item = ShapeLayoutItem(shape)
         self._add_layout(item)
-        self._drawable_items.append(item)
 
     def _add_widget(self, widget):
         """ Needs to be reimplemented in the inherited classes to add a widget.
