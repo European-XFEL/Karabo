@@ -276,6 +276,29 @@ namespace karabo {
                   .commit();
 
             INT32_ELEMENT(expected)
+                  .key("topologyUpdateInterval")
+                  .displayedName("Topology update interval")
+                  .description("Interval, in milliseconds, between successive cycles of the topology throttler")
+                  .unit(Unit::SECOND)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .assignmentOptional()
+                  .defaultValue(500)
+                  .init()
+                  .minInc(0)
+                  .maxInc(10000) // 0.1 Hz minimum
+                  .commit();
+
+            INT32_ELEMENT(expected)
+                  .key("topologyMaxChangesPerCycle")
+                  .displayedName("Topology Maximum Changes per Cycle")
+                  .description("Maximum number of instance changes to be dispatched per cycle of the throttler")
+                  .assignmentOptional()
+                  .defaultValue(100)
+                  .init()
+                  .minInc(0)
+                  .commit();
+
+            INT32_ELEMENT(expected)
                   .key("waitInitDevice")
                   .displayedName("Instantiate wait time")
                   .description("Time interval between the instantiation of devices.")
@@ -588,7 +611,8 @@ namespace karabo {
                       std::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
                 remote().registerInstanceChangeMonitor(
-                      bind_weak(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
+                      bind_weak(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1),
+                      get<int>("topologyUpdateInterval"), get<int>("topologyMaxChangesPerCycle"));
 
                 remote().registerDevicesMonitor(
                       bind_weak(&karabo::devices::GuiServerDevice::devicesChangedHandler, this, _1));
