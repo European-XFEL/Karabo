@@ -22,6 +22,7 @@ from karabo.native import (
     Int32, RegexString, String, TypeHash, TypeNone, TypeSchema, VectorChar,
     VectorDouble, VectorHash, VectorRegexString, VectorString, VectorUInt8,
     get_default_value, sanitize_table_schema)
+from karabo.native.schema.utils import create_shape_validator
 
 
 def get_test_table(access=AccessMode.READONLY):
@@ -264,6 +265,19 @@ class Tests(TestCase):
         vectorHashProperty = VectorHash(rows=Row, minSize=2)
         with self.assertRaises(TypeError):
             get_default_value(vectorHashProperty, force=True)
+
+    def test_shape_validator(self):
+        validator = create_shape_validator((0, 100, 100))
+        assert validator((100, 100, 100))
+        assert validator((0, 100, 100))
+        assert not validator((100, 10, 100))
+        assert not validator((100, 100, 10))
+        assert not validator((100, 100))
+
+        validator = create_shape_validator((100, 100, 100))
+        assert validator((100, 100, 100))
+        assert not validator((10, 100, 100))
+        assert not validator((100, 100))
 
 
 if __name__ == "__main__":

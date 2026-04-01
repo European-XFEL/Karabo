@@ -23,6 +23,7 @@ from .basetypes import ImageData, NoneValue
 from .configurable import Configurable
 from .descriptors import Bool, Int32, Simple, Type, VectorUInt64
 from .ndarray import NDArray
+from .utils import create_shape_validator
 
 
 class ImageNode(Configurable):
@@ -132,6 +133,7 @@ class Image(Type):
         self.__dict__.update(data.toDict())
         self.daqDataType = daqDataType
         super().__init__(accessMode=AccessMode.READONLY, **kwargs)
+        self.validator = create_shape_validator(self.shape)
 
     def toSchemaAndAttrs(self, device, state):
         _, attrs = super().toSchemaAndAttrs(device, state)
@@ -196,7 +198,7 @@ class Image(Type):
         if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:
             data = numpy.array(data, dtype=self.dtype)
 
-        if data.shape != self.shape:
+        if not self.validator(data.shape):
             raise ValueError(
                 f"Shape mismatch: expected {self.shape}, "
                 f"but received {data.shape}.")
