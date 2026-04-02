@@ -580,7 +580,3 @@ class VectorUint32Binding(VectorNumberBinding):
 
 class VectorUint64Binding(VectorNumberBinding):
     value = Array(dtype='uint64', shape=(None,))
-
-
-class TableBinding(VectorHashBinding):
-    pass  # Nothing to add. We just need a different class for Tables

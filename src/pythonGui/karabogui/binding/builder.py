@@ -122,5 +122,4 @@ _NODE_BINDING_MAP = {
     'NDArray': types.NDArrayBinding,
     'Slot': types.SlotBinding,
     'OutputChannel': types.PipelineOutputBinding,
-    'Table': types.TableBinding,
 }

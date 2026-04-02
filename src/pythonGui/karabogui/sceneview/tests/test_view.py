@@ -34,9 +34,9 @@ from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabogui.binding.api import (
     DeviceProxy, ImageBinding, Int8Binding, IntBinding, NDArrayBinding,
     NodeBinding, PipelineOutputBinding, PropertyProxy, ProxyStatus,
-    SignedIntBinding, TableBinding, Uint8Binding, UnsignedIntBinding,
-    VectorBinding, VectorHashBinding, VectorNoneBinding, VectorNumberBinding,
-    VectorUint8Binding, WidgetNodeBinding, build_binding)
+    SignedIntBinding, Uint8Binding, UnsignedIntBinding, VectorBinding,
+    VectorNoneBinding, VectorNumberBinding, VectorUint8Binding,
+    WidgetNodeBinding, build_binding)
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import (
@@ -89,7 +89,6 @@ REIMPLEMENTED_BINDINGS = {
     NDArrayBinding: NodeBinding,
     PipelineOutputBinding: NodeBinding,
     SignedIntBinding: Int8Binding,
-    TableBinding: VectorHashBinding,
     UnsignedIntBinding: Uint8Binding,
     VectorNumberBinding: VectorUint8Binding,
     VectorNoneBinding: VectorBinding,
