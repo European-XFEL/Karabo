@@ -71,6 +71,11 @@ variables:
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_JOB_NAME"
   after_script:
+    # Ensures that "$HOME/.local/bin" is in the path as that would be the location
+    # where both "pip install --user" and "pipx install" would make conan available
+    # from - the build process installs the required version of conan if the installed
+    # conan version in the CI runner is older.
+    - export PATH="$HOME/.local/bin:$PATH"
     # clean up build directories from conan cache
     - conan cache clean --build
 
