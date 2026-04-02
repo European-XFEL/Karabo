@@ -106,7 +106,7 @@ variables:
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
 .image_miniforge_: &image_miniforge
-  image: europeanxfel/karabo-ci:miniforge-3-002
+  image: europeanxfel/karabo-ci:miniforge-3-003
   cache: !reference [.build_cache, cache_rw]
   tags:
     # k8s is a tag attached to a pre-production Kubernetes cluster
