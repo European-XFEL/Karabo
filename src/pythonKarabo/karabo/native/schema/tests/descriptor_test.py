@@ -575,6 +575,19 @@ class Tests(TestCase):
             [[7, 8, 9], [0, 1, 2]],
         ])
 
+        # 2.1 ImageData invalid - shape is (2, 3, 2)
+        d = Image(data=ImageData(np.zeros(shape=(0, 3, 3))))
+        with pytest.raises(ValueError):
+            d.toKaraboValue(ImageData(np.array(
+                [[[1, 2], [1, 2], [3, 4]],
+                 [[6, 7], [6, 7], [9, 0]]])))
+
+        # 2.2 ImageData valid - shape is (2, 3, 3)
+        v = d.toKaraboValue(ImageData(np.array([
+            [[1, 2, 3], [1, 2, 3], [3, 4, 5]],
+            [[6, 7, 8], [6, 7, 8], [9, 0, 1]]])))
+        assert v is not None
+
     def test_string(self):
         d = String()
         v = d.toKaraboValue("bla")
