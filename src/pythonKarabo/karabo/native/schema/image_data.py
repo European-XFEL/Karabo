@@ -192,6 +192,10 @@ class Image(Type):
                              descriptor=self)
 
         if isinstance(data, ImageData):
+            if not self.validator(data.shape):
+                raise ValueError(
+                    f"Shape mismatch: expected {self.shape}, "
+                    f"but received {data.shape}.")
             data.descriptor = self
             return data
 
