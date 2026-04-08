@@ -14,14 +14,12 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest import main, mock
-
-from qtpy.QtCore import QItemSelectionModel
+import pytest
+from qtpy.QtCore import QItemSelectionModel, Qt
 from qtpy.QtWidgets import QApplication
 
 from karabo.native import Hash
 from karabogui.events import KaraboEvent
-from karabogui.testing import GuiTestCase
 from karabogui.widgets.log import LogWidget
 
 
@@ -55,45 +53,53 @@ def create_log_data():
     return logs
 
 
-class TestLogWidget(GuiTestCase):
-
-    def test_log_widget_prune(self):
-        widget = LogWidget()
-        model = widget.table.model()
-        data = create_log_data()
-        widget.onLogDataAvailable(data)
-        assert model.rowCount() == 300
-        # add 300 more to overshoot and prune, stays at 300
-        widget.onLogDataAvailable(data)
-        assert model.rowCount() == 300
-        assert model.rowCount() > 0
-        widget.onClearLog()
-        assert model.rowCount() == 0
-        # Do a reset with new data
-        widget.initialize(data)
-        assert model.rowCount() == 300
-
-    def test_clipboard_doubleclick(self):
-        widget = LogWidget()
-        data = create_log_data()
-        widget.onLogDataAvailable(data)
-        path = "karabogui.widgets.log.broadcast_event"
-        with mock.patch(path) as broadcast:
-            source_index = widget.table_model.createIndex(12, 0)
-            index = widget.filter_model.mapFromSource(source_index)
-            widget.onItemDoubleClicked(index)
-            broadcast.assert_called_with(KaraboEvent.ShowDevice,
-                                         {"deviceId": "XFEL_EG_RACK/MOTOR/95"})
-
-        selection_model = widget.table.selectionModel()
-        selection_model.setCurrentIndex(index,
-                                        QItemSelectionModel.ClearAndSelect)
-
-        widget._copy_clipboard()
-        clipboard = QApplication.clipboard()
-        text = clipboard.text()
-        assert "XFEL_EG_RACK/MOTOR/95" in text
+@pytest.fixture()
+def widget(gui_app):
+    widget = LogWidget()
+    data = create_log_data()
+    widget.onLogDataAvailable(data)
+    return widget
 
 
-if __name__ == "__main__":
-    main()
+def test_log_widget_prune(widget):
+    model = widget.table.model()
+    assert model.rowCount() == 300
+    # add 300 more to overshoot and prune, stays at 300
+    data = create_log_data()
+    widget.onLogDataAvailable(data)
+    assert model.rowCount() == 300
+    assert model.rowCount() > 0
+    widget.onClearLog()
+    assert model.rowCount() == 0
+    # Do a reset with new data
+    widget.initialize(data)
+    assert model.rowCount() == 300
+
+
+def test_clipboard_doubleclick(widget, mocker):
+    path = "karabogui.widgets.log.broadcast_event"
+    broadcast = mocker.patch(path)
+    source_index = widget.table_model.createIndex(12, 0)
+    index = widget.filter_model.mapFromSource(source_index)
+    widget.onItemDoubleClicked(index)
+    broadcast.assert_called_with(KaraboEvent.ShowDevice,
+                                 {"deviceId": "XFEL_EG_RACK/MOTOR/95"})
+
+    selection_model = widget.table.selectionModel()
+    selection_model.setCurrentIndex(index,
+                                    QItemSelectionModel.ClearAndSelect)
+
+    widget._copy_clipboard()
+    clipboard = QApplication.clipboard()
+    text = clipboard.text()
+    assert "XFEL_EG_RACK/MOTOR/95" in text
+
+
+def test_time_stamp(widget):
+    model = widget.table.model()
+    index = model.index(0, 0)
+    # Displayed text without milliseconds
+    assert model.data(index, Qt.DisplayRole) == "2021-07-05T15:08:35"
+
+    # Tooltip with milliseconds
+    assert model.data(index, Qt.ToolTipRole) == "2021-07-05T15:08:35.250"
