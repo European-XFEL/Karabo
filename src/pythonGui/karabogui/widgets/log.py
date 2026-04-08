@@ -34,6 +34,7 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_config
 from karabogui.util import getSaveFileName
 
+TIME_STAMP_COLUMN = 0
 TYPE_COLUMN = 1
 INSTANCE_COLUMN = 2
 MAX_LOG_ENTRIES = 300
@@ -181,7 +182,7 @@ class LogWidget(QWidget):
                         description=log["message"],
                         traceback=log.get("traceback", ""),
                         dateTime=QDateTime.fromString(
-                            log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
+                            log["timestamp"], Qt.ISODate))
                     for log in data]
         return log_data
 
@@ -345,14 +346,20 @@ class TableLogModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-
+        column = index.column()
         log = self._data[index.row()]
-        if role == Qt.DecorationRole and index.column() == TYPE_COLUMN:
+        if role == Qt.DecorationRole and column == TYPE_COLUMN:
             return self.icons.get(log.messageType)
-        elif role == Qt.TextColorRole and index.column() == TYPE_COLUMN:
+        elif role == Qt.TextColorRole and column == TYPE_COLUMN:
             return self.textColor.get(log.messageType)
-        elif role in (Qt.DisplayRole, Qt.ToolTipRole):
-            return log[index.column()]
+        elif role == Qt.DisplayRole:
+            if column == TIME_STAMP_COLUMN:
+                return log[column].toString(Qt.ISODate)
+            return log[column]
+        if role == Qt.ToolTipRole:
+            if column == TIME_STAMP_COLUMN:
+                return log[column].toString(Qt.ISODateWithMs)
+            return log[column]
         return None
 
     def initialize(self, data):
