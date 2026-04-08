@@ -18,6 +18,8 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "karabind.hh"
+
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -66,9 +68,9 @@ void exportPyNetAmqpConnectionClient(py::module_&); // PyNetAmqpConnectionClient
 // utilities
 void exportPyKarabindTestUtilities(py::module_&); // ConfigurationTestClasses.[cc,hh]
 
-// Build one big module, 'karabind.so', similar to how we build 'karathon' module
 
-PYBIND11_MODULE(karabind, m) {
+// Make exported symbol 'importKarabind' in libkarabind.so
+void importKarabind(py::module_& m) {
     // NOTE: the order below is IMPORTANT!
     // pybind11 should know how to convert C++ type to python (for instance, karabo::data::Hash -> karabind.Hash).
     // It means that definitions should processed before use case.  Since we split binding code into number of
@@ -117,4 +119,10 @@ PYBIND11_MODULE(karabind, m) {
 
     // exportPyKarabindTestUtilities
     exportPyKarabindTestUtilities(m);
+}
+
+// Build one big module, 'karabind.so' ('libkarabind.so', see cmake files)
+
+PYBIND11_MODULE(karabind, m) {
+    importKarabind(m);
 }
