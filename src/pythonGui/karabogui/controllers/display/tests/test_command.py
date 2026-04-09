@@ -87,7 +87,7 @@ def test_command_controller_basics(gui_app):
     assert controller.widget is None
 
 
-def test_command_controller_access_level():
+def test_command_controller_access_level(gui_app):
     slot_proxy, add_slot_proxy = get_slot_proxy(additional=True,
                                                 klass=AccessSlottedDevice)
     controller = DisplayCommand(proxy=slot_proxy)
