@@ -19,7 +19,7 @@ import pytest
 from karabogui.widgets.scintilla_api import create_symbols
 from karabogui.widgets.scintilla_editor import (
     ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,
-    CodeEditor, FlakeReporter, check_style)
+    FlakeReporter, check_style)
 
 MULTILINE_CODE = """
 This is a dummy code
@@ -38,13 +38,6 @@ class New(Macro):  # miss blank lines above
         print("Hello {}!".format(self.name))
         x =
 """
-
-
-@pytest.fixture()
-def code_editor(gui_app):
-    editor = CodeEditor(use_api=False)
-    yield editor
-    editor.destroy()
 
 
 @pytest.fixture()
@@ -69,7 +62,8 @@ def test_scintilla_editor(code_book):
     assert code_book.getEditorCode() is not None
 
 
-def test_find_match(code_editor):
+def test_find_match(code_book):
+    code_editor = code_book.code_editor
     code_editor.setText(MULTILINE_CODE)
 
     def assert_mouse_position(line, index):
@@ -107,7 +101,8 @@ def test_find_match(code_editor):
                                       find_backward=True)
 
 
-def test_replace(code_editor):
+def test_replace(code_book):
+    code_editor = code_book.code_editor
     code_editor.setText(MULTILINE_CODE)
 
     def assert_mouse_position(line, index):
@@ -144,8 +139,9 @@ def test_replace(code_editor):
     assert code_editor.text() == expected
 
 
-def test_highlight(code_editor):
+def test_highlight(code_book):
     """ Test for highlight and clear highlight"""
+    code_editor = code_book.code_editor
     code_editor.setText(MULTILINE_CODE)
 
     def has_highlight(pos):
