@@ -258,7 +258,7 @@ class InitConfigurationDialog(QDialog):
             if model.match(first_index, Qt.DisplayRole, name, hits,
                            Qt.MatchCaseSensitive):
                 ask = (f"A configuration with the name '{name}' already "
-                       "exists. Do you wish to overwrite it ? ")
+                       "exists. Do you wish to overwrite it?")
                 overwrite = QMessageBox(
                     QMessageBox.Question, "Overwrite Configuration?",
                     ask, QMessageBox.No | QMessageBox.Yes,
