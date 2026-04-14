@@ -280,7 +280,7 @@ class ConfigurationPanel(BasePanelWidget):
         tb_compare_device.setVisible(False)
         tb_compare_device.clicked.connect(self._on_compare_configuration)
 
-        text = "Switch Configuration"
+        text = "Change View to Expert"
         tb_switch_mode = SwitchButton()
         tb_switch_mode.setStatusTip(text)
         tb_switch_mode.setToolTip(text)
@@ -811,6 +811,11 @@ class ConfigurationPanel(BasePanelWidget):
     @Slot(bool)
     def _switch_mode_toggled(self, expert):
         """Change the mode setting of the tree widget"""
+        button = self.sender()
+        if button:  # 'None' in tests
+            tooltip = ("Change View to Normal" if expert
+                       else "Change View to Expert")
+            button.setToolTip(tooltip)
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         tree_widget.setMode(expert)
 
