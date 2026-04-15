@@ -26,7 +26,7 @@ from struct import calcsize, unpack
 
 from qtpy import uic
 from qtpy.QtCore import Qt, QTimer, QUrl, Signal, Slot
-from qtpy.QtGui import QIntValidator, QKeyEvent, QKeySequence
+from qtpy.QtGui import QClipboard, QIntValidator, QKeyEvent, QKeySequence
 from qtpy.QtNetwork import (
     QAbstractSocket, QNetworkAccessManager, QNetworkReply, QNetworkRequest,
     QSslConfiguration, QSslSocket, QTcpSocket)
@@ -188,7 +188,9 @@ class AccessCodeWidget(QWidget):
 BUTTON_STYLE = """
 QPushButton#skip_authentication_button{border: none; color: rgb(80,133,207)}
 QPushButton#skip_authentication_button:hover{border: none;
-                                             color: rgb(8,8,245)}"""
+                                             color: rgb(8,8,245)}
+QPushButton#copy_url_button{border: none; color: rgb(80,133,207)}
+QPushButton#copy_url_button:hover{border: none; color: rgb(8,8,245)}"""
 
 
 class ReactiveLoginDialog(QDialog):
@@ -279,6 +281,9 @@ class ReactiveLoginDialog(QDialog):
         self.switch_button.clicked.connect(self._on_switch_user_click)
         self.skip_authentication_button.setStyleSheet(BUTTON_STYLE)
         self.skip_authentication_button.clicked.connect(self.accept)
+
+        self.copy_url_button.setStyleSheet(BUTTON_STYLE)
+        self.copy_url_button.clicked.connect(self.copy_url)
 
     # --------------------------------------------------------------------
     # Dialog Public Properties
@@ -574,6 +579,13 @@ class ReactiveLoginDialog(QDialog):
             self.login_type = LoginType.REFRESH_TOKEN
         self._update_dialog_state()
 
+    @Slot()
+    def copy_url(self):
+        url = f"{self._auth_url}login_form"
+        clipboard = QApplication.clipboard()
+        clipboard.clear(mode=QClipboard.Clipboard)
+        clipboard.setText(url, mode=QClipboard.Clipboard)
+
 
 TEMPORARY_INDEX = 0
 PERMANENT_INDEX = 1
@@ -618,6 +630,9 @@ class UserSessionDialog(QDialog):
         register_for_broadcasts(self.event_map)
 
         get_network().onGetGuiSessionInfo()
+
+        self.copy_url_button.setStyleSheet(BUTTON_STYLE)
+        self.copy_url_button.clicked.connect(self.copy_url)
 
     def done(self, result):
         """Stop listening for broadcast events"""
@@ -696,6 +711,13 @@ class UserSessionDialog(QDialog):
     def _update_button(self):
         enable = self.edit_access_code.has_access_code()
         self.ok_button.setEnabled(enable)
+
+    @Slot()
+    def copy_url(self):
+        url = f"{self._auth_url}login_form"
+        clipboard = QApplication.clipboard()
+        clipboard.clear(mode=QClipboard.Clipboard)
+        clipboard.setText(url, mode=QClipboard.Clipboard)
 
     # --------------------------------------------------------------------
     # Private interface
