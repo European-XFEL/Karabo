@@ -40,7 +40,10 @@ namespace karabo {
             reqHeaders.set(HttpHeader::user_agent, "Karabo User Auth Client");
             reqHeaders.set(HttpHeader::content_type, "application/json");
 
-            const std::string reqBody{R"({"tk": ")" + token + R"(", "topic": ")" + topic + "\"}"};
+            nl::json jsonBody;
+            jsonBody["tk"] = token;
+            jsonBody["topic"] = topic;
+            const std::string reqBody = jsonBody.dump();
 
             m_cli.asyncPost("/authorize_once_tk", reqHeaders, reqBody,
                             [authHandler](const http::response<http::string_body>& resp) {

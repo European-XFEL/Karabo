@@ -81,6 +81,7 @@ async def guiServerAuth(authServer):
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_missing_token_on_login(guiServerAuth):
+    # Login with no token starts read-only session
     login_info = Hash("type", "login",
                       "clientId", "bobHost(pid 10264)",
                       "version", "2.20.0")
@@ -93,7 +94,7 @@ async def test_missing_token_on_login(guiServerAuth):
     assert msg["readOnly"] is True
     assert msg["accessLevel"] == AccessLevel.OBSERVER
 
-    # Try to start temporary session → should fail
+    # Try to start temporary session on top of read-only session → must fail
     begin_temp_session = Hash(
         "type", "beginTemporarySession",
         "temporarySessionToken", VALID_TOKEN,
@@ -205,6 +206,43 @@ async def test_invalid_token_on_in_session_login(guiServerAuth):
     sessions = session_info["clientSessions"]
     assert len(sessions) == 1
     assert sessions[0]["sessionToken"] == VALID_TOKEN
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_missing_token_on_in_session_login(guiServerAuth):
+    login_info = Hash("type", "login",
+                      "username", VALID_USER_ID,
+                      "oneTimeToken", VALID_TOKEN,
+                      "version", "2.20.0")
+    await guiServerAuth.reset()
+    await guiServerAuth.login(login_info)
+
+    msg = await guiServerAuth.get_next("loginInformation")
+    assert msg["accessLevel"] == VALID_ACCESS_LEVEL
+    assert msg["username"] == VALID_USER_ID
+
+    # Re-login without token - tries to initiate a read-only session
+    # on top of an existing session. Not allowed.
+    readonly_login_info = Hash("type", "login",
+                               "username", VALID_USER_ID,
+                               "version", "2.20.0")
+    await guiServerAuth.send(readonly_login_info)
+    msg = await guiServerAuth.get_next("notification")
+    assert (
+        "terminate the existing session before initiating a read-only session"
+        in msg["message"])
+
+    # The existing session must remain valid after the failed attempt
+    await guiServerAuth.send(Hash("type", "getGuiSessionInfo"))
+    msg = await guiServerAuth.get_next("getGuiSessionInfo")
+    assert msg["sessionStartTime"] != ""
+    assert msg["sessionDuration"] == MAX_SESSION_TIME
+    assert msg["tempSessionStartTime"] == ""
+    assert msg["tempSessionDuration"] == MAX_TEMPORARY_SESSION_TIME
+
+    await guiServerAuth.disconnect()
+    await sleepUntil(lambda: guiServerAuth.connected is False)
 
 
 @pytest.mark.timeout(30)

@@ -1326,28 +1326,37 @@ namespace karabo {
                         sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                         return;
                     }
+                    bool isLoginOverLogin =
+                          false; // Is this a login over login (session escalation or session refresh)?
+                                 // Login over logins require a one-time token (no read-only session can
+                                 // be established on top of another) and only emit a notification in
+                                 // case of a failed authorization. Normal logins (for establishing a
+                                 // session) disconnect the client upon a failed authorization.
+
+                    bool isThereTemporarySession =
+                          false; // Only one temporary session can be created for a given connection.
+                                 // Any attempt to create a second temporary session must be denied
+                    {
+                        std::lock_guard<std::mutex> lock(m_channelMutex);
+                        auto it = m_channels.find(channel);
+                        if (it != m_channels.end()) {
+                            isLoginOverLogin = true;
+                            if (!it->second.temporarySessionToken.empty()) {
+                                isThereTemporarySession = true;
+                            }
+                        }
+                    }
                     if (hash.has("oneTimeToken")) {
                         // A one time token was sent - has to validate and authorize it, but before we must check if
                         // we are dealing with a login over an active login session: if that is the case, there must
                         // be no active temporary session on top of the active login session.
-                        bool isLoginOverLogin =
-                              false; // Is this a "non-fresh" login? We need to know because a "non-fresh"
-                                     // login only notifies in case of a failed authorization, while a
-                                     // "fresh" login also disconnects the client.
-                        {
-                            std::lock_guard<std::mutex> lock(m_channelMutex);
-                            auto it = m_channels.find(channel);
-                            if (it != m_channels.end()) {
-                                isLoginOverLogin = true;
-                                if (!it->second.temporarySessionToken.empty()) {
-                                    const string errorMsg =
-                                          "There's an active temporary session. Please terminate it before trying "
-                                          "to login again.";
-                                    const Hash h("type", "notification", "message", errorMsg);
-                                    safeClientWrite(weakChannel, h);
-                                    return;
-                                }
-                            }
+                        if (isLoginOverLogin && isThereTemporarySession) {
+                            const string errorMsg =
+                                  "There's an active temporary session. Please terminate it before trying "
+                                  "to login again.";
+                            const Hash h("type", "notification", "message", errorMsg);
+                            safeClientWrite(weakChannel, h);
+                            return;
                         }
                         const std::string oneTimeToken = hash.get<string>("oneTimeToken");
                         m_authSessionManager->beginSession(
@@ -1361,9 +1370,17 @@ namespace karabo {
                         // meantime, we return without triggering the next read for the channel. This triggering
                         // will be done by onBeginSessionResult.
                         return;
-                    } else {
+                    } else { // No oneTimeToken was sent
                         // From version 2.20.0 of the GUI Client, a login message with no OneTimeToken is
                         // interpreted as a request for a read-only session by an authenticated GUI Server.
+                        if (isLoginOverLogin) {
+                            const string errorMsg =
+                                  "Read-only sessions cannot be created on top of an existing session. Please "
+                                  "terminate the existing session before initiating a read-only session.";
+                            const Hash h("type", "notification", "message", errorMsg);
+                            safeClientWrite(weakChannel, h);
+                            return;
+                        }
                         readOnly = true;
                         registerConnect(clientVersion, channel, clientId);
                         // Sends a message reporting a login for a read-only session
@@ -1387,7 +1404,6 @@ namespace karabo {
 
                 channel->readAsyncHash(
                       bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2, readOnly));
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
             }
