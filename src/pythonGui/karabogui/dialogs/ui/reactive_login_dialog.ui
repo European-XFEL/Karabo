@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>489</width>
-    <height>388</height>
+    <height>406</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -230,23 +230,10 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="authenticate_button">
-            <property name="toolTip">
-             <string> Open browser to generate the access code by authenticating the user</string>
-            </property>
+          <item row="1" column="2">
+           <widget class="QCheckBox" name="remember_login">
             <property name="text">
-             <string>Open Access Form</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_access_code">
-            <property name="text">
-             <string>Access Code</string>
+             <string>Remember me</string>
             </property>
            </widget>
           </item>
@@ -257,10 +244,10 @@
             </property>
            </layout>
           </item>
-          <item row="1" column="2">
-           <widget class="QCheckBox" name="remember_login">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_access_code">
             <property name="text">
-             <string>Remember me</string>
+             <string>Access Code</string>
             </property>
            </widget>
           </item>
@@ -298,6 +285,33 @@
                </size>
               </property>
              </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="2">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="QPushButton" name="authenticate_button">
+              <property name="toolTip">
+               <string> Open browser to generate the access code by authenticating the user</string>
+              </property>
+              <property name="text">
+               <string>Open Access Form</string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="copy_url_button">
+             <property name="toolTip">
+               <string>Copy url of authentication server</string>
+             </property>
+              <property name="text">
+               <string>Copy URL</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -564,7 +578,6 @@
  <tabstops>
   <tabstop>combo_hostname</tabstop>
   <tabstop>edit_port</tabstop>
-  <tabstop>authenticate_button</tabstop>
   <tabstop>remember_login</tabstop>
   <tabstop>skip_authentication_button</tabstop>
   <tabstop>connect_button</tabstop>
