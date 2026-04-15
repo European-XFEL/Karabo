@@ -19,6 +19,7 @@ import time
 from argparse import ArgumentParser
 from asyncio import ensure_future, get_event_loop, sleep, wait_for
 from copy import deepcopy
+from datetime import datetime
 
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient
@@ -27,22 +28,22 @@ from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 from .startkarabo import entrypoint
 from .webserver import EMPTY_NETWORK_RESPONSE, EMPTY_RESPONSE
 
-HEARTBEAT_PENALTY = 10  # the server is polled every 5 seconds see webserver.py
+HEARTBEAT_PENALTY = 12 * 3600  # keep track of gone servers for 12 hours.
 CHECK_INTERVAL = 20
 
 
 class MainHandler(web.RequestHandler):
-    def initialize(self, servers, client, last_updates, network):
+    def initialize(self, servers, client, network):
         self.servers = servers
         self.network = network
         self.client = client
-        self.last_updates = last_updates
 
     def get(self):
         self.render("aggregator_index.html", servers=self.servers)
 
-    async def request_servers(self, hostname, port):
-        khostname, *_ = hostname.split('.')  # the hostname without domain
+    async def request_server(self, hostname, port):
+        # the hostname without domain
+        khostname, *_ = hostname.split('.')
         url = f"http://{hostname}:{port}"
         api_url = f"{url}/api/servers.json"
         server = self.servers.setdefault(
@@ -56,10 +57,10 @@ class MainHandler(web.RequestHandler):
                  if server['control_allowed']]
         table.sort(key=lambda x: x['karabo_name'])
         server["services"] = table
+        # match the output of `since`
+        last_date = datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
+        server["last_update"] = last_date
 
-    async def request_network(self, hostname, port):
-        khostname, *_ = hostname.split('.')  # the hostname without domain
-        url = f"http://{hostname}:{port}"
         api_url = f"{url}/api/network.json"
         net = self.network.setdefault(
             khostname, dict(hostname=hostname))
@@ -77,23 +78,12 @@ class MainHandler(web.RequestHandler):
             raise web.HTTPError(
                 status_code=400,  # bad request
                 log_message='')
-        ensure_future(self.request_servers(hostname, port))
-
-        # New web servers also provide the version
-        try:
-            self.get_argument("version")
-            ensure_future(self.request_network(hostname, port))
-        except web.MissingArgumentError:
-            khostname, *_ = hostname.split('.')
-            net = self.network.setdefault(
-                khostname, dict(hostname=hostname))
-            net["error"] = "Not supported in current version: 1.0.0"
-        self.last_updates[(hostname, port)] = time.time()
+        ensure_future(self.request_server(hostname, port))
         self.write("OK")
 
 
 class StatusHandler(web.RequestHandler):
-    def initialize(self, servers, client, last_updates, network):
+    def initialize(self, servers, client, network):
         self.servers = servers
 
     def get(self):
@@ -104,7 +94,7 @@ class StatusHandler(web.RequestHandler):
 
 
 class NetworkHandler(web.RequestHandler):
-    def initialize(self, servers, client, last_updates, network):
+    def initialize(self, servers, client, network):
         self.network = network
 
     def get(self):
@@ -115,21 +105,20 @@ class NetworkHandler(web.RequestHandler):
 
 
 class HeartbeatChecker:
-    def __init__(self, servers, client, last_updates, network):
+    def __init__(self, servers, client, network):
         self.servers = servers
-        self.last_updates = last_updates
 
     async def ensure_hosts_alive(self):
         while True:
-            registered = deepcopy(self.last_updates)
+            registered = {
+                khostname: server["last_update"]
+                for khostname, server in self.servers.items()
+            }
             now = time.time()
-            for key, last_update in registered.items():
-                hostname, _ = key
+            for khostname, last_update in registered.items():
                 if last_update < now - HEARTBEAT_PENALTY:
                     # the hostname shown in karabo
-                    khostname, *_ = hostname.split('.')
                     self.servers.pop(khostname, None)
-                    self.last_updates.pop(key)
             await sleep(CHECK_INTERVAL)
 
 
@@ -160,7 +149,7 @@ def run_webserver():
             AsyncIOMainLoop().install()
 
     server_dict = {'servers': servers, 'client': AsyncHTTPClient(),
-                   'last_updates': {}, 'network': {}}
+                   'network': {}}
     heartbeat = HeartbeatChecker(**server_dict)
 
     app = web.Application([('/', MainHandler, server_dict),

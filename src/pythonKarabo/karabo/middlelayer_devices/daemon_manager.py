@@ -20,14 +20,15 @@
 import json
 import socket
 from asyncio import CancelledError
+from datetime import datetime, timedelta
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DisplayLabelModel, DisplayStateColorModel,
-    FilterTableElementModel, LabelModel, RectangleModel, SceneModel,
-    write_scene)
+    BoxLayoutModel, DeviceSceneLinkModel, DisplayLabelModel,
+    DisplayStateColorModel, FilterTableElementModel, LabelModel,
+    RectangleModel, SceneModel, SceneTargetWindow, write_scene)
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Double,
     Hash, KaraboError, Overwrite, State, String, UInt32, Unit, VectorHash,
@@ -55,6 +56,7 @@ def get_table_row(entry):
     returns: tuple of karabo name and boolean state machine information
     """
     status = entry["status"]
+
     is_stop = status.startswith("up")
     is_start = status.startswith("down")
     status_orphanage = "orphanage" in status
@@ -91,7 +93,10 @@ class ServiceInteractiveRow(Configurable):
     status = String(
         defaultValue="",
         displayedName="Status",
-        displayType="TableColor|DOWN=red&UP=lightgreen&default=lightblue",
+        displayType=(
+            f"TableColor|{STATUS_DOWN}=red&"
+            f"{STATUS_UP}=lightgreen&"
+            f"{STATUS_CHANGING}=lightblue&default=lightblue"),
         description="The status of the service, either running or down, etc.",
         accessMode=AccessMode.READONLY)
 
@@ -114,6 +119,23 @@ class ServiceInteractiveRow(Configurable):
         displayedName="Stop",
         displayType="TableBoolButton|confirmation=1",
         description="Stop the service",
+        accessMode=AccessMode.READONLY)
+
+
+class GoneServiceRow(Configurable):
+    name = String(
+        defaultValue="",
+        displayedName="Service",
+        accessMode=AccessMode.READONLY)
+
+    hostname = String(
+        defaultValue="",
+        displayedName="Hostname",
+        accessMode=AccessMode.READONLY)
+
+    lastUpdate = String(
+        defaultValue="",
+        displayedName="Last Update Date",
         accessMode=AccessMode.READONLY)
 
 
@@ -154,7 +176,7 @@ class DaemonManager(Device):
     numServices = UInt32(
         displayedName="Number of Services",
         defaultValue=0,
-        description="This value provides the number of services observed",
+        description="The number of services observed",
         accessMode=AccessMode.READONLY)
 
     services = VectorHash(
@@ -162,6 +184,21 @@ class DaemonManager(Device):
         displayedName="Server View",
         description="Servers Table with interactive interface",
         rows=ServiceInteractiveRow,
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.OPERATOR)
+
+    numGoneServices = UInt32(
+        displayedName="Number of Gone Services",
+        defaultValue=0,
+        description="The number of services that have not notified the "
+                    "web aggregator in the last 12 hours",
+        accessMode=AccessMode.READONLY)
+
+    goneServices = VectorHash(
+        defaultValue=[],
+        displayedName="Gone Server View",
+        description="Overview Table of servers",
+        rows=GoneServiceRow,
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.OPERATOR)
 
@@ -177,7 +214,7 @@ class DaemonManager(Device):
         displayType="Scenes",
         description="Provides a scene for the Daemon Manager.",
         accessMode=AccessMode.READONLY,
-        defaultValue=["scene"])
+        defaultValue=["scene", "gone_scene"])
 
     def __init__(self, configuration):
         super().__init__(configuration)
@@ -207,6 +244,10 @@ class DaemonManager(Device):
             payload.set("success", True)
             payload.set("name", name)
             payload.set("data", get_scene(self.deviceId))
+        if name == "gone_scene":
+            payload.set("success", True)
+            payload.set("name", name)
+            payload.set("data", get_gone_scene(self.deviceId))
         return Hash("type", "deviceScene",
                     "origin", self.deviceId,
                     "payload", payload)
@@ -269,6 +310,7 @@ class DaemonManager(Device):
                 self.services = []
                 self.numHosts = 0
                 self.numServices = 0
+                self.numGoneServices = 0
             return False, None
         else:
             changing = len(self.post_action_tasks) > 0
@@ -284,11 +326,17 @@ class DaemonManager(Device):
             self.numHosts = len(servers)
 
             table_value = []
+            gone_table_value = []
             data_keys = ("karabo_name", "name", "since", "status", "duration")
             self.services_info = {}
-            for host_name in servers:
-                info = servers[host_name]
+            for host_name, info in servers.items():
                 link = info["link"]
+                last_update = info["last_update"]
+                expiry_dt = datetime.strptime(
+                    last_update,
+                    "%a, %d %b %Y %H:%M:%S")
+                # ten seconds since the updates are every 5 seconds
+                expiry_dt += timedelta(seconds=10)
                 if "services" not in info:
                     self.logger.error(f"No services for {host_name}")
                     continue
@@ -297,17 +345,31 @@ class DaemonManager(Device):
                         data_key: service[data_key]
                         for data_key in data_keys
                     }
+                    # replicate properties common for each host
                     entry["link"] = link
                     entry["host_name"] = host_name
-                    table_value.append(get_table_row(entry))
+                    if expiry_dt >= datetime.now():
+                        table_value.append(get_table_row(entry))
+                    else:
+                        gone_table_value.append((
+                            entry["karabo_name"],
+                            entry["host_name"],
+                            last_update))
                     # Store the web link in a separate dict
                     key = f"{entry['host_name']}.{entry['karabo_name']}"
                     self.services_info[key] = entry
             table_value.sort()
             table_value = self.services.descriptor.toKaraboValue(table_value)
+            gone_table_value.sort()
+            gone_desc = self.goneServices.descriptor
+            gone_table_value = gone_desc.toKaraboValue(gone_table_value)
             if update and has_changes(self.services.value, table_value.value):
                 self.numServices = len(table_value)
                 self.services = table_value
+            if update and has_changes(
+                    self.goneServices.value, gone_table_value.value):
+                self.numGoneServices = len(gone_table_value)
+                self.goneServices = gone_table_value
             return True, table_value
 
     @slot
@@ -485,6 +547,61 @@ def get_scene(deviceId):
     scene4 = BoxLayoutModel(
         direction=2, height=70.0, width=148.0, x=29.0, y=52.0,
         children=[scene40, scene41])
+    scene50 = LabelModel(
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0", foreground="#000000",
+        height=36.0, parent_component="DisplayComponent", text="DeviceID",
+        width=59.0, x=268.0, y=18.0)
+    scene51 = DisplayLabelModel(
+        font_size=10, height=36.0, keys=[f"{deviceId}.deviceId"],
+        parent_component="DisplayComponent", width=398.0, x=327.0, y=18.0)
+    scene5 = BoxLayoutModel(
+        height=36.0, width=457.0, x=268.0, y=18.0, children=[scene50, scene51])
+    scene60 = LabelModel(
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0", foreground="#000000",
+        height=54.0, parent_component="DisplayComponent", text="Status",
+        width=42.0, x=285.0, y=60.0)
+    scene61 = DisplayLabelModel(
+        font_size=10, height=54.0, keys=[f"{deviceId}.status"],
+        parent_component="DisplayComponent", width=398.0, x=327.0, y=60.0)
+    scene62 = DeviceSceneLinkModel(
+        height=54.0, keys=[f"{deviceId}.availableScenes"],
+        target_window=SceneTargetWindow.Dialog, target="gone_scene",
+        text="Gone Services", parent_component="DisplayComponent", width=198.0,
+        x=755.0, y=59.0)
+    scene6 = BoxLayoutModel(
+        height=54.0, width=440.0, x=285.0, y=60.0,
+        children=[scene60, scene61])
+    scene7 = DisplayStateColorModel(
+        height=26.0, keys=[f"{deviceId}.state"],
+        parent_component="DisplayComponent", show_string=True, width=237.0,
+        x=734.0, y=23.0)
+    scene = SceneModel(
+        height=712.0, width=983.0,
+        children=[scene0, scene1, scene2, scene3, scene4, scene5, scene6,
+                  scene62, scene7])
+    return write_scene(scene)
+
+
+def get_gone_scene(deviceId):
+    scene0 = FilterTableElementModel(
+        height=533.0, keys=[f"{deviceId}.goneServices"],
+        parent_component="DisplayComponent", resizeToContents=True,
+        sortingEnabled=True,
+        width=960.0, x=11.0, y=158.0)
+    scene1 = LabelModel(
+        font="Source Sans Pro,12,-1,5,75,0,0,0,0,0,Bold", height=42.0,
+        parent_component="DisplayComponent", text="Karabo Daemon Manager",
+        width=363.0, x=12.0, y=10.0)
+    scene2 = RectangleModel(
+        fill="#b8b8b8", height=4.0, stroke="#000000", width=958.0, x=9.0,
+        y=141.0)
+    scene3 = DisplayLabelModel(
+        font_size=10, height=35.0, keys=[f"{deviceId}.numGoneServices"],
+        parent_component="DisplayComponent", width=109.0, x=163.0, y=78.0)
+    scene4 = LabelModel(
+        font="Source Sans Pro,10,-1,5,50,0,0,0,0,0", foreground="#000000",
+        height=35.0, parent_component="DisplayComponent",
+        text="Number of Gone Services", width=148.0, x=19.0, y=77.0)
     scene50 = LabelModel(
         font="Source Sans Pro,10,-1,5,50,0,0,0,0,0", foreground="#000000",
         height=36.0, parent_component="DisplayComponent", text="DeviceID",
