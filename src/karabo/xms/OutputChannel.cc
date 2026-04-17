@@ -236,7 +236,8 @@ namespace karabo {
             if (hostname == "default") {
                 m_hostname = boost::asio::ip::host_name();
             } else {
-                m_hostname = NetworkInterface{hostname}.presentationIP();
+                // false: do not exclude loopback
+                m_hostname = NetworkInterface{hostname, false}.presentationIP();
             }
 
             KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
