@@ -23,10 +23,15 @@ channels:
   - conda-forge
 {{ conda_local_channel }}
 
+# Group the dependencies by '# +++ <group name>' so that they are grouped accordingly in
+# the meta.yaml file
 dependencies:
+    # +++ build
   - python=3.12.*
-  - libzlib=1.2.13
-  # for tests and building
+  - setuptools>=69.*
+  - setuptools_scm>=7.*
+  - pip>=23.3.*
+  # +++ run
   - flake8=6.1.0
   - isort=5.8.0
   - pytest=7.4.4
@@ -35,9 +40,6 @@ dependencies:
   - pytest-mock=3.6.1
   - pytest-subtests=0.11.0
   - pytest-xdist=3.5.*
-  - setuptools>=69.*
-  - setuptools_scm>=7.*
-  - pip>=23.3.*
   # GUI
   - qtpy=2.4.1
   - pyqtgraph=0.14.0
