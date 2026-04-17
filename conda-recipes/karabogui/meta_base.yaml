@@ -49,31 +49,37 @@ build:
 requirements:
   # [[[cog
   # import cog
-  # import json
-  # import os
-  # import subprocess
-  # conda = os.environ.get('CONDA_EXE', 'conda')
-  # output = subprocess.check_output([conda, 'env', 'export', '-n', 'karabogui', '--json'])
-  # dependencies = [dep for dep in json.loads(output)['dependencies'] if isinstance(dep, str)]
+  # from pathlib import Path
+  # from collections import defaultdict
   #
-  # # Format build
-  # cog.outl('build:')
-  # required_build_pkgs = {
-  #     'python': '3.12.*',
-  #     'setuptools': '69.0.*',
-  #     'setuptools_scm': '7.0.5'}
-  # for dep in dependencies:
-  #     name = dep.split('=')[0]
-  #     if name in required_build_pkgs:
-  #         required_build_pkgs.pop(name)
-  #     cog.outl(f'  - {dep}')
-  # for pkg, version in required_build_pkgs.items():
-  #     cog.outl(f'  - {pkg}={version}')
+  # current_file = Path(cog.inFile)
+  # file_path = current_file.parent.resolve() / 'environment.devenv.yml'
+  # group_prefix = '# +++'
+  # valid_groups = ('build', 'run')
+  # to_write = defaultdict(str)
+  # capture = False
   #
-  # # Format run
-  # cog.outl('run:')
-  # for dep in dependencies:
-  #     cog.outl(f'  - {dep}')
+  # with open(file_path, 'r') as f:
+  #     for line in f:
+  #         stripped = line.strip()
+  #         if stripped.startswith('dependencies:'):
+  #             capture = True
+  #             continue
+  #         if not capture:
+  #             continue
+  #         if not stripped.startswith('#') and stripped.endswith(':'):
+  #             break  # next top-level section, stop
+  #         if stripped.startswith(group_prefix):
+  #             key = stripped[len(group_prefix):].strip()
+  #             if not key in valid_groups:
+  #                 continue
+  #         if stripped.startswith('-'):
+  #             to_write[key] += f'    {stripped}\n'
+  #
+  # for group in valid_groups:
+  #     if to_write[group]:
+  #         cog.outl(f'  {group}:')
+  #         cog.outl(f'{to_write[group]}')
   # ]]]
   # [[[end]]]
 
