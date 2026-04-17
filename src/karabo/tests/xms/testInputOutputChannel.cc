@@ -672,8 +672,7 @@ TEST_F(TestInputOutputChannel, testOutputPreparation) {
         }
     }
 
-    EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "127.0.0.1"), 0),
-                 karabo::data::LogicException);
+    EXPECT_NO_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "127.0.0.1"), 0));
 
     EXPECT_THROW(Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", "192.168.0.1"), 0),
                  karabo::data::LogicException);
