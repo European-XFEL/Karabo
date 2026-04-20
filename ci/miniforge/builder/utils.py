@@ -41,8 +41,10 @@ def command_run(cmd) -> str:
 
 def environment_exists(env_name: str) -> bool:
     """Check if the environment already exists"""
-    envs_dir = Path(os.getenv("CONDA_PREFIX", ".")).parent
-    envs = [folder.name for folder in envs_dir.iterdir() if folder.is_dir()]
+    envs_dir = Path(os.getenv("CONDA_PREFIX", ".")) / "envs"
+    if not envs_dir.is_dir():
+        return False
+    envs = [folder.name for folder in envs_dir.iterdir()]
     return env_name in envs
 
 
