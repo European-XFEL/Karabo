@@ -3,6 +3,7 @@ import os
 import os.path as op
 import shutil
 from contextlib import contextmanager
+from pathlib import Path
 from platform import machine
 from platform import system as sys_name
 from tempfile import gettempdir
@@ -96,21 +97,31 @@ class Builder:
             self.prepare_mirror_dir()
             for recipe in self.recipes:
                 self.create_mirror(recipe)
-            self.upload()
+            if self.args.local:
+                self.upload_recipes_local()
+                self.upload_mirrors_local()
+            else:
+                self.upload()
 
         if self.args.index_mirror:
-            self.index()
+            if self.args.local:
+                self.index_local()
+            else:
+                self.index()
 
     # -----------------------------------------------------------------------
     # Properties
 
     @property
     def mirror_channel(self):
-        return f"http://{self.args.channel}/karabo/channel"
+        dest = "file" if self.args.local else "http"
+        return f"{dest}://{self.args.channel}/karabo/channel"
 
     @property
     def mirror_conda_forge(self):
-        return f"http://{self.args.channel}/karabo/channel/mirror/conda-forge"
+        dest = "file" if self.args.local else "http"
+        return (
+            f"{dest}://{self.args.channel}/karabo/channel/mirror/conda-forge")
 
     @staticmethod
     def get_env_name(recipe):
@@ -297,7 +308,7 @@ class Builder:
                 print(line, end="")
 
     def build_recipe(self, recipe):
-        """ "Builds a recipe from meta.yaml file"""
+        """ Builds a recipe from meta.yaml file"""
         print(f"Building recipe for {recipe}")
         recipe_dir = op.dirname(self.recipe_path(recipe))
         command = [
@@ -417,8 +428,75 @@ class Builder:
                 # for some reason there is a unformatted package file
                 continue
 
+    def upload_recipes_local(self):
+        print("Uploading recipes locally")
+        target_dir = self.platform
+        if target_dir == "win-64":
+            # XXX: Special treatment for windows as conda info return
+            # difficult return value on CI
+            conda_build_path = os.getenv("WIN_CONDA_ROOT").strip()
+            assert conda_build_path, "Conda root must be set in CI variables"
+        else:
+            conda_build_path = command_run(["conda", "info", "--base"]).strip()
+
+        print("local: conda build path", conda_build_path)
+        packages_path = op.join(conda_build_path, "conda-bld", target_dir)
+        os.chdir(self.args.remote_channel_dir)
+        os.chdir(target_dir)
+        for entry in os.scandir(packages_path):
+            # a package has a filename like packageName-versionTxt.tar.bz2
+            # in <25.1 and later versions it's .conda
+            if not (entry.name.endswith(".conda") or
+                    entry.name.endswith("tar.bz2")):
+                continue
+            try:
+                package_name, tail = entry.name.split("-", 1)
+                if package_name not in self.recipes:
+                    continue
+                # upload
+                print(f"local: uploading {entry.path} to {entry.name}")
+                shutil.copy(entry.path, entry.name)
+            except ValueError:
+                # for some reason there is a unformatted package file
+                continue
+
+    def upload_mirrors_local(self):
+        print("local: Uploading mirror packages")
+        os.chdir(self.args.remote_mirror_dir)
+        for dir_, subdirs, files in os.walk(self.mirror_dir):
+            target_dir = op.relpath(dir_, self.mirror_dir)
+
+            remote_dir = Path(self.args.remote_mirror_dir) / target_dir
+            remote_dir.mkdir(parents=True, exist_ok=True)
+
+            for filename in files:
+                # the remote server will have a unix path.
+                # running a `op.join` on windows will mangle the paths
+                remote_file_path = remote_dir / filename
+                local_file_path = Path(dir_) / filename
+                print(f"local: Uploading mirror {local_file_path} to"
+                      f" {remote_file_path}")
+                shutil.copy(local_file_path, remote_file_path)
+
     # -----------------------------------------------------------------------
     # Indexing
+    def index_local(self):
+        dirs = [
+            self.args.remote_channel_dir,
+            f"{self.args.remote_mirror_dir}/conda-forge",
+        ]
+        for dir_ in dirs:
+            Path(Path(dir_) / "channeldata.json").unlink(missing_ok=True)
+            Path(Path(dir_) / "index.html").unlink(missing_ok=True)
+            for platform in PLATFORMS.values():
+                platform_dir = Path(dir_) / platform
+                if not platform_dir.exists():
+                    continue
+                for file in platform_dir.iterdir():
+                    if file.suffix == ".json":
+                        file.unlink(missing_ok=True)
+            conda_run_command(["conda", "index", dir_], env_name="base")
+            print(f"Adding conda index for dir: {dir_}")
 
     @connected_to_remote
     def index(self, ssh):
@@ -515,6 +593,8 @@ def main():
                          "directory of the git repository")
     ap.add_argument("--guiextensions-test", action="store_true",
                     help="Whether to run the GUIExtensions tests or not.")
+    ap.add_argument("-L", "--local", action="store_true",
+                    help="Channels are on the localhost")
 
     args = ap.parse_args()
     b = Builder(args)
