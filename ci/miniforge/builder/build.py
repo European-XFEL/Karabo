@@ -292,7 +292,7 @@ class Builder:
         self.clean_environment(name=recipe)
         os.environ["XFEL_CONDA_CHANNEL"] = self.args.channel
         command_run(
-            ["conda", "run", "-n", "base", "conda", "devenv", "--file",
+            ["conda", "run", "-n", "base", "conda-devenv", "--file",
              self.devenv_path(recipe)])
 
     def build_recipe_from_base(self, recipe):
