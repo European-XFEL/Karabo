@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from functools import wraps
@@ -41,10 +42,9 @@ def command_run(cmd) -> str:
 
 def environment_exists(env_name: str) -> bool:
     """Check if the environment already exists"""
-    envs_dir = Path(os.getenv("CONDA_PREFIX", ".")) / "envs"
-    if not envs_dir.is_dir():
-        return False
-    envs = [folder.name for folder in envs_dir.iterdir()]
+    json_data = command_run(["conda", "info", "--json"])
+    data = json.loads(json_data)
+    envs = [Path(env).name for env in data["envs"]]
     return env_name in envs
 
 

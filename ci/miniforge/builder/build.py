@@ -330,8 +330,10 @@ class Builder:
         # Create or use the existing environment
         env = self.get_env_name(recipe)
         if not environment_exists(env):
-            print(f"Create environment {env}")
+            print(f"Creating conda environment '{env}'")
             command_run(["conda", "create", "-n", env, "--yes"])
+        else:
+            print(f"Found '{env}' conda environment.")
 
         # locate the package
         print(f'install local package for "{recipe}" in env "{env}"')
