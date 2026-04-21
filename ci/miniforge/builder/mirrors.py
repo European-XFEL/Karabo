@@ -148,7 +148,7 @@ Creating mirror {mirror.name} - {pkg_platform} with the following configuration
 
         print(f"Mirroring channel {mirror.name}...")
         conda_run_command([
-            "conda", "mirror", "--source", mirror.original_repo,
+            "conda-mirror", "--source", mirror.original_repo,
             "--destination", target_mirror_directory,
             "--subdir", platform,
             "--config", str(conf_file)],
