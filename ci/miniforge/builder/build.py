@@ -1,6 +1,7 @@
 import argparse
 import os
 import os.path as op
+import re
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
@@ -8,6 +9,7 @@ from platform import machine
 from platform import system as sys_name
 from tempfile import gettempdir
 
+import requests
 import yaml
 
 from .mirrors import Mirrors
@@ -25,6 +27,8 @@ PLATFORMS = {"Windows": "win-64",
              "Darwin": _get_mac_architecture(),
              "Linux": "linux-64"}
 KARABOGUI = "karabogui"
+
+EXTENSIONS_PROJECT_URL = "https://git.xfel.eu/api/v4/projects/5188/variables/"
 
 
 class Builder:
@@ -108,6 +112,12 @@ class Builder:
                 self.index_local()
             else:
                 self.index()
+
+        if self.args.update_bundle_version:
+            tag = os.getenv("CI_COMMIT_TAG")
+            if tag:
+                release = re.fullmatch(r"\d+\.\d+\.\d+", tag)
+                self.update_bundle_version(tag, release=release)
 
     # -----------------------------------------------------------------------
     # Properties
@@ -542,6 +552,29 @@ class Builder:
         for line in stderr.readlines():
             print(line)
 
+    # -----------------------------------------------------------------------
+    # Bump Bundle version
+    @staticmethod
+    def update_bundle_version(tag: str, release: bool = False) -> None:
+        """Sets a guiextensions CI variable value as the latest
+        Framework tag.
+        For Framework release the variable name  is KARABO_GUI_VERSION and
+        for the pre-release it is KARABO_GUI_PRE_RELEASE_VERSION"""
+        variable = "KARABO_GUI_VERSION" if release else (
+            "KARABO_GUI_PRE_RELEASE_VERSION")
+        url = f"{EXTENSIONS_PROJECT_URL}/{variable}"
+
+        headers = {"PRIVATE-TOKEN": os.environ.get("GUI_VERSION_UPDATE_TOKEN")}
+        response = requests.put(url, headers=headers, data={"value": tag})
+
+        if response.status_code in (200, 201):
+            print(f"Successfully set variable '{variable}' in 'guiextensions' "
+                  f"to {tag}")
+        else:
+            print("Failed to update bundle version:",
+                  response.status_code,
+                  response.text)
+
 
 DESCRIPTION = """
 Conda Recipes Builder
@@ -597,6 +630,10 @@ def main():
                     help="Whether to run the GUIExtensions tests or not.")
     ap.add_argument("-L", "--local", action="store_true",
                     help="Channels are on the localhost")
+    ap.add_argument("--update-bundle-version", action="store_true",
+                    help="Update the KaraboGUI version in the bundle. This "
+                         "sets a variable on guiextensions CI and  the "
+                         "bundle is created using this GUI version.")
 
     args = ap.parse_args()
     b = Builder(args)
