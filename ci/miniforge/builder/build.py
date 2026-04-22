@@ -88,6 +88,12 @@ class Builder:
         if self.args.ci:
             self.adapt_platform()
 
+        if self.args.update_bundle_version:
+            tag = os.getenv("CI_COMMIT_TAG")
+            if tag:
+                release = re.fullmatch(r"\d+\.\d+\.\d+", tag)
+                self.update_bundle_version(tag, release=release)
+
         for recipe in self.recipes:
             # Proceed only if recipe supports testing
             if recipe == KARABOGUI and self.args.test:
@@ -112,12 +118,6 @@ class Builder:
                 self.index_local()
             else:
                 self.index()
-
-        if self.args.update_bundle_version:
-            tag = os.getenv("CI_COMMIT_TAG")
-            if tag:
-                release = re.fullmatch(r"\d+\.\d+\.\d+", tag)
-                self.update_bundle_version(tag, release=release)
 
     # -----------------------------------------------------------------------
     # Properties
