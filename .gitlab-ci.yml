@@ -171,6 +171,7 @@ variables:
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
       --guiextensions-test
+      --update-bundle-version
   only:
     - /^(\d+\.)(\d+\.)(\d+)$/
   except:
@@ -197,6 +198,7 @@ variables:
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
       --guiextensions-test
+      --update-bundle-version
   only:
     - /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/
   except:
