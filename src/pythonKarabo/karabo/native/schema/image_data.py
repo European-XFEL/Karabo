@@ -180,7 +180,7 @@ class Image(Type):
             dtype = dtype.newbyteorder(">" if pixels["isBigEndian"] else "<")
             ar = numpy.frombuffer(pixels["data"], count=pixels["shape"].prod(),
                                   dtype=dtype)
-            ar.shape = pixels["shape"]
+            ar = ar.reshape(pixels["shape"])
             return ImageData(value=ar,
                              encoding=self.encoding,
                              bitsPerPixel=self.bitsPerPixel,

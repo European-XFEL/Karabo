@@ -110,7 +110,7 @@ def _build_ndarray(data, path=None, squeeze=False):
     dtype = dtype.newbyteorder(">" if data["isBigEndian"] else "<")
     array = np.frombuffer(data["data"], count=data["shape"].prod(),
                           dtype=dtype)
-    array.shape = data["shape"]
+    array = array.reshape(data["shape"])
     if squeeze and array.shape[-1] == 1:
         array = np.squeeze(array)
 
