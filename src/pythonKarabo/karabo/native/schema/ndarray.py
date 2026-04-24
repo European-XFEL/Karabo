@@ -122,7 +122,7 @@ class NDArray(Type):
                 ">" if data["isBigEndian"] else "<")
             ar = numpy.frombuffer(data["data"], count=data["shape"].prod(),
                                   dtype=dtype)
-            ar.shape = data["shape"]
+            ar = ar.reshape(data["shape"])
             return QuantityValue(ar, descriptor=self)
 
         if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:

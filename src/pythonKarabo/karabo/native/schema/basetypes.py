@@ -556,7 +556,7 @@ class TableValue(KaraboValue):
             value = [tuple(value[key] for key in self.value.dtype.names)]
         converted = numpy.array(value, dtype=self.value.dtype)
         if converted.shape == ():
-            converted.shape = (1,)
+            converted = converted.reshape((1,))
         start, stop, stride = item.indices(len(self.value))
         if item.step is not None or len(converted) == (stop - start) // stride:
             newvalue = self.value.copy()

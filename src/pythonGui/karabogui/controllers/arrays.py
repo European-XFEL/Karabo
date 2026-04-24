@@ -62,14 +62,14 @@ def get_image_data(image_node, dimX, dimY, dimZ):
 
     if dimZ:
         try:
-            npy.shape = dimY, dimX, dimZ
+            npy = npy.reshape(dimY, dimX, dimZ)
         except ValueError:
             msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
                 dimX, dimY, dimZ, len(npy))
             raise RuntimeError(msg)
     else:
         try:
-            npy.shape = dimY, dimX
+            npy = npy.reshape(dimY, dimX)
         except ValueError:
             msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
                 dimX, dimY, dimZ, len(npy))
