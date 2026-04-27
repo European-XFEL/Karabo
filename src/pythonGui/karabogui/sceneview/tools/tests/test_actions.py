@@ -37,7 +37,9 @@ def scene_view(gui_app):
     # Create the SceneView using the SceneModel
     scene_view = SceneView(model=scene_model)
 
-    return scene_view
+    yield scene_view
+    scene_model.children.clear()
+    scene_view.destroy()
 
 
 def test_basics(scene_view):
