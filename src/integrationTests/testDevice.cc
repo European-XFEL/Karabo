@@ -195,6 +195,14 @@ class DeviceExampleTest : public karabo::core::Device {
 
         INT32_ELEMENT(expected).key("valueOther").readOnly().initialValue(0).commit();
 
+        INT32_ELEMENT(expected)
+              .key("valueFurther")
+              .description("If updated, 'valueOther' will increment")
+              .assignmentOptional()
+              .defaultValue(0)
+              .reconfigurable()
+              .commit();
+
         UINT32_ELEMENT(expected)
               .key("countStateToggles")
               .description("How often slotToggleState was called")
@@ -295,6 +303,14 @@ class DeviceExampleTest : public karabo::core::Device {
 
     virtual ~DeviceExampleTest() {}
 
+    void preReconfigure(karabo::data::Hash& config) override {
+        if (config.has("valueFurther")) {
+            config.set("valueOther", get<int>("valueOther") + 1);
+            if (config.get<int>("valueFurther") == -1) {
+                config.set("nonExistingProperty", 42); // should make slotReconfigure throw!
+            }
+        }
+    }
 
     void slotIdOfEpochstamp(unsigned long long sec, unsigned long long frac) {
         const Timestamp stamp(getTimestamp(Epochstamp(sec, frac)));
@@ -1634,6 +1650,29 @@ void TestDeviceTest::testGetconfigReconfig() {
     ASSERT_TRUE(receivedStamp.getEpochstamp() > beforeSetStamp.getEpochstamp())
           << receivedStamp.toIso8601Ext() << " " << beforeSetStamp.toIso8601Ext(); // cannot compare Timestamps
 
+    // Check validation of properties added in preReconfigure:
+    // a) non-existing property cannot be added and this config is untouched
+    //    (preReconfigure(..) with "valueFurther" == -1 adds a non-existing property)
+    EXPECT_THROW(
+          m_deviceServer->request(deviceId, "slotReconfigure", Hash("valueFurther", -1)).timeout(timeoutInMs).receive(),
+          karabo::data::RemoteException);
+    Hash newCfgHash;
+    EXPECT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(newCfgHash));
+    // Erase property that changes at least timestamp before checking otherwise unchanged properties:
+    EXPECT_TRUE(cfgHash.erase("lastCommand"));
+    EXPECT_TRUE(newCfgHash.erase("lastCommand"));
+    EXPECT_TRUE(cfgHash.fullyEquals(newCfgHash)) << "old\n:" << cfgHash << "new:\n" << newCfgHash;
+    // b) adding an existing property is allowed - and that one gets a decent timestamp
+    //    (preReconfigure(..) with "valueFurther" increments "valueOther")
+    newCfgHash.clear();
+    Epochstamp stampBefore;
+    EXPECT_NO_THROW(
+          m_deviceServer->request(deviceId, "slotReconfigure", Hash("valueFurther", 1)).timeout(timeoutInMs).receive());
+    EXPECT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(newCfgHash));
+    EXPECT_EQ(cfgHash.get<int>("valueOther") + 1, newCfgHash.get<int>("valueOther"));
+    Epochstamp stampNew(Epochstamp::fromHashAttributes(newCfgHash.getAttributes("valueOther")));
+    EXPECT_GT(stampNew, stampBefore);
+
     // Now test slotGetConfigurationSlice
     const std::vector<std::string> selectedPaths({"performanceStatistics.enable", "vecString", "table"});
     Hash arg("paths", selectedPaths);
@@ -1764,7 +1803,7 @@ void TestDeviceTest::testSet() {
     Hash hash;
     ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     ASSERT_EQ(0, hash.get<int>("valueWithLimit"));
-    ASSERT_EQ(0, hash.get<int>("valueOther"));
+    ASSERT_NE(2000, hash.get<int>("valueOther"));
     ASSERT_THROW(m_deviceServer
                        ->request(deviceId, "slotSet",
                                  Hash("valueWithLimit", 1000, // hit slimit

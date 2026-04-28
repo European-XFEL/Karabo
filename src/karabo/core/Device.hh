@@ -904,9 +904,9 @@ namespace karabo {
 
             void slotReconfigure(const karabo::data::Hash& newConfiguration);
 
-            std::pair<bool, std::string> validate(const karabo::data::Hash& unvalidated, karabo::data::Hash& validated);
-
-            void applyReconfiguration(const karabo::data::Hash& reconfiguration);
+            std::pair<bool, std::string> validateExtern(const karabo::data::Hash& unvalidated,
+                                                        karabo::data::Hash& validated,
+                                                        const karabo::data::Timestamp& stamp);
 
             void slotKillDevice();
 
