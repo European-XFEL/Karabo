@@ -53,7 +53,7 @@ dependencies:
   - natsort=8.4.0
   # Other
   - tabulate=0.10.0
-  - traits=6.4.3
+  - traits=7.1.0
   # Depends conflict for lxml higher
   - lxml=6.1.0
   - requests=2.33.1
