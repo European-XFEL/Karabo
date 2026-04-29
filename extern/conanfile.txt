@@ -30,7 +30,6 @@ pugixml/1.15
 
 # minor-any
 boost/1.88.0
-cppunit/1.15.1
 libjpeg/9e
 libtiff/4.3.0
 

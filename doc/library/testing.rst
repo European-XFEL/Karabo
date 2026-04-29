@@ -33,8 +33,8 @@ Best practice is to do this in a single commit that is removed via
 Unit tests for the C++ core
 ===========================
 
-We are using `CppUnit <http://sourceforge.net/projects/cppunit/>`_ as
-unit testing framework.
+We are using `GoogleTest <http://github.com/google/googletest>`_ as
+testing and mocking framework.
 
 All unit tests are placed in *src/karabo/tests*. Within the *tests*
 folder the file structure of Karabo's sources is repeated and the
@@ -44,95 +44,22 @@ Every sub-folder in *tests* implements an own ``main()`` function which runs all
 registered classes of the folder. By convention all test classes should end with
 <className>_Test.cpp or <className>_Test.hh, respectively.
 
-
-Creating a whole new test
---------------------------
-
-UPDATE: Use of CppUnit/Netbeans for creating new C++ tests is discouraged.
-Supporting C++ unit and integration tests using Google Test
-(https://github.com/google/googletest) in an IDE agnostic way is
-the path the Karabo Framework is moving towards. Documentation on that will
-come through the year of 2022.
-
-HINT: You have do this only in the unlikely case that Karabo gets an new sources sub-folder!
-
-1. Create a new folder under *src/karabo/tests*, corresponding to the new folder created in *src/karabo*
-
-2. Right-click the folder *TestFiles* in NetBeans and click *New CppUnit Test...*
-
-3. In the dialog use::
-
-     Test Name:        <folderName>_test
-     Folder:           tests/<folderName>
-     Test Class Name:  <className>_Test
-     Source Extension: cc and hh
-     Test Name:        <folderName>TestRunner
-
-
-Creating a new test class
--------------------------
-
-1. Navigate to the corresponding test in NetBeans (e.g. *util_test*) right-click and select *New->Other...*
-
-2. In the dialog choose *C++* as category and select *C++ CppUnit Test* as file type
-
-3. In the next dialog use::
-
-     Class Name:  <className>_Test
-     For both source and header:
-     Folder:      tests/<subfolder>
-     Extension:   cc and hh
-
-4. In case the new test class
-
- * does not appear in NetBeans' project view
- * and/or the tests are not executed using the recipes does not run (see :ref:`running-tests-label`)
- * and/or compiling the file using F9 fails
-
- it may help to close the Karabo project, re-open it, right click on the test subfolder and add header and source files using *Add existing Item...*.
-
-
-Creating a new test function
-----------------------------
-
-Simply add a new function into an existing test class and register it in the header using the *CPPUNIT_TEST* macro. (Look at other functions as example!)
-
-
-.. _running-tests-label:
-
 Running C++ unit tests
 -----------------------
 
-* Method 1: In NetBeans, navigate to the *Test Files* or to any sub-folder of it,
-  and select *Test* in the context menu.
-* Method 2: Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware
-  that this will also run the Python tests.
-* Method 3: From command line (in *build/netbeans/karabo*): ``make -j test``
-* Method 4: Just compile test (in *build/netbeans/karabo*): ``make -j build-tests``
-
+Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware
+that this will also run the Python tests.
 
 Integration and long tests for the C++ core
 ============================================
 
-They use the same test framework as the unit tests, but are not organised in
-the NetBeans project *karabo*, but in their own projects *integrationTests*
-and *cppLongTests*, respectively.
-
-Otherwise, they are organised in a similar way as the unit tests.
-
 Running C++ integration tests
 -------------------------------
 
-* Method 1: In NetBeans' *integrationTests* project, navigate to the
-  *Test Files* or to any sub-folder of it, and select *Test* in the context
-  menu.
-* Method 2: Use the *auto build* script:
+Use the *auto build* script:
   *./auto_build_all.sh Debug --runIntegrationTests* - but be aware that this
   will also run the Python tests.
-* Method 3: From command line (in *build/netbeans/integrationTests*):
-  ``make -j test``
-* Method 4: Just compile test (in *build/netbeans/integrationTests*):
-  ``make -j build-tests``
+
 
 Running C++ long tests
 -----------------------------
