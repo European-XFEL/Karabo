@@ -1187,19 +1187,35 @@ namespace karabo {
             if (newConfiguration.empty()) return;
 
             karabo::data::Hash validated;
-            std::pair<bool, std::string> result = validate(newConfiguration, validated);
+            const karabo::data::Timestamp stamp = getActualTimestamp();
+            std::pair<bool, std::string> result = validateExtern(newConfiguration, validated, stamp);
 
             if (result.first == true) { // is a valid reconfiguration
 
                 // Give device-implementer a chance to specifically react on reconfiguration event by
                 // polymorphically calling back
+                const karabo::data::Hash validatedBeforePreReconfig(validated);
                 preReconfigure(validated);
 
-                // nothing to do if empty after preReconfigure
                 if (!validated.empty()) {
-                    // Merge reconfiguration with current state
-                    applyReconfiguration(validated);
-                }
+                    // Merge reconfiguration with current state - but first check whether any modifications are valid
+                    std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
+                    if (validatedBeforePreReconfig.fullyEquals(validated)) {
+                        // preReconfigure did not do anything
+                        m_parameters.merge(validated);
+                        emit("signalChanged", validated, getInstanceId());
+                    } else {
+                        // Need to validate changes (especially additions), but with internal validator and full schema
+                        karabo::data::Hash validatedAfterPreReconfig;
+                        result = m_validatorIntern.validate(m_fullSchema, validated, validatedAfterPreReconfig, stamp);
+                        if (!result.first) { // an invalid reconfiguration
+                            throw KARABO_PARAMETER_EXCEPTION(result.second + " (after preReconfigure)");
+                        }
+                        m_parameters.merge(validatedAfterPreReconfig);
+                        emit("signalChanged", validatedAfterPreReconfig, getInstanceId());
+                    }
+                } // else: nothing to do if empty after preReconfigure
+
                 // post reconfigure action
                 this->postReconfigure();
 
@@ -1209,27 +1225,17 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> Device::validate(const karabo::data::Hash& unvalidated,
-                                                      karabo::data::Hash& validated) {
+        std::pair<bool, std::string> Device::validateExtern(const karabo::data::Hash& unvalidated,
+                                                            karabo::data::Hash& validated,
+                                                            const karabo::data::Timestamp& stamp) {
             // Retrieve the current state of the device instance
             const karabo::data::State& currentState = getState();
             const karabo::data::Schema whiteList(getStateDependentSchema(currentState));
             KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
             std::pair<bool, std::string> valResult =
-                  m_validatorExtern.validate(whiteList, unvalidated, validated, getActualTimestamp());
+                  m_validatorExtern.validate(whiteList, unvalidated, validated, stamp);
             KARABO_LOG_DEBUG << "Validated reconfiguration:\n" << validated;
             return valResult;
-        }
-
-
-        void Device::applyReconfiguration(const karabo::data::Hash& reconfiguration) {
-            {
-                std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-                m_parameters.merge(reconfiguration);
-            }
-            KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
-
-            emit("signalChanged", reconfiguration, getInstanceId());
         }
 
 
