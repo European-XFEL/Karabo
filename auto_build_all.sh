@@ -66,7 +66,7 @@ activateKaraboBuildTree() {
     fi
 }
 
-copyCppUnitTestResults() {
+copyGTestTestResults() {
     for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
         cp ${name} $scriptDir/junit.$(basename ${name})
     done
@@ -533,7 +533,7 @@ if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONT
     # deactivate the environment where C++ tests are run
     deactivateKarabo
     # Parse the XML test outputs
-    copyCppUnitTestResults
+    copyGTestTestResults
     if [ $tests_ret_code != 0 ]; then
         echo "Test execution FAILED"
         echo "Report files processing did not find errors..."

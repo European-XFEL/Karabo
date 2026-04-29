@@ -39,23 +39,6 @@
 using namespace karabo::data;
 using namespace std;
 
-// It's unclear if we need in GoogleTest something similar to what follows below...
-// namespace CppUnit {
-//     // Enable EXPECT_EQ for vectors
-//     // (Note: vector<unsigned char> might need special casing, vector<Hash> even more!)
-//     template <typename T>
-//     struct assertion_traits<std::vector<T>> {
-//         static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
-//             return a == b;
-//         }
-
-//         static std::string toString(const std::vector<T>& p) {
-//             return karabo::data::toString(p);
-//         }
-//     };
-// } // namespace CppUnit
-
-
 TEST(TestHash, testConstructors) {
     {
         Hash h;

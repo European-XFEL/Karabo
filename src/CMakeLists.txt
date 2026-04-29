@@ -34,7 +34,7 @@
 #
 # CMAKE_PREFIX_PATH: this is used by the projects to find their external
 #                    dependencies - e.g. libkarabo depends on Boost and the
-#                    tests depend on CppUnit. The variable should point to the
+#                    tests depend on GoogleTest. The variable should point to the
 #                    directory that host the header files and libs for the
 #                    dependencies. If you are using Visual Studio Code there is
 #                    a Python script, "$REPO_ROOT/build/karabo/setupCMakeUserPresets.py"
@@ -160,7 +160,7 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
             EXECUTABLE ctest -VV
             BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             LCOV_ARGS --no-external --quiet
-            EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
+            EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/nlohmann/*"
                     "*/tests/*" "*/include/python*"
                     "*/include/numpy/*" "${CMAKE_CURRENT_SOURCE_DIR}/tools/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/deviceServer/*"
