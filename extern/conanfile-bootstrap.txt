@@ -13,5 +13,6 @@ zlib/1.2.13
 cpython/*:shared=True
 cpython/*:with_tkinter=False
 cpython/*:optimizations=True
+cpython/*:with_gdbm=False
 # make shared lib for expat (CentOS support)
 expat/*:shared=True

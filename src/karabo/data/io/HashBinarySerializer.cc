@@ -281,6 +281,7 @@ namespace karabo {
             }
         }
 
+
         void HashBinarySerializer::writeSingleValue(BufferSet& buffers, const std::any& value,
                                                     const Types::ReferenceType type) const {
             switch (type) {
@@ -385,6 +386,7 @@ namespace karabo {
         template <>
         void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const ByteArray& value) const {
             writeSize(buffer, static_cast<unsigned int>(value.second));
+            if (!value.second) return;
             const char* src = value.first.get();
             const size_t n = value.second;
             const size_t pos = buffer.size();

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(daemontools-encore LANGUAGES C CXX)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu17")
+
 include(CheckSymbolExists)
 include(CheckIncludeFile)
 
@@ -55,7 +57,7 @@ file(READ svscanboot.sh SVSCANBOOT_2)
 file(CONFIGURE OUTPUT svscanboot CONTENT ${SVSCANBOOT_1}${SVSCANBOOT_2})
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/svscanboot TYPE BIN)
 
-add_compile_options(-Wall -Wshadow -Wcast-align -Wwrite-strings -Wno-implicit)
+add_compile_options(-Wall -Wshadow -Wcast-align -Wwrite-strings -Wno-implicit -Wno-error=int-conversion)
 
 file(GLOB_RECURSE byte_srcs CONFIGURE_DEPENDS
     byte_*.c

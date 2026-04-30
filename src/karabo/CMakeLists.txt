@@ -229,7 +229,6 @@ target_link_libraries(
     Boost::date_time
     Boost::filesystem
     Boost::regex
-    Boost::system
     Boost::thread
 )
 

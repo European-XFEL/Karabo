@@ -11,7 +11,6 @@ source "$scriptDir/../set_lsb_release_info.sh"
 
 CONAN_RECIPE_CHANNEL=py312
 DAEMONTOOLS_VERSION=1.11-karabo3
-NSS_VERSION=3.93
 CONAN_MIN_VERSION=2.21.0
 
 declare -A CONAN_MIRRORS=(
@@ -293,7 +292,6 @@ install_from_deps() {
         # export local conan recipes (for packages where no public recipe exists
         # we keep custom conan recipes in extern/resources/<pkg_name>)
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py --name daemontools-encore --version $DAEMONTOOLS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/nss/conanfile.py --name nss --version $NSS_VERSION --user karabo --channel $CONAN_RECIPE_CHANNEL"
 
     # configure prefix paths
     local folder_opts="--deployer=karabo_deployer --deployer-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX/conan_toolchain"

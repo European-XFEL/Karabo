@@ -63,7 +63,7 @@ namespace karabo::net {
 
 namespace boost::system {
     template <>
-    struct is_error_code_enum<karabo::net::AmqpCppErrc> : true_type {};
+    struct is_error_code_enum<karabo::net::AmqpCppErrc> : std::true_type {};
 } // namespace boost::system
 
 

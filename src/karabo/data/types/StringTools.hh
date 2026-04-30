@@ -487,7 +487,7 @@ namespace karabo {
 
             const size_t byteSize = array.size();
             std::shared_ptr<char> data(new char[byteSize], std::default_delete<char[]>());
-            std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
+            if (byteSize > 0) std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
             return karabo::data::ByteArray(data, byteSize);
         }
 

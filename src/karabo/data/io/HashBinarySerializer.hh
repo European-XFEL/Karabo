@@ -125,7 +125,8 @@ namespace karabo {
             template <typename T>
             inline void writeSequenceBulk(std::vector<char>& buffer, const std::vector<T>& vect) const {
                 writeSize(buffer, static_cast<unsigned int>(vect.size()));
-                const char* src = reinterpret_cast<const char*>(&vect[0]);
+                if (!vect.size()) return;
+                const char* src = reinterpret_cast<const char*>(vect.data());
                 const size_t n = vect.size() * sizeof(T);
                 const size_t pos = buffer.size();
                 buffer.resize(pos + n);
@@ -143,6 +144,7 @@ namespace karabo {
             template <typename T>
             inline void writeRawArray(std::vector<char>& buffer, const std::pair<const T*, size_t>& raw) const {
                 writeSize(buffer, static_cast<unsigned int>(raw.second));
+                if (!raw.second) return;
                 const char* src = reinterpret_cast<const char*>(raw.first);
                 const size_t n = raw.second * sizeof(T);
                 const size_t pos = buffer.size();
@@ -222,6 +224,7 @@ namespace karabo {
             inline void readSequenceBulk(std::istream& is, std::any& value, unsigned size) const {
                 value = std::vector<T>();
                 std::vector<T>& result = std::any_cast<std::vector<T>&>(value);
+                if (!size) return;
                 result.resize(size);
                 is.read(reinterpret_cast<char*>(&result[0]), size * sizeof(T));
             }
