@@ -30,7 +30,7 @@ from karabind import (
     UINT32_ELEMENT, AssemblyRules, Broker, ChannelMetaData, ConnectionStatus,
     Epochstamp, EventLoop, Hash, HashFilter, Logger, Schema, SignalSlotable,
     TimeId, Timestamp, Validator, ValidatorValidationRules, VectorHash,
-    loadFromFile)
+    fullyEqual, loadFromFile)
 from karabo._version import __version__ as karaboVersion
 from karabo.common.api import (
     KARABO_CLASS_ID_ALARM, KARABO_CLASS_ID_STATE,
@@ -1509,27 +1509,45 @@ class PythonDevice:
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
-        result, error, validated = self._validate(newConfiguration)
-        if result:
+        stamp = self.getActualTimestamp()
+        ok, error, validated = self._validateExtern(newConfiguration, stamp)
+
+        if ok:
+            validatedBeforePreReconfig = copy.deepcopy(validated)
             self.preReconfigure(validated)
-            self._applyReconfiguration(validated)
+
+            if not validated.empty():
+                with self._stateChangeLock:
+                    if fullyEqual(validatedBeforePreReconfig, validated):
+                        # preReconfigure did not do anything
+                        self._parameters += validated
+                        self._sigslot.emit("signalChanged", validated,
+                                           self.deviceId)
+                    else:
+                        # Need to validate changes (especially additions),
+                        # but with internal validator and full schema
+                        res = self.validatorIntern.validate(
+                            self._fullSchema, validated, stamp)
+                        (flag, error, validatedAfterPreReconfig) = res
+                        if not flag:  # an invalid reconfiguration
+                            raise ValueError(error + " (after preReconfigure)")
+
+                        self._parameters += validatedAfterPreReconfig
+                        self._sigslot.emit(
+                            "signalChanged", validatedAfterPreReconfig,
+                            self.getInstanceId())
+            # else: nothing to do if empty after preReconfigure
+
             self.postReconfigure()
         else:
             raise ValueError(error)
 
-    def _validate(self, unvalidated):
+    def _validateExtern(self, unvalidated, stamp):
         currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
         flag, error, validated = self.validatorExtern.validate(
-            whiteList, unvalidated, self.getActualTimestamp())
+            whiteList, unvalidated, stamp)
         return (flag, error, validated)
-
-    def _applyReconfiguration(self, reconfiguration):
-
-        with self._stateChangeLock:
-            self._parameters += reconfiguration
-
-        self._sigslot.emit("signalChanged", reconfiguration, self.deviceId)
 
     def slotGetSchema(self, onlyCurrentState):
         # state lock!

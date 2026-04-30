@@ -429,6 +429,36 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                             epochReceived.toIso8601Ext() + " "
                             + epochBeforeSet.toIso8601Ext())
 
+            # Check preReconfigure
+            self.assertEqual(cfg["readOnlyProp"], 0)
+            attrs = cfg.getAttributes("readOnlyProp")
+            stampBefore = Epochstamp.fromHashAttributes(attrs)
+
+            # Test that timestamp added to things added in preReconfigure
+            arg = Hash("someString", "incrementReadOnlyProp")
+            request = sigSlotA.request("testComm1", "slotReconfigure", arg)
+            request.waitForReply(instTimeoutMs)  # in ms
+            request = sigSlotA.request("testComm1", "slotGetConfiguration")
+            cfg = request.waitForReply(instTimeoutMs)[0]
+            self.assertEqual(cfg["someString"], "incrementReadOnlyProp")
+            self.assertEqual(cfg["readOnlyProp"], 1)
+            attrs = cfg.getAttributes("readOnlyProp")
+            stampAfter = Epochstamp.fromHashAttributes(attrs)
+            self.assertGreater(stampAfter, stampBefore)
+            attrs = cfg.getAttributes("someString")
+            stampSomeString = Epochstamp.fromHashAttributes(attrs)
+            self.assertEqual(stampAfter, stampSomeString)
+
+            # Test that config fails if preReconfigure adds non-existing prop
+            # (nothing is changed!)
+            arg = Hash("someString", "addNonExistingProperty")
+            request = sigSlotA.request("testComm1", "slotReconfigure", arg)
+            with self.assertRaises(RuntimeError) as ctxt:
+                request.waitForReply(instTimeoutMs)
+            request = sigSlotA.request("testComm1", "slotGetConfiguration")
+            cfg = request.waitForReply(instTimeoutMs)[0]
+            self.assertEqual(cfg["someString"], "incrementReadOnlyProp")
+
         with self.subTest(msg="Test slotGetConfigurationSlice"):
             request = sigSlotA.request("testComm1", "slotGetConfiguration")
             cfg = request.waitForReply(instTimeoutMs)[0]
