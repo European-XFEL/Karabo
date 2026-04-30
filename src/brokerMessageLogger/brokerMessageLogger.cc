@@ -55,10 +55,22 @@ void printHelp(const char* execName) {
     cout << "                order of precedence" << endl;
     cout << "  -b brokerUrl: URL(s) of broker" << endl;
     cout << "                if not specified, use environment variable KARABO_BROKER" << endl;
-    cout << "  -s selector : Broker type specific selection of messages" << endl;
-    cout << "                AMQP:   Selection criteria involves 2 values: exchange and binding key " << endl;
-    cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl;
-    cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
+    cout << "  -s selector : AMQP broker specific selection of messages:\n"
+         << "                Selection criteria involves 2 values: exchange and binding key\n"
+         << "                separated by colon sign (:) and such pairs are comma separated.\n"
+         << "                Exchanges used by Karabo are 'Signals', 'Slots' and\n"
+         << "                'Global_Slots', prepended by the topic and a dot (.).\n"
+         << "                Routing keys have two parts, separated by a dot: First part is\n"
+         << "                the device id (of the sender for signals and global slots, of\n"
+         << "                the receiver for slots), second part is the signal name or the\n"
+         << "                slot, respectively.\n"
+         << "                So to see all signals that device INSTANCE_ID in topic TOPIC\n"
+         << "                publishes and all (non-global) slot calls it receives:\n"
+         << "                   -s \"TOPIC.Signals:INSTANCE_ID.#,TOPIC.Slots:INSTANCE_ID.#\"\n"
+         << "                To watch schema updates of all devices:\n"
+         << "                   -s \"TOPIC.Signals:*.signalSchemaUpdated\"\n"
+         << "                To see all instances instantiating:\n"
+         << "                   -s\"TOPIC.Global_Slots:*.slotInstanceNew\"" << endl;
 }
 
 void readHandler(const Hash::Pointer& header, const Hash::Pointer& body, const std::string& exchange,
