@@ -47,8 +47,7 @@ registered classes of the folder. By convention all test classes should end with
 Running C++ unit tests
 -----------------------
 
-Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware
-that this will also run the Python tests.
+Use the *auto build* script: *./auto_build_all.sh Debug --runTests --skipPythonTests*.
 
 Integration and long tests for the C++ core
 ============================================
@@ -56,10 +55,7 @@ Integration and long tests for the C++ core
 Running C++ integration tests
 -------------------------------
 
-Use the *auto build* script:
-  *./auto_build_all.sh Debug --runIntegrationTests* - but be aware that this
-  will also run the Python tests.
-
+Use the *auto build* script: *./auto_build_all.sh Debug --runIntegrationTests --skipPythonTests*.
 
 Running C++ long tests
 -----------------------------
