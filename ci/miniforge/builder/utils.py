@@ -80,7 +80,7 @@ def mkdir(remote_path, sftp=None):
     try:
         sftp.stat(remote_path)
     except FileNotFoundError:
-        print(f"Creating missing directory {remote_path}..")
+        print(f"Creating directory {remote_path}..")
         sftp.mkdir(remote_path)
 
 
@@ -88,7 +88,7 @@ def chdir(remote_path, sftp=None):
     try:
         sftp.stat(remote_path)
     except FileNotFoundError:
-        print(f"Creating missing directory {remote_path}..")
+        print(f"'{remote_path}' not found. Creating before changing to it..")
         sftp.mkdir(remote_path)
     finally:
         sftp.chdir(remote_path)

@@ -386,23 +386,20 @@ class Builder:
         """Transfers mirror files using the sftp client"""
         print("Uploading mirror packages")
         chdir(self.args.remote_mirror_dir, sftp)
-        for dir_, subdirs, files in os.walk(self.mirror_dir):
-            target_dir = op.relpath(dir_, self.mirror_dir)
-            # the remote server will have a unix-like path.
-            # this call converts windows directories structure
-            # and is a nop in unix like systems.
-            dir_parts = [self.args.remote_mirror_dir]
-            dir_parts.extend(op.split(target_dir))
-            remote_dir = "/".join(dir_parts)
-            mkdir(remote_dir, sftp)
 
-            for filename in files:
-                # the remote server will have a unix path.
-                # running a `op.join` on windows will mangle the paths
-                remote_file_path = "/".join([remote_dir, filename])
-                local_file_path = op.join(dir_, filename)
-                print(f"Uploading {local_file_path} to {remote_file_path}")
-                sftp.put(local_file_path, remote_file_path)
+        for file_path in Path(self.mirror_dir).rglob("*"):
+            if file_path.is_dir():
+                # The directory will be created on remote.
+                continue
+            # The remote directory on unix file system.
+            # Need to handle file path separator for windows.
+            remote_target_path = file_path.relative_to(Path(self.mirror_dir))
+            remote_file_path = (
+                    Path(self.args.remote_mirror_dir) / remote_target_path)
+            mkdir(remote_file_path.parent.as_posix(), sftp)
+            remote_file_path = remote_file_path.as_posix()
+            print(f"uploading '{file_path}' to '{remote_file_path}'")
+            sftp.put(file_path, remote_file_path)
 
     def upload_recipes(self, sftp):
         """Transfers packages using the sftp client"""
