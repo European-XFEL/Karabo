@@ -36,6 +36,9 @@ class CommTestDevice(PythonDevice):
             .assignmentOptional().defaultValue("")
             .reconfigurable()
             .commit(),
+            INT32_ELEMENT(expected).key("readOnlyProp")
+            .readOnly().defaultValue(0)
+            .commit(),
             INT32_ELEMENT(expected).key("nonReconfigurableProp")
             .assignmentOptional().defaultValue(0)
             .commit(),
@@ -72,6 +75,14 @@ class CommTestDevice(PythonDevice):
 
     def initialize(self):
         self.updateState(State.NORMAL)
+
+    def preReconfigure(self, incomingCfg):
+        if incomingCfg.has("someString"):
+            someString = incomingCfg.get("someString")
+            if someString == "incrementReadOnlyProp":
+                incomingCfg["readOnlyProp"] = self["readOnlyProp"] + 1
+            elif someString == "addNonExistingProperty":
+                incomingCfg["addNonExistingProperty"] = 42
 
     def slotRequestStateUpdate(self, state):
         # Note: `updateState` replies slot call with state
