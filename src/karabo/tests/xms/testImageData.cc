@@ -85,16 +85,23 @@ TEST(TestImageData, testConstructor) {
 
         ImageData image1(arr, Encoding::UNDEFINED);
         EXPECT_TRUE(image1.getEncoding() == Encoding::RGBA);
+        ImageData image1a(arr); // UNDEFINED is default constructor argument
+        EXPECT_TRUE(image1a.getEncoding() == Encoding::RGBA);
+        ImageData image1b(arr, Encoding::GRAY); // If we say GRAY, it is GRAY
+        EXPECT_TRUE(image1b.getEncoding() == Encoding::GRAY);
 
         ImageData image2(arr, dims, Encoding::UNDEFINED);
         EXPECT_TRUE(image2.getEncoding() == Encoding::RGBA);
     }
     {
         Dims dims(200, 100, 11);
-        NDArray arr(dims, 2); // Will be interpreted by default as a stack of GRAY images
+        // Will be interpreted by default as a stack of 200 (!) GRAY 100x11 images
+        NDArray arr(dims, 2);
 
         ImageData image1(arr, Encoding::UNDEFINED);
         EXPECT_TRUE(image1.getEncoding() == Encoding::GRAY);
+        ImageData image1b(arr, Encoding::GRAY); // If we say GRAY, it is GRAY
+        EXPECT_TRUE(image1b.getEncoding() == Encoding::GRAY);
 
         ImageData image2(arr, dims, Encoding::UNDEFINED);
         EXPECT_TRUE(image2.getEncoding() == Encoding::GRAY);
@@ -122,11 +129,11 @@ TEST(TestImageData, testSetAndGetMethods) {
     std::vector<unsigned char> someData(dims.size(), 2); // i.e. type UINT8
 
     {
-        NDArray arr(&someData[0], someData.size());
+        // If we do not specify dims here, ImageData constructor cannot deduce encoding and thus neither bitsPerPixel
+        NDArray arr(&someData[0], someData.size(), dims);
 
         // Set
         ImageData image(arr);
-        image.setDimensions(dims);
         image.setROIOffsets(offsets);
         image.setBinning(binning);
         image.setRotation(Rotation::ROT_90);
@@ -142,6 +149,10 @@ TEST(TestImageData, testSetAndGetMethods) {
         EXPECT_TRUE(imageDims.rank() == 2);
         EXPECT_TRUE(imageDims.x1() == 200);
         EXPECT_TRUE(imageDims.x2() == 100);
+        image.setDimensions(Dims(100, 200));
+        imageDims = image.getDimensions();
+        EXPECT_TRUE(imageDims.x1() == 100);
+        EXPECT_TRUE(imageDims.x2() == 200);
 
         EXPECT_TRUE(imageOffsets.rank() == 2);
         EXPECT_TRUE(imageOffsets.x1() == 10);
@@ -166,7 +177,7 @@ TEST(TestImageData, testSetAndGetMethods) {
     // Unit tests for automatic assignments and range checks
     {
         ImageData image2;
-        Dims dims(640, 480, 4);             // Dont care about dimension order
+        Dims dims(640, 480, 4);
         NDArray arr_v2(dims, Types::INT16); // Will be interpreted by default as RGBA
 
 
