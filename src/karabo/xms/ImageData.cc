@@ -159,23 +159,27 @@ namespace karabo {
             Encoding finalEncoding = enc;
             if (enc == Encoding::UNDEFINED) {
                 // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && dataDims.x3() == 1)) {
+                if (rank == 2) {
                     finalEncoding = Encoding::GRAY;
-                } else if (rank == 3 && dataDims.x3() == 3) {
-                    finalEncoding = Encoding::RGB;
-                } else if (rank == 3 && dataDims.x3() == 4) {
-                    finalEncoding = Encoding::RGBA;
                 } else if (rank == 3) {
-                    // Assume it is a stack of GRAY images
-                    finalEncoding = Encoding::GRAY;
+                    if (dataDims.x3() == 3) {
+                        finalEncoding = Encoding::RGB;
+                    } else if (dataDims.x3() == 4) {
+                        finalEncoding = Encoding::RGBA;
+                    } else {
+                        // assume stack of images, with dataDims.x1() being the stack size
+                        finalEncoding = Encoding::GRAY;
+                    }
                 }
+                // All the rest stays undefined ([for now ?] do not auto-detect stack of RGB/RGBA)
             }
             auto iFinalEncoding = finalEncoding;
             setEncoding(iFinalEncoding);
 
-            // If Dims are not defined, they can be deduced from data as well in many cases
             if (dims.size() == 0) {
-                if (!encoding::isIndexable(iFinalEncoding)) {
+                // Do not allow a defined, but non-indexable encoding
+                // (except if data is also empty as for default constructor)
+                if (iFinalEncoding != Encoding::UNDEFINED && !encoding::isIndexable(iFinalEncoding)) {
                     throw KARABO_LOGIC_EXCEPTION("Dimensions must be supplied for encoded images");
                 }
             } else {
@@ -295,7 +299,7 @@ namespace karabo {
             if (dims.size() == 0) {
                 // Will use the shape information of underlying NDArray as best guess
                 std::vector<unsigned long long> shape = get<NDArray>("pixels").getShape().toVector();
-                set("dims", shape);
+                set("dims", std::move(shape));
             } else {
                 if (has("encoding")) {
                     if (encoding::isIndexable(getEncoding())) {
@@ -349,8 +353,14 @@ namespace karabo {
             // Once the encoding is definitely set, we can set the dimensions
             setDimensions(array.getShape());
 
-            // Finally we set the bits per pixels
-            defaultBitsPerPixel(Encoding(get<int>("encoding")), array);
+            // Finally set bits per pixels if not yet set (we are in constructor) or zero (i.e. undefined)
+            boost::optional<Hash::Node&> node = find("bitsPerPixel");
+            if (node) {
+                int& bpp = node->getValue<int>();
+                if (bpp == 0) bpp = defaultBitsPerPixel(Encoding(get<int>("encoding")), array);
+            } else {
+                set("bitsPerPixel", defaultBitsPerPixel(Encoding(get<int>("encoding")), array));
+            }
         }
 
 

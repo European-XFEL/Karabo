@@ -107,13 +107,17 @@ namespace karabo {
              *
              * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
              *                       memory as this input
-             * @param encoding The encoding of the bytes - defaults to GRAY.
-             *                 If UNDEFINED, anything matching GRAY, RGB or RGBA will be identified as such.
+             * @param encoding The encoding of the bytes. If it has its default value UNDEFINED, the shape of the data
+             *                 'array' is used to guess the encoding:
+             *                 - If the rank of the shape is 3 and the size of the 3rd dimension is 3 or 4, the
+             *                   encoding is identified as RGB or RGBA, respectively.
+             *                 - If the rank is 2 or it is 3 and the 3rd dimension does not match RGB or RGBA, GRAY
+             *                   is taken as the encoding.
              * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::data::NDArray& data, const Encoding enc = Encoding::GRAY,
+            ImageData(const karabo::data::NDArray& data, const Encoding enc = Encoding::UNDEFINED,
                       const int bitsPerPixel = 0);
 
             /**
@@ -123,15 +127,19 @@ namespace karabo {
              * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
              *                       memory as this input
              * @param dims The dimensions of the image data - if 'empty' and encoding is indexable, will be deduced from
-             * data
-             * @param encoding The encoding of the bytes - defaults to GRAY.
-             *                 If UNDEFINED, anything matching GRAY, RGB or RGBA will be identified as such.
+             *             data
+             * @param encoding The encoding of the bytes. If it has its default value UNDEFINED, 'dims' is used to
+             *                 guess the encoding:
+             *                 - If the rank of the shape is 3 and the size of the 3rd dimension is 3 or 4, the
+             *                   encoding is identified as RGB or RGBA, respectively.
+             *                 - If the rank is 2 or it is 3 and the 3rd dimension does not match RGB or RGBA, GRAY
+             *                   is taken as the encoding.
              * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
             ImageData(const karabo::data::NDArray& data, const karabo::data::Dims& dims,
-                      const Encoding encoding = Encoding::GRAY, const int bitsPerPixel = 0);
+                      const Encoding encoding = Encoding::UNDEFINED, const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
 
