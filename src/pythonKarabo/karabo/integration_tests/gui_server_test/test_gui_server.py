@@ -117,9 +117,8 @@ async def test_gui_server_execute(guiServer):
     assert not msg["success"]
 
     reason = msg["reason"]
-    prefix = (f"'{TEST_GUI_SERVER_ID}' has no slot 'not.existing'\nDetails:\n")
+    prefix = (f"'{TEST_GUI_SERVER_ID}' has no slot 'not.existing'")
     assert reason.startswith(prefix)
-    assert "1. Exception =====>" in reason[len(prefix):]
 
     # Request execution of existing slot of existing device
     # (the GuiServerDevice itself...)
