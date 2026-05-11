@@ -133,13 +133,6 @@ namespace karabo {
               {"projectSaveItems", "initDevice", "killDevice", "execute", "killServer", "acknowledgeAlarm",
                "projectUpdateAttribute", "reconfigure", "updateAttributes"});
 
-
-        // configure here restrictions to the command type against client versions
-        const std::unordered_map<std::string, Version> GuiServerDevice::m_minVersionRestrictions{
-              {"projectSaveItems", Version("2.10.0")},
-              {"projectUpdateAttribute", Version("2.10.0")},
-        };
-
         const std::string GuiServerDevice::m_errorDetailsDelim("\nDetails:\n");
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
@@ -1427,13 +1420,6 @@ namespace karabo {
                                                   "' is not allowed on GUI servers in readOnly mode!");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
-                    } else if (violatesClientConfiguration(type, channel)) {
-                        // not allowed, bail out and inform client
-                        const std::string message(
-                              "Action '" + type +
-                              "' is not allowed on this GUI client version. Please upgrade your GUI client");
-                        const Hash h("type", "notification", "message", message);
-                        safeClientWrite(channel, h);
                     } else if (type == "login") {
                         if (isUserAuthActive()) {
                             // Login over an existing session is only supported by
@@ -1543,28 +1529,6 @@ namespace karabo {
             }
         }
 
-
-        bool GuiServerDevice::violatesClientConfiguration(const std::string& type, WeakChannelPointer channel) {
-            auto itTypeMinVersion = m_minVersionRestrictions.find(type);
-            if (itTypeMinVersion == m_minVersionRestrictions.end()) {
-                // `type` not in the restrictions map, so unrestricted.
-                return false;
-            } else {
-                auto chan = channel.lock();
-                if (chan) {
-                    std::lock_guard<std::mutex> lock(m_channelMutex);
-                    ConstChannelIterator itChannelData = m_channels.find(chan);
-                    if (itChannelData != m_channels.end()) {
-                        return (itChannelData->second.clientVersion < itTypeMinVersion->second);
-                    } else {
-                        KARABO_LOG_FRAMEWORK_WARN << "Channel missing its ChannelData. It should never happen.";
-                        return true;
-                    }
-                }
-                // channel is null
-                return true;
-            }
-        }
 
         void GuiServerDevice::onGuiInfo(const karabo::data::Hash& hash) {
             try {

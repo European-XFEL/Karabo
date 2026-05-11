@@ -171,7 +171,6 @@ namespace karabo {
 
             const bool m_isReadOnly;
             static const std::unordered_set<std::string> m_writeCommands;
-            static const std::unordered_map<std::string, karabo::util::Version> m_minVersionRestrictions;
             /// In reported failure reasons, this delimiter comes between short message and details like a trace
             static const std::string m_errorDetailsDelim; //
 
@@ -310,16 +309,6 @@ namespace karabo {
              * @return bool is the reply type involved in the Load Project operation?
              */
             bool isProjectLoadingReplyType(const std::string& replyType);
-
-            /**
-             * validates the client configuration
-             *
-             * currently only validating the type versus the client version.
-             * @param type
-             * @param channel
-             * @return bool whether the request violates client validation
-             */
-            bool violatesClientConfiguration(const std::string& type, WeakChannelPointer channel);
 
             /**
              * an info further specified by hash occurred on a connection to a GUI

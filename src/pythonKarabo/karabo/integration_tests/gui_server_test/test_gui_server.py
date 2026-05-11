@@ -169,33 +169,6 @@ async def test_request_fail_protocol(guiServer):
 
 @pytest.mark.timeout(60)
 @pytest.mark.asyncio
-@pytest.mark.skip(
-    reason="requires setting server minClientVersion")
-async def test_request_fail_old_version(guiServer):
-    # Set minimum required version on the server side
-    await setWait(TEST_GUI_SERVER_ID, minClientVersion="2.9.1")
-    # Reconnect with an older client version
-    info = Hash("type", "login",
-                "clientId", "mrusp",
-                "password", "12345",
-                "version", "2.9.1")
-    await guiServer.login(info)
-
-    msg_type = "projectSaveItems"
-    h = Hash("type", msg_type)
-
-    await guiServer.send(h)
-    msg = await guiServer.get_next("notification")
-
-    expected_message = (
-        "Action '" + msg_type + "' is not allowed on this GUI client version. "
-        "Please upgrade your GUI client"
-    )
-    assert msg["message"] == expected_message
-
-
-@pytest.mark.timeout(60)
-@pytest.mark.asyncio
 async def test_request_generic(guiServer):
     info = Hash("type", "login",
                 "clientId", "mrusp",
