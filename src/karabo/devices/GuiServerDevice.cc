@@ -406,9 +406,9 @@ namespace karabo {
                         "If this variable does not respect the N.N.N(.N) convention,"
                         " the Server will not enforce a version check")
                   .assignmentOptional()
-                  .defaultValue("3.0.0rc13")
-                  .reconfigurable()
+                  .defaultValue("3.0.3")
                   .expertAccess()
+                  .init()
                   .commit();
 
             BOOL_ELEMENT(expected)
