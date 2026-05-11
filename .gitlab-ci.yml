@@ -293,6 +293,7 @@ variables:
     changes:
       - "src/karabo/core/**/*"
       - "src/karabo/devices/**/*"
+      - "src/karabo/xms/**/*"
       - "src/integrationTests/**/*"
       - "src/pythonKarabo/karabo/integration_tests/**/*"
       - "src/pythonKarabo/karabo/bound/device.py"
