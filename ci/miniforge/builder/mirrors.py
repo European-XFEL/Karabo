@@ -76,32 +76,36 @@ class Mirrors:
     def _generate_needed_packages(self):
         """Returns the packages we will need to download. This excludes
         packages already present in our mirror channels"""
+        print("Mirror: collecting needed packages to upload to mirror")
         output = command_run(
             ["conda", "list", "-n", self.reference_environment, "--json"])
         for pkg in json.loads(output):
+            name = pkg["name"]
             if pkg["base_url"].startswith("file://"):
+                print(f"Mirror: skipping package '{name}' from local channels")
                 continue
 
             # skip local files
             channel_name = pkg["channel"]
             if channel_name in EXCLUDED_CHANNELS:
+                print(f"Mirror: skipping package '{name}' from channel "
+                      f"'{channel_name}'")
                 continue
 
             channel = self._mirrors.setdefault(
                 channel_name,
                 _MirrorChannel(channel_name, mirror_root=self.mirror_channel),
             )
-
-            name = pkg["name"]
             version = pkg["version"]
             build = pkg["build_string"]
             platform = pkg["platform"]
-
+            print(f"Mirror: Checking the package {name} {version} {platform}")
             to_exclude = channel.get_packages(platform)
 
             if name in to_exclude and (version, build) in to_exclude[name]:
                 # this package is already uploaded
-                print(f"Skipping upload of {name} to {channel_name}")
+                print(f"Mirror: Skipping upload of '{name}', already found in "
+                      f"the channel '{channel_name}' for '{platform}'")
                 continue
 
             self._needed_packages[channel_name][platform].append(
@@ -114,7 +118,7 @@ class Mirrors:
         for channel_name, platforms in self._needed_packages.items():
             mirror = self._mirrors[channel_name]
             # Create a configuration file for each platform's packages
-            print("needing", channel_name, platforms)
+            print(f"Mirror: needed '{channel_name}' for '{platforms}'")
             for pkg_platform, needed_packages in platforms.items():
                 to_write = "include:\n"
 
@@ -126,12 +130,8 @@ class Mirrors:
                 with open(conf_file, "w") as f:
                     f.write(to_write)
 
-                print(
-                    f"""
-Creating mirror {mirror.name} - {pkg_platform} with the following configuration
-
-{to_write}"""
-                )
+                print(f"Creating mirror {mirror.name} - {pkg_platform} with "
+                      f"the following configuration\n\n{to_write}\n\n")
                 self._populate_mirror(
                     mirror, pkg_platform, conf_file, target_dir
                 )

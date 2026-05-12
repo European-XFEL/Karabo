@@ -425,16 +425,20 @@ class Builder:
             # in <25.1 and later versions it's .conda
             if not (entry.name.endswith(".conda") or
                     entry.name.endswith("tar.bz2")):
+                print(f"Upload Recipe: Skipping the package '{entry.name}'. "
+                      "for invalid file extension")
                 continue
             try:
                 package_name, tail = entry.name.split("-", 1)
                 if package_name not in self.recipes:
                     continue
                 # upload
-                print(f"uploading {entry.path}")
+                print(f"uploading recipe : {entry.path}")
                 sftp.put(entry.path, entry.name)
-            except ValueError:
+            except ValueError as err:
                 # for some reason there is a unformatted package file
+                print(f"Upload Recipe: Package '{entry.name}' failed with "
+                      f"error:\n {err}")
                 continue
 
     def upload_recipes_local(self):
@@ -465,8 +469,10 @@ class Builder:
                 # upload
                 print(f"local: uploading {entry.path} to {entry.name}")
                 shutil.copy(entry.path, entry.name)
-            except ValueError:
+            except ValueError as err:
                 # for some reason there is a unformatted package file
+                print(f"local: Upload Recipe: Package '{entry.name}' failed "
+                      f"with error:\n {err}")
                 continue
 
     def upload_mirrors_local(self):
