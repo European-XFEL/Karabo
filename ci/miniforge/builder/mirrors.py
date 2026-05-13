@@ -92,6 +92,10 @@ class Mirrors:
                       f"'{channel_name}'")
                 continue
 
+
+            self._mirrors.setdefault(
+                channel_name,
+                _MirrorChannel(channel_name, mirror_root=self.mirror_channel),)
             version = pkg["version"]
             build = pkg["build_string"]
             platform = pkg["platform"]
