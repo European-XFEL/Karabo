@@ -85,29 +85,19 @@ class Mirrors:
                 print(f"Mirror: skipping package '{name}' from local channels")
                 continue
 
-            # skip local files
+            # skip local files and conda forge mirror
             channel_name = pkg["channel"]
             if channel_name in EXCLUDED_CHANNELS:
                 print(f"Mirror: skipping package '{name}' from channel "
                       f"'{channel_name}'")
                 continue
 
-            channel = self._mirrors.setdefault(
-                channel_name,
-                _MirrorChannel(channel_name, mirror_root=self.mirror_channel),
-            )
             version = pkg["version"]
             build = pkg["build_string"]
             platform = pkg["platform"]
-            print(f"Mirror: Checking the package {name} {version} {platform}")
-            to_exclude = channel.get_packages(platform)
-
-            if name in to_exclude and (version, build) in to_exclude[name]:
-                # this package is already uploaded
-                print(f"Mirror: Skipping upload of '{name}', already found in "
-                      f"the channel '{channel_name}' for '{platform}'")
-                continue
-
+            print(
+                f"Mirror: Need the package {name} {version} {platform}"
+                f" from {channel_name}.")
             self._needed_packages[channel_name][platform].append(
                 (name, version, build)
             )
