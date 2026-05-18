@@ -222,6 +222,10 @@ void exportPyUtilTimestamp(py::module_& m) {
 
     ts.def(py::init<Epochstamp const&, TimeId const&>(), py::arg("e"), py::arg("t"));
 
+    ts.def("getEpochstamp", &Timestamp::getEpochstamp);
+
+    ts.def("getTimeId", &Timestamp::getTimeId);
+
     ts.def("getSeconds", &Timestamp::getSeconds);
 
     ts.def("getFractionalSeconds", &Timestamp::getFractionalSeconds);

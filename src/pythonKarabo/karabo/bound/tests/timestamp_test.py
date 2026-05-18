@@ -345,9 +345,9 @@ class Timestamp_TestCase(unittest.TestCase):
                 Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
 
-            self.assertEqual(tm.getTid(), 2 ** 31)
-            self.assertEqual(tm.getSeconds(), 2)
-            self.assertEqual(tm.getFractionalSeconds(), 3)
+            self.assertEqual(tm.getTimeId().getTid(), 2 ** 31)
+            self.assertEqual(tm.getEpochstamp().getSeconds(), 2)
+            self.assertEqual(tm.getEpochstamp().getFractionalSeconds(), 3)
         except Exception as e:
             self.fail(
                 " testing conversion from large uint32 "
