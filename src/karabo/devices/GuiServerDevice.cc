@@ -222,8 +222,6 @@ namespace karabo {
                   .init()
                   .commit();
 
-            OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_GuiServer_0").commit();
-
             // Monitor performance of this system relevant device
             OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable").setNewDefaultValue(true).commit();
 
