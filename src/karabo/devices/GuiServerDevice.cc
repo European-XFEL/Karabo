@@ -910,7 +910,7 @@ namespace karabo {
             safeClientWrite(weakChannel, h);
             KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << userId << "' using GUI client version "
                                       << cliVersion << " (from " << getChannelAddress(channel) << "): " + errorMsg;
-            karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakChannel), 500);
+            karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakChannel), 1'500);
         }
 
         void GuiServerDevice::onBeginSessionResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
