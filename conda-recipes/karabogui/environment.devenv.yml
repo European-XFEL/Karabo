@@ -55,7 +55,7 @@ dependencies:
   - tabulate=0.10.0
   - traits=7.1.0
   # Depends conflict for lxml higher
-  - lxml=6.1.0
+  - lxml=5.1.*
   - requests=2.33.1
   - python-dateutil=2.9.0
   - pyyaml=6.0.3
