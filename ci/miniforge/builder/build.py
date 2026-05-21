@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import os.path as op
 import re
@@ -13,14 +14,32 @@ import requests
 import yaml
 
 from .mirrors import Mirrors
-from .utils import (chdir, command_run, conda_run_command, connected_to_remote,
-                    environment_exists, mkdir)
+from .utils import (
+    chdir, command_run, conda_run_command, connected_to_remote,
+    environment_exists, mkdir)
 
 
 def _get_mac_architecture():
     if machine == "x86_64":
         return "osx-64"
     return "osx-arm64"
+
+
+def print_table(data: list[dict]):
+    # Get column names
+    headers = list(data[0].keys())
+
+    # Compute column widths
+    widths = {
+        h: max(len(str(h)), max(len(str(row.get(h, ""))) for row in data))
+        for h in headers
+    }
+    # Print header
+    print(" | ".join(f"{h:<{widths[h]}}" for h in headers))
+    print("-+-".join("-" * widths[h] for h in headers))
+
+    for row in data:
+        print(" | ".join(f"{str(row.get(h, '')):<{widths[h]}}" for h in headers))
 
 
 PLATFORMS = {"Windows": "win-64",
@@ -304,6 +323,15 @@ class Builder:
         command_run(
             ["conda", "run", "-n", "base", "conda-devenv", "--file",
              self.devenv_path(recipe)])
+        output = command_run(
+            ["conda", "list", "-n", recipe, "--json"])
+        print("---- DEV ENV Environment ---- ")
+
+        to_print = [
+            {k: v for k, v in item.items() if k in {"name", "version", "build_string", "channel"}}
+            for item in json.loads(output)
+        ]
+        print_table(to_print)
 
     def build_recipe_from_base(self, recipe):
         # build the meta.yaml file from the meta_base file
@@ -349,9 +377,6 @@ class Builder:
         print(f'install local package for "{recipe}" in env "{env}"')
         command = ["conda", "install", recipe,
                    "-y", "--quiet",
-                   "-c", self.mirror_channel,
-                   "-c", self.mirror_conda_forge,
-                   "-c", "conda-forge",
                    "-c", "local"]
         conda_run_command(cmd=command, env_name=env)
         return env
