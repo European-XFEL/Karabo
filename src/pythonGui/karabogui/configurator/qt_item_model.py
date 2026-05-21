@@ -519,7 +519,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
-        flags = 0
+        flags = Qt.NoItemFlags
         is_project = isinstance(self.root, ProjectDeviceProxy)
         if isinstance(self.root, DeviceClassProxy) and not is_project:
             return flags
