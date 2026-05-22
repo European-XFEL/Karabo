@@ -249,7 +249,7 @@ def set_fill_rect(painter, option, index):
             # XXX: Palette background is deprecated in Qt5. Take the brush
             # with background role
             painter.fillRect(option.rect,
-                             option.palette.brush(QPalette.Background))
+                             option.palette.brush(QPalette.Window))
     else:
         brush = index.data(Qt.BackgroundRole)
         if brush is not None:
