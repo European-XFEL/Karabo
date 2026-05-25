@@ -503,7 +503,7 @@ def install(args):
                 print('done.')
                 if os.path.isdir('dist') and str2bool(copyFlag):
                     src = os.path.join('dist', args.config, '*', '*.so')
-                    run_cmd(f'cp -f {src} {tgt}')
+                    run_cmd(f'cp --remove-destination {src} {tgt}')
         elif os.path.exists('setup.py') or os.path.exists('pyproject.toml'):
             run_cmd('pip install --upgrade .')
         else:
