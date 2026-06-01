@@ -372,7 +372,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHandlerCopyFalse(const boost::system::error_code& ec,
-                                       const karabo::net::Channel::Pointer& channel, karabo::data::Hash& hash) {
+                                       const karabo::net::Channel::Pointer& channel, const karabo::data::Hash& hash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyFalse: " << ec.value()
                                        << " -- " << ec.message();
@@ -397,7 +397,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHandlerCopyTrue(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                      karabo::data::Hash& hash) {
+                                      const karabo::data::Hash& hash) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyTrue: " << ec.value()
                                        << " -- " << ec.message();
@@ -1250,7 +1250,7 @@ static void testConnCloseChannelStop(Channel::Pointer& alice, Channel::Pointer& 
     // Register handlers and asynchronously write and read from bob to alice
     auto readProm = std::make_shared<std::promise<boost::system::error_code>>();
     auto readFut = readProm->get_future();
-    Channel::ReadHashHandler readHandler = [readProm](const boost::system::error_code& ec, Hash&) {
+    Channel::ReadHashHandler readHandler = [readProm](const boost::system::error_code& ec, const Hash&) {
         readProm->set_value(ec);
     };
     alice->readAsyncHash(readHandler);
@@ -1265,7 +1265,7 @@ static void testConnCloseChannelStop(Channel::Pointer& alice, Channel::Pointer& 
     // - or stop bob's connection: all stays fine, bob can still write and so alice will receive OK
     readProm = std::make_shared<std::promise<boost::system::error_code>>();
     readFut = readProm->get_future();
-    readHandler = [readProm](const boost::system::error_code& ec, Hash& h) { readProm->set_value(ec); };
+    readHandler = [readProm](const boost::system::error_code& ec, const Hash& h) { readProm->set_value(ec); };
     bool stoppedConn = false;
     if (bobConn) {
         bobConn->stop();

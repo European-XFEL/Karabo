@@ -64,7 +64,7 @@ namespace karabo {
                   ReadVectorBufferSetPointerHandler;
             typedef std::function<void(const boost::system::error_code&, std::vector<char>&)> ReadVectorHandler;
             typedef std::function<void(const boost::system::error_code&, std::string&)> ReadStringHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&)> ReadHashHandler;
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&)> ReadHashHandler;
             typedef std::function<void(const boost::system::error_code&, karabo::data::Hash::Pointer&)>
                   ReadHashPointerHandler;
             typedef std::function<void(const boost::system::error_code&, std::shared_ptr<std::vector<char> >&)>
@@ -99,6 +99,13 @@ namespace karabo {
              * @return
              */
             virtual Connection::Pointer getConnection() const = 0;
+
+            /**
+             * String representing protocol: tcp, amqp, http, ws, ...
+             */
+            virtual std::string getProtocol() const {
+                return "";
+            }
 
             /**
              * Synchronously reads the message's size.

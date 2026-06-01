@@ -100,7 +100,7 @@ namespace karabo {
                       karabo::data::Schema::AccessLevel::OBSERVER};
 
 
-                ChannelData() : clientVersion("0.0.0"), temporarySessionStartTime(0ULL, 0ULL){};
+                ChannelData() : clientVersion("0.0.0"), temporarySessionStartTime(0ULL, 0ULL) {}
 
                 ChannelData(const karabo::util::Version& version, const std::string& userId = "",
                             const std::string& oneTimeToken = "")
@@ -108,7 +108,7 @@ namespace karabo {
                       userId(userId),
                       oneTimeToken(oneTimeToken),
                       sessionStartTime(karabo::data::Epochstamp()),
-                      temporarySessionStartTime(0ULL, 0ULL){};
+                      temporarySessionStartTime(0ULL, 0ULL) {}
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -140,6 +140,7 @@ namespace karabo {
             };
 
             karabo::net::Connection::Pointer m_dataConnection;
+            karabo::net::Connection::Pointer m_webConnection;
 
             karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, ChannelData> m_channels;
@@ -319,6 +320,11 @@ namespace karabo {
             void onGuiInfo(const karabo::data::Hash& hash);
 
             /**
+             * Set up connection using portKey: supported port keys: "port", "webport"
+             */
+            void setupConnection(karabo::net::Channel::Pointer channel, const std::string& portKeys);
+
+            /**
              * connects a client on to the GUI server on channel. The channel is
              * registered with two priority handlers: remove oldest and loss-less. The
              * onRead and onError handlers are registered to handle incoming data
@@ -329,6 +335,17 @@ namespace karabo {
              * @param channel
              */
             void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
+
+            /**
+             * connects a web client on to the GUI server on (web-)channel. The
+             * onRead and onError handlers are registered to handle incoming data
+             * and faults on the channel. Both upon successful completion and exceptions
+             * in the process the acceptor socket of the GUI-server is re-registered so
+             * that new client connections may be established.
+             * @param e holds an error code if any error occurs when calling this slot
+             * @param channel
+             */
+            void onWsConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
             /**
              * @brief Creates an internal ChannelData structure mapped to the TCP Channel in charge of
@@ -382,7 +399,7 @@ namespace karabo {
              * the user logging in.
              */
             void onWaitForLogin(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel,
-                                karabo::data::Hash& info);
+                                const karabo::data::Hash& info);
 
             bool isUserAuthActive() const;
 
@@ -520,7 +537,7 @@ namespace karabo {
              * @param info
              * @param readOnly
              */
-            void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::data::Hash& info,
+            void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, const karabo::data::Hash& info,
                         const bool readOnly);
 
 

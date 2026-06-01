@@ -169,6 +169,7 @@ set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/testReadAsyncStringUntil.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/testStrand.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/testTcpNetworking.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/testWebSocketNetworking.cc
     $<TARGET_OBJECTS:BROKER_UTILS>
     $<TARGET_OBJECTS:WAIT_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>

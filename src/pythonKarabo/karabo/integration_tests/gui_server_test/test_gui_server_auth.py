@@ -58,7 +58,8 @@ async def guiServerAuth(authServer):
     serverId = TEST_SERVER_ID
     config = {
         TEST_GUI_SERVER_ID: {
-            "classId": "GuiServerDevice", "port": 44450, "timeout": 1,
+            "classId": "GuiServerDevice", "port": 44450, "webport": 8850,
+            "timeout": 1,
             "authServer": f"http://{AUTH_ADDRESS}:{AUTH_PORT}",
             "minClientVersion": "2.20.0",
             "maxSessionDuration": MAX_SESSION_TIME,
@@ -538,7 +539,7 @@ async def test_only_app_mode_clients(guiServerAuth):
     PORT = 44454
     await instantiate(
          TEST_SERVER_ID, "GuiServerDevice", APP_ONLY_DEVICE_ID,
-         Hash("port", PORT, "minClientVersion", "2.20.0",
+         Hash("port", PORT, "webport", 8854, "minClientVersion", "2.20.0",
               "onlyAppModeClients", True))
     login_info = Hash(
         "type", "login",

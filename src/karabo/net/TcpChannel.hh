@@ -109,6 +109,10 @@ namespace karabo {
                 return m_connectionPointer.lock();
             }
 
+            std::string getProtocol() const override {
+                return "tcp";
+            }
+
             /**
              * Synchronously reads the TCP message's size.
              * Will block until a message arrives on the socket.
