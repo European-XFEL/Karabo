@@ -118,7 +118,7 @@ namespace karabo {
             auto wrapped = [f, wp](Args... fargs) -> Ret {
                 auto ptr = wp.lock();
                 if (ptr) {
-                    return (*ptr.*f)(fargs...);
+                    return (*ptr.*f)(std::forward<Args>(fargs)...);
                 } else {
                     return Ret();
                 }

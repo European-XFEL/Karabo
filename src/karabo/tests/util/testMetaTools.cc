@@ -70,6 +70,15 @@ struct PointerTest {
     }
 };
 
+class ClassWithoutCopyCtr {
+   public:
+    ClassWithoutCopyCtr(int value) : m_value(value) {}
+    // std::move(other.m_value) is overdoing since it is an int - but maybe good practice for move constructor:
+    ClassWithoutCopyCtr(ClassWithoutCopyCtr&& other) : m_value(std::move(other.m_value)) {}
+    ClassWithoutCopyCtr(const ClassWithoutCopyCtr&) = delete;
+
+    int m_value;
+};
 
 struct BindWeakTest : public std::enable_shared_from_this<BindWeakTest> {
     int add(const int a, const int b) {
@@ -77,6 +86,9 @@ struct BindWeakTest : public std::enable_shared_from_this<BindWeakTest> {
     }
     int dummyFunction(const int a) const {
         return a;
+    }
+    int funcWithArgWithoutCopyCtr(ClassWithoutCopyCtr byValue) {
+        return byValue.m_value;
     }
 };
 
@@ -105,12 +117,18 @@ struct Test_Device : public virtual Test_SignalSlotable {
               karabo::util::bind_weak(&Test_Device::dummyConstFunction, const_cast<const Test_Device*>(this), 0, _1));
         m_timer.cancel();
 
-        // This is just testing that binding a member function that returns a value works
+        // This is just testing that binding member functions work that
+        // - return a value
+        // - and take by value an argument of a class that has no copy constructor
         {
             std::shared_ptr<BindWeakTest> bindWeakTest = std::make_shared<BindWeakTest>();
 
+            auto f0 = karabo::util::bind_weak(&BindWeakTest::funcWithArgWithoutCopyCtr, bindWeakTest.get(), _1);
+            int v = f0(ClassWithoutCopyCtr(42));
+            EXPECT_EQ(v, 42);
+
             auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
-            int v = f1(1, 1);
+            v = f1(1, 1);
             EXPECT_TRUE(v == 2);
 
             auto f2 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, _1);
