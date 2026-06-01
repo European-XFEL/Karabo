@@ -20,7 +20,7 @@
 #############################################################################
 from qtpy.QtCore import QRect, Slot
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QAction, QDialog, QPlainTextEdit
+from qtpy.QtWidgets import QAction, QDialog, QFrame, QPlainTextEdit
 
 from karabogui.dialogs.api import GREY, StickerDialog
 from karabogui.fonts import get_qfont
@@ -38,7 +38,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
 
         # Enforce the same frame style as with the dialog text edit to
         # have the same scroll area dimensions
-        self.setFrameShape(QPlainTextEdit.Box | QPlainTextEdit.Plain)
+        self.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Plain)
         edit_action = QAction("Edit Sticker", self)
         edit_action.triggered.connect(self.edit_colors_text)
         self.addAction(edit_action)
