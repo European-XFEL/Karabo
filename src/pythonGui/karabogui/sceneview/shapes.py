@@ -83,7 +83,7 @@ class BaseShape(ABCHasStrictTraits):
             if model.stroke_dasharray:
                 pen.setDashPattern(model.stroke_dasharray)
 
-            pen.setStyle(model.stroke_style)
+            pen.setStyle(Qt.PenStyle(model.stroke_style))
             join_style = QT_PEN_JOIN_STYLE_FROM_STR[model.stroke_linejoin]
             pen.setJoinStyle(join_style)
             pen.setMiterLimit(model.stroke_miterlimit)
