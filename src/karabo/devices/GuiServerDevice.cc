@@ -34,6 +34,7 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/net/WebSocketChannel.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/Version.hh"
@@ -148,6 +149,17 @@ namespace karabo {
                   .description("Local port for this server")
                   .assignmentOptional()
                   .defaultValue(44444)
+                  .minInc(1024)  // Below 1024: normal users are not allowed to run servers on them
+                                 // (https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html)
+                  .maxInc(65535) // TCP port numbers are 16 bits
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("webport")
+                  .displayedName("Web port")
+                  .description("Local web port for this server")
+                  .assignmentOptional()
+                  .defaultValue(8090)
                   .minInc(1024)  // Below 1024: normal users are not allowed to run servers on them
                                  // (https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html)
                   .maxInc(65535) // TCP port numbers are 16 bits
@@ -511,12 +523,17 @@ namespace karabo {
             h.set("serializationType", "binary"); // Will lead to binary header hashes
             m_dataConnection = Connection::create("Tcp", h);
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
+            // Configure websocket connection as well
+            h.set("port", config.get<unsigned int>("webport"));
+            m_webConnection = Connection::create("WebSocket", h);
         }
 
 
         GuiServerDevice::~GuiServerDevice() {
             if (m_dataConnection) m_dataConnection->stop();
+            if (m_webConnection) m_webConnection->stop();
         }
+
 
         void GuiServerDevice::initializeAuthSessionSupport() {
             auto endSessionNoticeTime = get<unsigned int>("endSessionNoticeTime");
@@ -622,6 +639,7 @@ namespace karabo {
                 }
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
+                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
@@ -635,7 +653,8 @@ namespace karabo {
                 updateState(State::ON);
 
                 // Produce some information
-                KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
+                KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port")
+                                << " and on web port: " << get<unsigned int>("webport");
                 if (!get<std::string>("authServer").empty()) {
                     KARABO_LOG_INFO << "Using the Karabo Authentication Server at '" << get<std::string>("authServer")
                                     << "'";
@@ -804,64 +823,79 @@ namespace karabo {
             startNetworkMonitor();
         }
 
+
+        void GuiServerDevice::setupConnection(karabo::net::Channel::Pointer channel, const std::string& portname) {
+            // Set 3 different queues for publishing (writeAsync) to the GUI client...
+            // priority 2 bound to FAST_DATA traffic: This queue is filled only when GUI client reports readiness
+            // for a pipeline channel, so we can afford a LOSSLESS policy. In fact we have to:
+            // If something would be dropped, the client will never report readiness again for that pipeline. And
+            // we do not have to fear that the queue grows very big - it is limited to the number of pipelines that
+            // the client monitors.
+            // We do not use the same queue as for priority 4 (although both are lossless) since sending FAST_DATA
+            // still has lower priority than other data.
+            channel->setAsyncChannelPolicy(FAST_DATA, "LOSSLESS");
+            // priority 3 bound to REMOVE_OLDEST dropping policy
+            channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("lossyDataQueueCapacity"));
+            // priority 4 should be LOSSLESS
+            channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
+
+            channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onWaitForLogin, this, _1, channel, _2));
+
+            string const version = karabo::util::Version::getVersion();
+            const std::string& authServer = get<std::string>("authServer");
+            Hash systemInfo("type", "serverInformation");
+            systemInfo.set("topic", m_topic);
+            systemInfo.set("hostname", get<std::string>("hostName"));
+            systemInfo.set("hostport", get<unsigned int>(portname));
+            systemInfo.set("deviceId", getInstanceId());
+            systemInfo.set("readOnly", m_isReadOnly);
+            systemInfo.set("version", version);
+            systemInfo.set("authServer", authServer);
+
+            channel->writeAsync(systemInfo);
+
+            // Forward banner info if some:
+            const std::vector<std::string> banner_data(get<std::vector<std::string>>("bannerData"));
+            if (banner_data.size() == 3ul) {
+                Hash banner("type", "notification", "contentType", "banner", "message", banner_data[0]);
+                if (!banner_data[1].empty()) {
+                    banner.set("background", banner_data[1]);
+                }
+                if (!banner_data[2].empty()) {
+                    banner.set("foreground", banner_data[2]);
+                }
+                channel->writeAsync(banner);
+            }
+        }
+
+
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) return;
-
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
-
-                // Set 3 different queues for publishing (writeAsync) to the GUI client...
-                // priority 2 bound to FAST_DATA traffic: This queue is filled only when GUI client reports readiness
-                // for a pipeline channel, so we can afford a LOSSLESS policy. In fact we have to:
-                // If something would be dropped, the client will never report readiness again for that pipeline. And
-                // we do not have to fear that the queue grows very big - it is limited to the number of pipelines that
-                // the client monitors.
-                // We do not use the same queue as for priority 4 (although both are lossless) since sending FAST_DATA
-                // still has lower priority than other data.
-                channel->setAsyncChannelPolicy(FAST_DATA, "LOSSLESS");
-                // priority 3 bound to REMOVE_OLDEST dropping policy
-                channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("lossyDataQueueCapacity"));
-                // priority 4 should be LOSSLESS
-                channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
-
-                channel->readAsyncHash(
-                      bind_weak(&karabo::devices::GuiServerDevice::onWaitForLogin, this, _1, channel, _2));
-
-                string const version = karabo::util::Version::getVersion();
-                const std::string& authServer = get<std::string>("authServer");
-                Hash systemInfo("type", "serverInformation");
-                systemInfo.set("topic", m_topic);
-                systemInfo.set("hostname", get<std::string>("hostName"));
-                systemInfo.set("hostport", get<unsigned int>("port"));
-                systemInfo.set("deviceId", getInstanceId());
-                systemInfo.set("readOnly", m_isReadOnly);
-                systemInfo.set("version", version);
-                systemInfo.set("authServer", authServer);
-
-                channel->writeAsync(systemInfo);
-
-                // Forward banner info if some:
-                const std::vector<std::string> banner_data(get<std::vector<std::string>>("bannerData"));
-                if (banner_data.size() == 3ul) {
-                    Hash banner("type", "notification", "contentType", "banner", "message", banner_data[0]);
-                    if (!banner_data[1].empty()) {
-                        banner.set("background", banner_data[1]);
-                    }
-                    if (!banner_data[2].empty()) {
-                        banner.set("foreground", banner_data[2]);
-                    }
-                    channel->writeAsync(banner);
-                }
-
-                // Re-register acceptor socket (allows handling multiple clients)
+                setupConnection(channel, "port");
+                // TODO: Avoid to re-register TCP acceptor socket (allows handling multiple clients)
+                // Normally re-registration should be done internally in TcpConnection
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
-
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.what();
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
             }
         }
+
+
+        void GuiServerDevice::onWsConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
+            if (e) return;
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Incoming WebSocket connection";
+                setupConnection(channel, "webport");
+                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.what();
+                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
+            }
+        }
+
 
         void GuiServerDevice::registerConnect(const karabo::util::Version& version,
                                               const karabo::net::Channel::Pointer& channel, const std::string& userId,
@@ -874,7 +908,8 @@ namespace karabo {
 
 
         void GuiServerDevice::onWaitForLogin(const karabo::net::ErrorCode& e,
-                                             const karabo::net::Channel::Pointer& channel, karabo::data::Hash& info) {
+                                             const karabo::net::Channel::Pointer& channel,
+                                             const karabo::data::Hash& info) {
             if (e) {
                 channel->close();
                 return;
@@ -1402,7 +1437,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel,
-                                     karabo::data::Hash& info, const bool readOnly) {
+                                     const karabo::data::Hash& info, const bool readOnly) {
             if (e) {
                 onError(e, channel);
                 return;
@@ -2878,9 +2913,16 @@ namespace karabo {
             {
                 std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    const std::string clientAddr = getChannelAddress(it->first);
-                    TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(it->first);
-                    queueInfos.set(clientAddr, tcpChannel->queueInfo());
+                    Channel::Pointer channel = it->first;
+                    const std::string clientAddr = getChannelAddress(channel);
+                    // Populate queueInfos only for TCP protocol since we have "ws"(WebSocket) as well
+                    if (channel->getProtocol() == "tcp") {
+                        TcpChannel::Pointer tcpChannel = std::dynamic_pointer_cast<TcpChannel>(channel);
+                        if (tcpChannel) queueInfos.set(clientAddr, tcpChannel->queueInfo());
+                    } else if (channel->getProtocol() == "ws") {
+                        WebSocketChannel::Pointer wsChannel = std::dynamic_pointer_cast<WebSocketChannel>(channel);
+                        if (wsChannel) queueInfos.set(clientAddr, wsChannel->queueInfo());
+                    }
                 }
             }
 
