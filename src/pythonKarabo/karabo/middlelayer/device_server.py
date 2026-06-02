@@ -483,11 +483,13 @@ class MiddleLayerDeviceServer(HeartBeatMixin, SignalSlotable):
                     "Some devices had exceptions when they "
                     f"were shutdown: {devices} --- {errors.values()}")
 
-        # then kill the server
-        await self.slotKillDevice(message)
-        # Stop event loop on the next cycle ...
-        await sleep(0.1)
-        get_event_loop().call_soon(self.stopEventLoop)
+        try:
+            # then kill the server
+            await self.slotKillDevice(message)
+        finally:
+            # Stop event loop on the next cycle ...
+            await sleep(0.1)
+            get_event_loop().call_soon(self.stopEventLoop)
 
         return self.serverId
 
