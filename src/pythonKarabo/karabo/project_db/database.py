@@ -15,12 +15,12 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
 import logging
+import xml.etree.ElementTree as ET
 from asyncio import gather
 from collections.abc import Awaitable, Callable
 from datetime import UTC
 from pathlib import Path
 
-from lxml import etree
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -874,7 +874,7 @@ class SQLDatabase:
     async def _save_project_item(
             self, session: AsyncSession, domain: str, uuid: str,
             xml: str, timestamp: str):
-        project_xml = etree.fromstring(xml)
+        project_xml = ET.fromstring(xml)
         date = datetime_from_str(timestamp)
 
         # Save the project attributes
@@ -919,14 +919,13 @@ class SQLDatabase:
         # type currently linked to the project must be first unlinked
         # to the project.
         project_elements = (
-            project_xml.getchildren()[0].getchildren()[0]
-            if project_xml.getchildren()
-            and project_xml.getchildren()[0].getchildren() else None)
+            project_xml[0][0]
+            if len(project_xml) and len(project_xml[0]) else None)
 
         group_map = {}
         if project_elements is not None:
             group_map = {child.tag.lower(): child
-                         for child in project_elements.getchildren()}
+                         for child in project_elements}
 
         # several child elements
         macro_group = group_map.get("macros", None)
@@ -947,8 +946,8 @@ class SQLDatabase:
 
         macro_index = 0
         if macro_group is not None:
-            for macro_elem in macro_group.getchildren():
-                macro_uuid = macro_elem.getchildren()[0].text
+            for macro_elem in macro_group:
+                macro_uuid = macro_elem[0].text
                 result = await session.exec(
                     select(Macro).where(Macro.uuid == macro_uuid))
                 macro = result.first()
@@ -973,10 +972,9 @@ class SQLDatabase:
 
         if scene_group is not None:
             scene_index = 0
-            for scene_element in scene_group.getchildren():
-                scene_uuid = (
-                    scene_element.getchildren()[0].text
-                    if len(scene_element.getchildren()) > 0 else None)
+            for scene_element in scene_group:
+                scene_uuid = (scene_element[0].text
+                              if len(scene_element) > 0 else None)
                 # The legacy unit tests had the scene UUID as an attribute
                 # of a <xml> tag
                 if (scene_uuid is None
@@ -1010,8 +1008,8 @@ class SQLDatabase:
 
         if servers_group is not None:
             server_index = 0
-            for server_element in servers_group.getchildren():
-                server_uuid = server_element.getchildren()[0].text
+            for server_element in servers_group:
+                server_uuid = server_element[0].text
                 result = await session.exec(
                     select(DeviceServer).where(
                         DeviceServer.uuid == server_uuid))
@@ -1042,8 +1040,8 @@ class SQLDatabase:
         # Iterate over the subprojects to be saved
         if subprojects_group is not None:
             subproject_index = 0
-            for sub_element in subprojects_group.getchildren():
-                subproject_uuid = sub_element.getchildren()[0].text
+            for sub_element in subprojects_group:
+                subproject_uuid = sub_element[0].text
                 result = await session.exec(
                     select(Project).where(
                         Project.uuid == subproject_uuid))
@@ -1092,11 +1090,12 @@ class SQLDatabase:
 
     async def _save_macro_item(self, session: AsyncSession, uuid: str,
                                xml: str, timestamp: str):
-        macro_obj = etree.fromstring(xml)
+        macro_obj = ET.fromstring(xml)
         macro_name = macro_obj.attrib["simple_name"]
+        macro_raw_body = macro_obj[0].text
+
         # In MySQL the macro bodies are not Base64 encoded
-        macro_body = base64.b64decode(
-            macro_obj.getchildren()[0].text).decode('utf-8')
+        macro_body = base64.b64decode(macro_raw_body).decode("utf-8")
 
         date = datetime_from_str(timestamp)
 
@@ -1125,11 +1124,11 @@ class SQLDatabase:
     async def _save_scene_item(self, session: AsyncSession,
                                uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
-        scene_obj = etree.fromstring(xml)
+        scene_obj = ET.fromstring(xml)
         scene_name = scene_obj.attrib["simple_name"]
         scene_svg_data = (
-            etree.tostring(scene_obj.getchildren()[0]).decode("UTF-8")
-            if len(scene_obj.getchildren()) > 0 else "")
+            ET.tostring(scene_obj[0], encoding="unicode")
+            if len(scene_obj) > 0 else "")
 
         result = await session.exec(
             select(Scene).where(Scene.uuid == uuid))
@@ -1192,11 +1191,11 @@ class SQLDatabase:
     async def _save_device_config_item(
             self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
-        config_obj = etree.fromstring(xml)
+        config_obj = ET.fromstring(xml)
         config_name = config_obj.attrib["simple_name"]
         config_data = (
-            etree.tostring(config_obj.getchildren()[0]).decode("UTF-8")
-            if len(config_obj.getchildren()) > 0 else "")
+            ET.tostring(config_obj[0], encoding="unicode")
+            if len(config_obj) > 0 else "")
 
         result = await session.exec(
             select(DeviceConfig).where(DeviceConfig.uuid == uuid))
@@ -1221,13 +1220,13 @@ class SQLDatabase:
             self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         # XXX: Why is the uuid not taken here?
         date = datetime_from_str(timestamp)
-        instance_element = etree.fromstring(xml)
+        instance_element = ET.fromstring(xml)
 
-        instance_tag = instance_element.getchildren()[0]
+        instance_tag = instance_element[0]
         instance_id = instance_tag.attrib['instance_id']
         class_id = instance_tag.attrib['class_id']
         active_uuid = instance_tag.attrib['active_uuid']
-        config_objs = instance_tag.getchildren()
+        config_objs = instance_tag
 
         # Insert or update the device instance in the DB
         result = await session.exec(
@@ -1284,12 +1283,10 @@ class SQLDatabase:
     async def _save_device_server_item(
             self, session: AsyncSession, uuid: str, xml: str, timestamp: str):
         date = datetime_from_str(timestamp)
-        server_obj = etree.fromstring(xml)
+        server_obj = ET.fromstring(xml)
         server_name = server_obj.attrib["simple_name"]
-        server_tag = (server_obj.getchildren()[0]
-                      if len(server_obj.getchildren()) > 0 else None)
-        instance_elements = (server_tag.getchildren() if server_tag is not None
-                             else [])
+        server_tag = server_obj[0] if len(server_obj) > 0 else None
+        instance_elements = server_tag if server_tag is not None else []
 
         result = await session.exec(
             select(DeviceServer).where(DeviceServer.uuid == uuid))

@@ -14,12 +14,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+import base64
 import datetime
+import xml.etree.ElementTree as ET
 from time import strptime
 
 import pytest
 import pytest_asyncio
-from lxml import etree
 
 from karabo.native import Hash
 from karabo.project_db.database import SQLDatabase
@@ -73,7 +74,7 @@ async def test_project_interface(database, subtests):
                 "LOCAL", [{"uuid": testproject2,
                            "item_type": "device_server"}])
             assert res[0]['uuid'] == testproject2
-            doctree = etree.fromstring(res[0]['xml'])
+            doctree = ET.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "device_server"
             assert doctree.get('simple_name') == NAME
 
@@ -86,9 +87,13 @@ async def test_project_interface(database, subtests):
                 "LOCAL", [{"uuid": testproject2,
                            "item_type": "macro"}])
             assert res[0]['uuid'] == testproject2
-            doctree = etree.fromstring(res[0]['xml'])
+            doctree = ET.fromstring(res[0]['xml'])
             assert doctree.get('item_type') == "macro"
             assert doctree.get('simple_name') == "simpleMacro"
+            macro_element = doctree.find("macro")
+            assert macro_element is not None
+            macro_body = base64.b64decode(macro_element.text).decode("utf-8")
+            assert macro_body == "from karabo.middlelayer import Macro"
 
             # An attempt to save an item with an invalid name must be rejected
             # An unescaped '&' in the project name at save time yields an

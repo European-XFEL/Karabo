@@ -14,10 +14,10 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import base64
+import xml.etree.ElementTree as ET
 from io import StringIO
+from typing import IO, Any
 from xml.sax.saxutils import escape
-
-from lxml import etree
 
 from karabo.common.project.api import (
     PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
@@ -47,12 +47,12 @@ _PROJECT_ITEM_TYPES = {
 assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
 
 
-def get_item_type(obj):
+def get_item_type(obj: object) -> str:
     """Return the item type for a project model"""
     return _ITEM_TYPES.get(type(obj), 'unknown')
 
 
-def read_project_model(io_obj, existing=None):
+def read_project_model(io_obj: IO[str], existing: Any = None) -> Any:
     """ Deserialize a project model object.
 
     :param io_obj: A file-like object that can be read from
@@ -72,7 +72,7 @@ def read_project_model(io_obj, existing=None):
     parent, child = _unwrap_child_element_xml(io_obj.read())
 
     # Grab the metadata from the parent
-    parent = etree.parse(StringIO(parent)).getroot()
+    parent = ET.fromstring(parent)
     metadata = dict(parent.items())
     item_type = metadata.get('item_type')
     factory = factories.get(item_type)
@@ -81,7 +81,7 @@ def read_project_model(io_obj, existing=None):
     return factory(StringIO(child), existing, metadata)
 
 
-def write_project_model(model):
+def write_project_model(model: Any) -> str:
     """ Serialize a project model object.
 
     :param model: A project data model object (project, scene, macro, etc.)
@@ -112,7 +112,7 @@ def write_project_model(model):
 # -----------------------------------------------------------------------------
 
 
-def _unwrap_child_element_xml(xml):
+def _unwrap_child_element_xml(xml: str) -> tuple[str, str]:
     """ Unwrap a blob of XML into two independent documents
     """
     start_index = xml.find('>') + 1
@@ -122,13 +122,15 @@ def _unwrap_child_element_xml(xml):
     return parent, child
 
 
-def _wrap_child_element_xml(child_xml, root_metadata):
+def _wrap_child_element_xml(
+        child_xml: str, root_metadata: dict[str, str]) -> str:
     """ Insert a complex XML document into a much simpler document consisting
     of a single root element with included attributes.
     """
-    element = etree.Element('xml', **root_metadata)
-    element.text = ''  # This guarantees a closing tag (</xml>)
-    root_xml = etree.tostring(element, encoding='unicode')
+    element = ET.Element('xml', root_metadata)
+    # short_empty_elements=False guarantees a closing tag (</xml>)
+    root_xml = ET.tostring(
+        element, encoding='unicode', short_empty_elements=False)
 
     index = root_xml.rfind('</xml>')
     return root_xml[:index] + child_xml + root_xml[index:]
@@ -137,7 +139,7 @@ def _wrap_child_element_xml(child_xml, root_metadata):
 # -----------------------------------------------------------------------------
 
 
-def _db_metadata_reader(metadata):
+def _db_metadata_reader(metadata: dict[str, str]) -> dict[str, str]:
     """ Read the traits which are common to all BaseProjectObjectModel objects
     """
     attrs = {
@@ -148,7 +150,8 @@ def _db_metadata_reader(metadata):
     return attrs
 
 
-def _check_preexisting(existing, klass, traits):
+def _check_preexisting(
+        existing: Any, klass: type[Any], traits: dict[str, Any]) -> Any:
     """ Make sure a preexisting object is in order.
     """
     if existing is None:
@@ -166,7 +169,9 @@ def _check_preexisting(existing, klass, traits):
     return existing
 
 
-def _device_reader(io_obj, existing, metadata):
+def _device_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> DeviceInstanceModel:
     """ A reader for device instances
     """
     traits = _db_metadata_reader(metadata)
@@ -188,7 +193,9 @@ def _device_reader(io_obj, existing, metadata):
     return existing
 
 
-def _device_config_reader(io_obj, existing, metadata):
+def _device_config_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> DeviceConfigurationModel:
     """ A reader for device configurations
     """
     traits = _db_metadata_reader(metadata)
@@ -204,7 +211,9 @@ def _device_config_reader(io_obj, existing, metadata):
     return existing
 
 
-def _device_server_reader(io_obj, existing, metadata):
+def _device_server_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> DeviceServerModel:
     """ A reader for device server models
     """
     traits = _db_metadata_reader(metadata)
@@ -222,13 +231,15 @@ def _device_server_reader(io_obj, existing, metadata):
     return existing
 
 
-def _macro_reader(io_obj, existing, metadata):
+def _macro_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> MacroModel:
     """ A reader for macros
     """
     traits = _db_metadata_reader(metadata)
     existing = _check_preexisting(existing, MacroModel, traits)
 
-    root = etree.parse(io_obj).getroot()
+    root = ET.parse(io_obj).getroot()
     code = root.text
     if code is not None:
         existing.trait_set(code=base64.b64decode(code).decode('utf-8'))
@@ -237,11 +248,13 @@ def _macro_reader(io_obj, existing, metadata):
     return existing
 
 
-def _project_reader(io_obj, existing, metadata):
+def _project_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> ProjectModel:
     """ A reader for projects
     """
 
-    def _get_items(hsh, type_name):
+    def _get_items(hsh: Hash, type_name: str) -> list[Any]:
         klass = _PROJECT_ITEM_TYPES[type_name]
         entries = hsh.get(type_name, [])
         return [klass(uuid=h['uuid'], initialized=False) for h in entries]
@@ -259,7 +272,9 @@ def _project_reader(io_obj, existing, metadata):
     return existing
 
 
-def _scene_reader(io_obj, existing, metadata):
+def _scene_reader(
+        io_obj: IO[str], existing: Any, metadata: dict[str, str]
+) -> SceneModel:
     """ A reader for scenes
     """
     traits = _db_metadata_reader(metadata)
@@ -283,7 +298,7 @@ def _scene_reader(io_obj, existing, metadata):
 # -----------------------------------------------------------------------------
 
 
-def _model_db_metadata(model):
+def _model_db_metadata(model: Any) -> dict[str, str]:
     """ Extract attributes which are stored in the root of a project DB object
     """
     attrs = {}
@@ -297,23 +312,23 @@ def _model_db_metadata(model):
     return attrs
 
 
-def _device_config_writer(model):
+def _device_config_writer(model: DeviceConfigurationModel) -> str:
     """ A writer for device configurations
     """
     hsh = Hash(model.class_id, model.configuration)
     return encodeXML(hsh)
 
 
-def _macro_writer(model):
+def _macro_writer(model: MacroModel) -> str:
     """ A writer for macros
     """
-    element = etree.Element(PROJECT_DB_TYPE_MACRO)
+    element = ET.Element(PROJECT_DB_TYPE_MACRO)
     code = model.code.encode('utf-8')
-    element.text = base64.b64encode(code)
-    return etree.tostring(element, encoding='unicode')
+    element.text = base64.b64encode(code).decode('ascii')
+    return ET.tostring(element, encoding='unicode')
 
 
-def _project_writer(model):
+def _project_writer(model: ProjectModel) -> str:
     """ A writer for projects
     """
     project = Hash()

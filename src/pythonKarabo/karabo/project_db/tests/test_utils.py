@@ -14,8 +14,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+import xml.etree.ElementTree as ET
+
 import pytest
-from lxml import etree
 
 from ..models import Scene
 from ..utils import (
@@ -97,7 +98,7 @@ def test_malformed_xml_inputs():
 
 
 def test_make_str_if_needed():
-    element = etree.Element('test')
+    element = ET.Element('test')
     element.text = 'foo'
     str_rep = make_str_if_needed(element)
-    assert str_rep == "<test>foo</test>\n"
+    assert str_rep == "<test>foo</test>"
