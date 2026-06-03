@@ -109,10 +109,6 @@ namespace karabo {
                 return m_connectionPointer.lock();
             }
 
-            std::string getProtocol() const override {
-                return "tcp";
-            }
-
             /**
              * Synchronously reads the TCP message's size.
              * Will block until a message arrives on the socket.
@@ -324,12 +320,12 @@ namespace karabo {
              * Records the sizes of the write queues in a Hash.
              * Useful for debugging devices with multiple channels open (like the GuiServerDevice...)
              */
-            karabo::data::Hash queueInfo();
+            karabo::data::Hash queueInfo() override;
 
             /**
              * Address of the remote endpoint
              */
-            std::string remoteAddress() const;
+            std::string remoteAddress() const override;
 
             /**
              *  Writes a copy from the data array.

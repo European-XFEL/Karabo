@@ -33,8 +33,6 @@
 #include "karabo/data/types/State.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/net/TcpChannel.hh"
-#include "karabo/net/WebSocketChannel.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/Version.hh"
@@ -2803,10 +2801,10 @@ namespace karabo {
                         const std::string clientAddr = getChannelAddress(it->first);
                         const std::vector<std::string> monitoredDevices(it->second.visibleInstances.begin(),
                                                                         it->second.visibleInstances.end());
-                        TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(it->first);
+                        const Channel::Pointer channel = it->first;
 
                         data.set(clientAddr,
-                                 Hash("queueInfo", tcpChannel->queueInfo(), "monitoredDevices", monitoredDevices,
+                                 Hash("queueInfo", channel->queueInfo(), "monitoredDevices", monitoredDevices,
                                       // Leave string and bool vectors for the pipeline connections
                                       // to be filled in below
                                       "pipelineConnections", std::vector<std::string>(), "pipelineConnectionsReadiness",
@@ -2821,17 +2819,17 @@ namespace karabo {
                          ++mapIter) {
                         const std::string& channelName = mapIter->first;
                         const auto& channelSet = mapIter->second;
-                        for (const WeakChannelPointer& channel : channelSet) {
-                            Channel::Pointer channelPtr = channel.lock(); // promote to shared pointer
-                            if (channelPtr) {
-                                const std::string clientAddr = getChannelAddress(channelPtr);
+                        for (const WeakChannelPointer& weakChannel : channelSet) {
+                            Channel::Pointer channel = weakChannel.lock(); // promote to shared pointer
+                            if (channel) {
+                                const std::string clientAddr = getChannelAddress(channel);
                                 if (data.has(clientAddr)) {
                                     std::vector<std::string>& pipelineConnections =
                                           data.get<std::vector<std::string>>(clientAddr + ".pipelineConnections");
                                     pipelineConnections.push_back(channelName);
                                     std::vector<bool>& pipelinesReady =
                                           data.get<std::vector<bool>>(clientAddr + ".pipelineConnectionsReadiness");
-                                    pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
+                                    pipelinesReady.push_back(m_readyNetworkConnections[channelName][weakChannel]);
                                 } else {
                                     // Very unlikely, but can happen in case a new client has connected AND
                                     // subscribed to a pipeline between creation of 'clientAddr +
@@ -2913,16 +2911,9 @@ namespace karabo {
             {
                 std::lock_guard<std::mutex> lock(m_channelMutex);
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    Channel::Pointer channel = it->first;
+                    const Channel::Pointer& channel = it->first;
                     const std::string clientAddr = getChannelAddress(channel);
-                    // Populate queueInfos only for TCP protocol since we have "ws"(WebSocket) as well
-                    if (channel->getProtocol() == "tcp") {
-                        TcpChannel::Pointer tcpChannel = std::dynamic_pointer_cast<TcpChannel>(channel);
-                        if (tcpChannel) queueInfos.set(clientAddr, tcpChannel->queueInfo());
-                    } else if (channel->getProtocol() == "ws") {
-                        WebSocketChannel::Pointer wsChannel = std::dynamic_pointer_cast<WebSocketChannel>(channel);
-                        if (wsChannel) queueInfos.set(clientAddr, wsChannel->queueInfo());
-                    }
+                    queueInfos.set(clientAddr, channel->queueInfo());
                 }
             }
 
@@ -3223,8 +3214,7 @@ namespace karabo {
         }
 
         std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
-            TcpChannel::Pointer tcpChannel = std::static_pointer_cast<TcpChannel>(channel);
-            std::string addr = tcpChannel->remoteAddress();
+            std::string addr = channel->remoteAddress();
 
             // convert periods to underscores, so that this can be used as a Hash key...
             std::transform(addr.begin(), addr.end(), addr.begin(),
