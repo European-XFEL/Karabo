@@ -15,7 +15,10 @@ gtest/1.16.0
 nlohmann_json/3.12.0
 spdlog/1.14.1
 zeromq/4.3.2
-
+# libcurl pinned at 8.17.0 because 8.18.0 requires openssl >= 3 which is
+# incompatible with the current openssl 1.1.1w set in "conanfile-bootstrap.txt".
+# libcurl is a transitive dependency introduced by date/3.0.3 below.
+libcurl/8.17.0
 
 # patch-any
 libpng/1.6.50
