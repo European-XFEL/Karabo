@@ -15,10 +15,10 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import random
+import xml.etree.ElementTree as ET
 from io import StringIO
 from pathlib import Path
 
-from lxml import etree
 from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import (
@@ -39,7 +39,7 @@ def _get_notes():
     def get_lines(fn):
         with open(fn) as fp:
             xml = fp.read()
-            tree = etree.parse(StringIO(xml))
+            tree = ET.parse(StringIO(xml))
             title = tree.find('.//title').text
             ret.update({title: xml})
 
