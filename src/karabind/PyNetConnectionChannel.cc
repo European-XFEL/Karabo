@@ -359,6 +359,14 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "  - an ErrorCode object\n"
                     "  - the channel that called writeAsyncHashHash\n")
 
+              .def(
+                    "writeAsync",
+                    [](const Channel::Pointer& self, const Hash& body, int prio, bool copyAllData) {
+                        py::gil_scoped_release release;
+                        self->writeAsync(body, prio, copyAllData);
+                    },
+                    py::arg("body"), py::arg("prio") = 4, py::arg("copyAllData") = false)
+
               .def("close", &Channel::close, "Close channel session.")
 
               .def_property_readonly(
@@ -371,7 +379,9 @@ void exportPyNetConnectionChannel(py::module_& m) {
 #include <karabo/net/InfluxDbClient.hh>
 #include <karabo/net/Strand.hh>
 #include <karabo/net/TcpConnection.hh>
+#include <karabo/net/WebSocketConnection.hh>
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::AmqpBroker)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::InfluxDbClient)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Strand)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Connection, karabo::net::TcpConnection)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Connection, karabo::net::WebSocketConnection)
