@@ -67,10 +67,6 @@ namespace karabo::net {
             return m_connectionPointer.lock();
         }
 
-        std::string getProtocol() const override {
-            return "ws";
-        }
-
         boost::asio::any_io_executor get_executor() {
             return m_ws->get_executor();
         }
@@ -94,12 +90,12 @@ namespace karabo::net {
          * Records the sizes of the write queues in a Hash.
          * Useful for debugging devices with multiple channels open (like the GuiServerDevice...)
          */
-        karabo::data::Hash queueInfo();
+        karabo::data::Hash queueInfo() override;
 
         /**
          * Address of the remote endpoint
          */
-        std::string remoteAddress() const;
+        std::string remoteAddress() const override;
 
 
         virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);

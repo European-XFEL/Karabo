@@ -35,6 +35,7 @@
 #include "karabo/data/types/Schema.hh"
 #include "karabo/devices/GuiServerAuthSessionManager.hh"
 #include "karabo/net/Broker.hh"
+#include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"

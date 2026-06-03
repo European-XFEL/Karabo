@@ -101,9 +101,17 @@ namespace karabo {
             virtual Connection::Pointer getConnection() const = 0;
 
             /**
-             * String representing protocol: tcp, amqp, http, ws, ...
+             * Records the sizes of the write queues in a Hash.
+             * Useful for debugging devices with multiple channels open (like the GuiServerDevice...)
              */
-            virtual std::string getProtocol() const {
+            virtual karabo::data::Hash queueInfo() {
+                return karabo::data::Hash();
+            }
+
+            /**
+             * Address of the remote endpoint
+             */
+            virtual std::string remoteAddress() const {
                 return "";
             }
 

@@ -2064,10 +2064,11 @@ namespace karabo {
                                                    status, counter, outputsToIgnore.size()),
                                          outputsToIgnore);
             }
-            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " Channel reconnection cycle cares about '"
-                                       << toString(channelsToCheck) << "' (" << fullyConnected
-                                       << " of them do not need reconnection)";
-
+            if (!channelsToCheck.empty()) {
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " Channel reconnection cycle cares about '"
+                                           << toString(channelsToCheck) << "' (" << fullyConnected
+                                           << " of them do not need reconnection)";
+            }
             m_channelConnectTimer.expires_after(seconds(channelReconnectIntervalSec));
             m_channelConnectTimer.async_wait(
                   bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
