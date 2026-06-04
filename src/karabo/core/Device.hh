@@ -421,14 +421,41 @@ namespace karabo {
 
            public:
             /**
-             * Retrieves the current value of any device parameter (that was defined in the expectedParameters function)
-             * @param key A valid parameter of the device (must be defined in the expectedParameters function)
+             * Retrieves the current value of a device property or of an update
+             *
+             * Like get<T>(key), but if the Hash passed as 2nd argument contains the key, that has preference.
+             *
+             * This function is useful to be used inside the preReconfigure(Hash& preReconfInput) hook:
+             * If the consistency of some reconfigurations is to be checked, incoming updates have to be taken into
+             * account as if already applied, so one should use 'getOrFromUpdate<T>(key, preReconfInput)'.
+             *
+             * @param key A valid property of the device (as defined in expectedParameters or injected into schema)
+             * @param update A Hash that may provide an update of the device property, i.e. if it contains the
+             *               requested key, the value is taken from this Hash instead of from the device.
+             * @return value of the requested parameter
+             */
+            template <class T>
+            T getOrFromUpdate(const std::string& key, const karabo::data::Hash& update) const {
+                const auto node = update.find(key);
+                if (node) {
+                    return node->getValue<T>();
+                } else {
+                    return get<T>(key);
+                }
+            }
+
+            /**
+             * Retrieves the current value of a device property
+             *
+             * Note that device properties are defined in the expectedParameters function or via a schema update.
+             *
+             * @param key A valid property of the device (as defined in expectedParameters or injected into schema)
+             *
              * @return value of the requested parameter
              */
             template <class T>
             T get(const std::string& key) const {
                 std::lock_guard<std::mutex> lock(m_objectStateChangeMutex);
-
                 try {
                     const karabo::data::Hash::Attributes& attrs =
                           m_fullSchema.getParameterHash().getNode(key).getAttributes();

@@ -62,7 +62,7 @@ class TestDeviceTest : public ::testing::Test {
     void testGetconfigReconfig();
     void testLockClearLock();
     void testUpdateState();
-    void testSet();
+    void testSetGet();
     void testSetVectorUpdate();
     void testSignal();
     void testBadInit();
@@ -111,6 +111,7 @@ class TestDeviceTest : public ::testing::Test {
 
 using karabo::core::DeviceClient;
 using karabo::core::DeviceServer;
+using karabo::data::AlarmCondition;
 using karabo::data::DOUBLE_ELEMENT;
 using karabo::data::Epochstamp;
 using karabo::data::Hash;
@@ -279,6 +280,12 @@ class DeviceExampleTest : public karabo::core::Device {
 
         KARABO_SLOT(slotAppendSchemaMultiMaxSize, unsigned int);
 
+        KARABO_SLOT(slotGetOrFromUpdateAlarm, std::string, Hash);
+
+        KARABO_SLOT(slotGetOrFromUpdateState, std::string, Hash);
+
+        KARABO_SLOT(slotGetOrFromUpdateInt, std::string, Hash);
+
         KARABO_SLOT(slotSet, Hash);
 
         KARABO_SLOT(slotToggleState, const Hash);
@@ -331,6 +338,17 @@ class DeviceExampleTest : public karabo::core::Device {
         appendSchemaMultiMaxSize({"output.schema.data.intensityTD", "output.schema.data.vecInt32"}, {maxSize, maxSize});
     }
 
+    void slotGetOrFromUpdateInt(const std::string& key, const Hash& h) {
+        reply(getOrFromUpdate<int>(key, h));
+    }
+
+    void slotGetOrFromUpdateAlarm(const std::string& key, const Hash& h) {
+        reply(getOrFromUpdate<AlarmCondition>(key, h).asString());
+    }
+
+    void slotGetOrFromUpdateState(const std::string& key, const Hash& h) {
+        reply(getOrFromUpdate<State>(key, h).name());
+    }
 
     void slotSet(const Hash& h) {
         set(h);
@@ -562,7 +580,7 @@ TEST_F(TestDeviceTest, appTestRunner) {
     testNodedSlot();
     testGetconfigReconfig();
     testUpdateState();
-    testSet();
+    testSetGet();
     testSetVectorUpdate();
     testSignal();
 
@@ -1789,8 +1807,8 @@ void TestDeviceTest::testUpdateState() {
 }
 
 
-void TestDeviceTest::testSet() {
-    std::clog << "Start testSet: " << std::flush;
+void TestDeviceTest::testSetGet() {
+    std::clog << "Start testSetGet: " << std::flush;
     const int timeoutInMs = KRB_TEST_MAX_TIMEOUT * 1000;
     const std::string deviceId("DeviceExampleTest");
 
@@ -1824,6 +1842,43 @@ void TestDeviceTest::testSet() {
     ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
     ASSERT_EQ(999, hash2.get<int>("valueWithLimit"));
     ASSERT_EQ(2000, hash2.get<int>("valueOther"));
+
+    // Now test Device::getOrFromUpdate with its update argument
+    int pid = 0;
+    ASSERT_NO_THROW(
+          m_deviceServer->request(deviceId, "slotGetOrFromUpdateInt", "pid", Hash()).timeout(timeoutInMs).receive(pid));
+    EXPECT_EQ(pid, hash2.get<int>("pid"));
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetOrFromUpdateInt", "pid", Hash("pid", 42))
+                          .timeout(timeoutInMs)
+                          .receive(pid));
+    EXPECT_EQ(pid, 42);
+
+    std::string state;
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetOrFromUpdateState", "state", Hash())
+                          .timeout(timeoutInMs)
+                          .receive(state));
+    EXPECT_EQ(state, hash2.get<std::string>("state"));
+    // Note: 'State' is not serialisable, so this request only works since we use the inner-process shortcut.
+    //       But STATE_ELEMENTs are READ-only and thus getOrFromUpdate will not be called with State updates
+    //       in preReconfigure where the Hash would normally have been serialised.
+    ASSERT_NO_THROW(
+          m_deviceServer->request(deviceId, "slotGetOrFromUpdateState", "state", Hash("state", State::RUNNING))
+                .timeout(timeoutInMs)
+                .receive(state));
+    EXPECT_EQ(state, "RUNNING");
+
+    std::string alarm;
+    ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetOrFromUpdateAlarm", "alarmCondition", Hash())
+                          .timeout(timeoutInMs)
+                          .receive(alarm));
+    EXPECT_EQ(alarm, hash2.get<std::string>("alarmCondition"));
+    // Note: Same as for State few lines above.
+    ASSERT_NO_THROW(m_deviceServer
+                          ->request(deviceId, "slotGetOrFromUpdateAlarm", "alarmCondition",
+                                    Hash("alarmCondition", AlarmCondition::WARN))
+                          .timeout(timeoutInMs)
+                          .receive(alarm));
+    EXPECT_EQ(alarm, "warn");
 
     std::clog << "OK." << std::endl;
 }
