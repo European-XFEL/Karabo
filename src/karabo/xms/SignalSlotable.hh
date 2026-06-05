@@ -1073,6 +1073,16 @@ namespace karabo {
             static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message,
                                          bool isTimeout = false);
 
+            /**
+             * Check need for slot name mangling (i.e. replacing dots from slots under node by `_`)
+             *
+             * @param unmangledSlotFunction string to mangle
+             *
+             * @return a pair - if its 'first' is true', use its 'second' as mangled function
+             *                  if its 'first' is false, no need to mangle, use unmangledSlotFunction
+             */
+            static std::pair<bool, std::string> mangleSlotFunction(const std::string& unmangledSlotFunction);
+
            private: // Members
             // Performance statistics
 
@@ -1253,11 +1263,13 @@ namespace karabo {
 
         template <class A1>
         void SignalSlotable::registerSlot(const std::function<void(const A1&)>& slot, const std::string& funcName) {
+            const std::pair<bool, std::string> needMangle = mangleSlotFunction(funcName);
+            const std::string& mangledFuncName = (needMangle.first ? needMangle.second : funcName);
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = std::dynamic_pointer_cast<SlotN<void, A1>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1>>(findSlot(mangledFuncName));
             if (!s) {
-                s = std::make_shared<SlotN<void, A1>>(funcName);
-                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1>>(mangledFuncName);
+                registerNewSlot(mangledFuncName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
@@ -1265,11 +1277,13 @@ namespace karabo {
         template <class A1, class A2>
         void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&)>& slot,
                                           const std::string& funcName) {
+            const std::pair<bool, std::string> needMangle = mangleSlotFunction(funcName);
+            const std::string& mangledFuncName = (needMangle.first ? needMangle.second : funcName);
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2>>(findSlot(mangledFuncName));
             if (!s) {
-                s = std::make_shared<SlotN<void, A1, A2>>(funcName);
-                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2>>(mangledFuncName);
+                registerNewSlot(mangledFuncName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
@@ -1277,11 +1291,13 @@ namespace karabo {
         template <class A1, class A2, class A3>
         void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&, const A3&)>& slot,
                                           const std::string& funcName) {
+            const std::pair<bool, std::string> needMangle = mangleSlotFunction(funcName);
+            const std::string& mangledFuncName = (needMangle.first ? needMangle.second : funcName);
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3>>(findSlot(mangledFuncName));
             if (!s) {
-                s = std::make_shared<SlotN<void, A1, A2, A3>>(funcName);
-                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2, A3>>(mangledFuncName);
+                registerNewSlot(mangledFuncName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
@@ -1289,11 +1305,13 @@ namespace karabo {
         template <class A1, class A2, class A3, class A4>
         void SignalSlotable::registerSlot(const std::function<void(const A1&, const A2&, const A3&, const A4&)>& slot,
                                           const std::string& funcName) {
+            const std::pair<bool, std::string> needMangle = mangleSlotFunction(funcName);
+            const std::string& mangledFuncName = (needMangle.first ? needMangle.second : funcName);
             // About the dynamic_pointer_cast: see non-template version of registerSlot.
-            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3, A4>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void, A1, A2, A3, A4>>(findSlot(mangledFuncName));
             if (!s) {
-                s = std::make_shared<SlotN<void, A1, A2, A3, A4>>(funcName);
-                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void, A1, A2, A3, A4>>(mangledFuncName);
+                registerNewSlot(mangledFuncName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
