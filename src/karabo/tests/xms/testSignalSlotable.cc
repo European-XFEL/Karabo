@@ -1354,6 +1354,39 @@ TEST_F(TestSignalSlotable, testAutoConnect) {
     _loopFunction(__FUNCTION__, [] { _testAutoConnect(); });
 }
 
+static void _testSlotMangling() {
+    // Testing that wherever slot names contain a dot '.' it is replaced by an underscore '_'
+    auto instance = std::make_shared<SignalSlotable>("instance");
+    instance->start();
+
+    int count = 0;
+    auto dummy = [&count]() { ++count; };
+    instance->registerSlot(dummy, "slot.dummy");
+
+    // Registered with dot, is seen and can be called with both, dot or underscore:
+    bool has = false;
+    EXPECT_NO_THROW(instance->request("", "slotHasSlot", "slot.dummy").timeout(slotCallTimeout).receive(has));
+    EXPECT_TRUE(has);
+    has = false;
+    EXPECT_NO_THROW(instance->request("", "slotHasSlot", "slot_dummy").timeout(slotCallTimeout).receive(has));
+    EXPECT_TRUE(has);
+
+    // Can be called with both, too:
+    EXPECT_NO_THROW(instance->request("", "slot.dummy").timeout(slotCallTimeout).receive());
+    EXPECT_EQ(count, 1);
+    EXPECT_NO_THROW(instance->request("", "slot_dummy").timeout(slotCallTimeout).receive());
+    EXPECT_EQ(count, 2);
+
+    // Removal can thus only be done once:
+    EXPECT_TRUE(instance->unregisterSlot("slot.dummy"));
+    EXPECT_FALSE(instance->unregisterSlot("slot_dummy"));
+}
+
+
+TEST_F(TestSignalSlotable, testSlotMangling) {
+    _loopFunction(__FUNCTION__, [] { _testSlotMangling(); });
+}
+
 
 static void _testRegisterSlotTwice() {
     // Registering two function of the same signature for the same slot means that both are executed

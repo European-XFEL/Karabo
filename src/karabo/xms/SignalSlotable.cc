@@ -47,26 +47,6 @@ using std::placeholders::_2;
 using std::placeholders::_3;
 using std::placeholders::_4;
 
-namespace {
-    /**
-     * Check need for slot name mangling (i.e. replacing dots from slots under node by `_`)
-     *
-     * @param unmangledSlotFunction string to mangle
-     *
-     * @return a pair - if its 'first' is true', use its 'second' as mangled function
-     *                  if its 'first' is false, no need to mangle, use unmangledSlotFunction
-     */
-    std::pair<bool, std::string> mangleSlotFunction(const std::string& unmangledSlotFunction) {
-        const char cStringSep[] = {karabo::data::Hash::k_defaultSep, '\0'};
-
-        if (unmangledSlotFunction.find(karabo::data::Hash::k_defaultSep) == std::string::npos) {
-            return {false, std::string()}; // no need for mangling
-        } else {
-            return {true, boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_")};
-        }
-    }
-} // namespace
-
 namespace karabo {
     namespace xms {
 
@@ -182,19 +162,16 @@ namespace karabo {
         }
 
 
-        /**
-         * Register a new slot function for a slot. A new slot is generated
-         * if so necessary. It is checked that the signature of the new
-         * slot is the same as an already registered one.
-         */
         void SignalSlotable::registerSlot(const std::function<void()>& slot, const std::string& funcName) {
+            const std::pair<bool, std::string> needMangle = mangleSlotFunction(funcName);
+            const std::string& mangledFuncName = (needMangle.first ? needMangle.second : funcName);
             // If the same slot name was registered under a different signature before,
             // the dynamic_pointer_cast will return a NULL pointer and finally registerNewSlot
             // will throw an exception.
-            auto s = std::dynamic_pointer_cast<SlotN<void>>(findSlot(funcName));
+            auto s = std::dynamic_pointer_cast<SlotN<void>>(findSlot(mangledFuncName));
             if (!s) {
-                s = std::make_shared<SlotN<void>>(funcName);
-                registerNewSlot(funcName, std::static_pointer_cast<Slot>(s));
+                s = std::make_shared<SlotN<void>>(mangledFuncName);
+                registerNewSlot(mangledFuncName, std::static_pointer_cast<Slot>(s));
             }
             s->registerSlotFunction(slot);
         }
@@ -1463,6 +1440,15 @@ namespace karabo {
             }
         }
 
+        std::pair<bool, std::string> SignalSlotable::mangleSlotFunction(const std::string& unmangledSlotFunction) {
+            const char cStringSep[] = {karabo::data::Hash::k_defaultSep, '\0'};
+
+            if (unmangledSlotFunction.find(karabo::data::Hash::k_defaultSep) == std::string::npos) {
+                return {false, std::string()}; // no need for mangling
+            } else {
+                return {true, boost::algorithm::replace_all_copy(unmangledSlotFunction, cStringSep, "_")};
+            }
+        }
 
         void SignalSlotable::asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
                                           const std::function<void()>& successHandler,
