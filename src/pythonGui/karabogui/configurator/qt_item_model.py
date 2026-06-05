@@ -176,7 +176,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         """Public method to announce that data has changed"""
         last_row = self.rowCount() - 1
         first = self.index(0, 0)
-        last = self.index(last_row, 1)
+        last = self.index(last_row, 2)
         self.dataChanged.emit(first, last, [Qt.BackgroundRole, Qt.DisplayRole])
 
     def notify_of_modifications(self):
