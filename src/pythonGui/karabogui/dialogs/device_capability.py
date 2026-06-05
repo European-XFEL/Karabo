@@ -161,7 +161,6 @@ class DeviceCapabilityDialog(QDialog):
             return (mask & bit) == bit
 
         def visitor(node):
-            nonlocal device_ids
             if _test_mask(node.capabilities, self.capability):
                 device_ids.append(node.node_id)
 

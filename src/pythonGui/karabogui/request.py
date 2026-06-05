@@ -38,7 +38,7 @@ from karabogui.singletons.api import get_manager, get_network, get_topology
 from karabogui.util import get_reason_parts
 
 _WAIT_SECONDS = 5
-_waiting_devices = {}
+_WAITING_DEVICES = {}
 
 
 def call_device_slot(handler, instance_id, slot_name, **kwargs):
@@ -321,8 +321,7 @@ def onShutdown(device_proxy, handler, parent=None):
     def _offline_handler(device_proxy, name, new):
         """Handle a device getting a new configuration
         """
-        global _waiting_devices
-        handler, timer = _waiting_devices.pop(device_proxy,
+        handler, timer = _WAITING_DEVICES.pop(device_proxy,
                                               (lambda: None, None))
 
         # Remove the trait handler
@@ -336,8 +335,7 @@ def onShutdown(device_proxy, handler, parent=None):
     @Slot()
     def _timeout_handler(device_proxy):
         """Handle our wait timer expiring"""
-        global _waiting_devices
-        _waiting_devices.pop(device_proxy, None)
+        _WAITING_DEVICES.pop(device_proxy, None)
 
         # Remove the trait handler
         device_proxy.on_trait_change(_offline_handler, "online",
@@ -353,8 +351,7 @@ def onShutdown(device_proxy, handler, parent=None):
         messagebox.show_error(msg, parent=parent)
         return
 
-    global _waiting_devices
-    if device_proxy in _waiting_devices:
+    if device_proxy in _WAITING_DEVICES:
         # Already waiting
         return
 
@@ -363,7 +360,7 @@ def onShutdown(device_proxy, handler, parent=None):
     timer.timeout.connect(partial(_timeout_handler, device_proxy))
     device_proxy.on_trait_change(_offline_handler, 'online')
 
-    _waiting_devices[device_proxy] = (handler, timer)
+    _WAITING_DEVICES[device_proxy] = (handler, timer)
     timer.start(_WAIT_SECONDS * 1000)
 
     instanceId = device_proxy.device_id

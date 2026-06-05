@@ -55,7 +55,6 @@ class SceneLinkDialog(QDialog):
         collected = set()
 
         def visitor(obj):
-            nonlocal collected
             if isinstance(obj, SceneModel):
                 target = f"{obj.simple_name}:{obj.uuid}"
                 collected.add(target)

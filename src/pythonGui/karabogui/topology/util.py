@@ -65,7 +65,6 @@ def get_macro_servers(development=False):
     macro_servers_set = set()
 
     def visitor(node):
-        nonlocal macro_servers
         attrs = node.attributes
         if attrs.get("type") == "server" and attrs.get("lang") == "macro":
             # Exclude development servers

@@ -243,7 +243,6 @@ class TestSystemTopology(GuiTestCase):
             devices = []
 
             def device_visitor(node):
-                nonlocal devices
                 # Check for devices, level 3
                 if node.level == 3:
                     devices.append(node)
@@ -256,7 +255,6 @@ class TestSystemTopology(GuiTestCase):
             servers = []
 
             def server_visitor(node):
-                nonlocal servers
                 # Check for servers, level 1
                 if node.level == 1:
                     servers.append(node)
@@ -272,7 +270,6 @@ class TestSystemTopology(GuiTestCase):
             members = []
 
             def member_visitor(node):
-                nonlocal members
                 # Check for member, level 2
                 if node.level == 2:
                     members.append(node)
