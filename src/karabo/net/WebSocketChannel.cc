@@ -110,7 +110,8 @@ namespace karabo::net {
           m_queueWrittenBytes(m_queue.size(), 0),
           m_readBytes(0),
           m_writtenBytes(0),
-          m_writeInProgress(false) {
+          m_writeInProgress(false),
+          m_messageSize(0) {
         m_queue[4] = Queue::Pointer(new LosslessQueue);
         m_queue[2] = Queue::Pointer(new RemoveOldestQueue(kDefaultQueueCapacity));
         m_queue[0] = Queue::Pointer(new RejectNewestQueue(kDefaultQueueCapacity));
@@ -274,15 +275,16 @@ namespace karabo::net {
             }
 
             const BufferSet::Pointer& bptr = mp->body();
-            unsigned int bsize = bptr->totalSize();
             m_vbuf.clear();
 #ifndef NO_SIZE_PREFIX
-            // serialized archive should be prefixed with 4 bytes 'size' field (for KIWI compatibility)
-            m_vbuf.push_back(asio::buffer(reinterpret_cast<char*>(&bsize), sizeof(bsize)));
+            // Serialized archive is prefixed with 4 bytes 'size' field (for KIWI compatibility)
+            m_messageSize = bptr->totalSize();
+            m_vbuf.push_back(asio::buffer(reinterpret_cast<char*>(&m_messageSize), sizeof(m_messageSize)));
 #endif
-            m_vbuf.push_back(asio::buffer(bptr->current()));
+            bptr->appendTo(m_vbuf);
             m_ws->binary(true); // the payload is binary. The default is utf8
-            m_ws->async_write(m_vbuf, bind_weak(&WebSocketChannel::onWrite, this, _1, _2, queueIndex));
+            // Keep mp alive until the async write completes
+            m_ws->async_write(m_vbuf, bind_weak(&WebSocketChannel::onWrite, this, mp, _1, _2, queueIndex));
         } catch (const std::exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR << "WebSocketChannel::doWrite exception : " << e.what();
             m_writeInProgress = false;
@@ -290,7 +292,8 @@ namespace karabo::net {
     }
 
 
-    void WebSocketChannel::onWrite(beast::error_code ec, std::size_t bytes_transferred, int queueIndex) {
+    void WebSocketChannel::onWrite(const Message::Pointer& /*mp*/, beast::error_code ec, std::size_t bytes_transferred,
+                                   int queueIndex) {
         KARABO_LOG_FRAMEWORK_DEBUG << "onWrite : ec=" << ec << ", bytes_transferred=" << bytes_transferred;
 
         m_queueWrittenBytes[queueIndex] += bytes_transferred;

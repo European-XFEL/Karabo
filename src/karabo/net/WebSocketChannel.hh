@@ -51,6 +51,7 @@ namespace karabo::net {
         std::size_t m_readBytes;
         std::size_t m_writtenBytes;
         std::atomic<bool> m_writeInProgress;
+        unsigned int m_messageSize;
 
        public:
         KARABO_CLASSINFO(WebSocketChannel, "WebSocketChannel", "1.0")
@@ -120,7 +121,8 @@ namespace karabo::net {
 
         void doWrite();
 
-        void onWrite(boost::beast::error_code ec, std::size_t bytes_transferred, int queueIndex);
+        void onWrite(const Message::Pointer& mp, boost::beast::error_code ec, std::size_t bytes_transferred,
+                     int queueIndex);
     };
 
 } // namespace karabo::net
