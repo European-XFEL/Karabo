@@ -212,8 +212,6 @@ class NavigationDropHandler(SceneDnDHandler):
 
             def attach_device_link(scene_name):
                 """Attach a device scene link"""
-                nonlocal event, device_id, scene_view
-
                 fm = get_font_metrics()
                 width = max(fm.width(device_id) + _LINK_MARGIN, _LINK_SIZE_HIT)
                 height = max(fm.height() + _LINK_MARGIN, _LINK_SIZE_HIT)

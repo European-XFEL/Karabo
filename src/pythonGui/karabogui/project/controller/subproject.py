@@ -155,7 +155,7 @@ class SubprojectController(ProjectSubgroupController):
 
         def _visitor(model):
             """Count the number of times each UUID appears in the tree"""
-            nonlocal project_uuids, project_names, empty_projects
+            nonlocal empty_projects
             if isinstance(model, ProjectModel):
                 project_uuids[model.uuid] += 1
                 if not model.simple_name:

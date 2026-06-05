@@ -99,7 +99,6 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
         network.set_server_information(read_only=False)
 
         def _trigger_message_parse():
-            nonlocal socket
             # Get the byte array and remove size
             call = socket().write.call_args[0]
             byte_array = call[0]
