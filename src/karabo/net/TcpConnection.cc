@@ -268,8 +268,8 @@ namespace karabo {
                                 m_acceptor.close();
                             }
                             if (m_port != 0) {
-                                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port " + toString(m_port) +
-                                                                           " failed. OS: '" + e.what() + "'"));
+                                KARABO_RETHROW_AS(
+                                      KARABO_NETWORK_EXCEPTION("bind with port " + toString(m_port) + " failed."));
                             }
                         }
                     } while (m_port == 0);
