@@ -660,10 +660,9 @@ namespace karabo {
 
                 initUsersActionsLog();
 
-            } catch (const std::exception& e) {
-                updateState(State::ERROR);
-
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.what();
+            } catch (const karabo::data::Exception& e) {
+                updateState(State::ERROR, Hash("status", e.userFriendlyMsg(false)));
+                KARABO_RETHROW_MSG("Failed to initialize");
             }
         }
 

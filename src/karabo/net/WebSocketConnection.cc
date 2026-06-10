@@ -332,8 +332,7 @@ namespace karabo::net {
                 m_acceptor.cancel();
                 m_acceptor.close();
             }
-            KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port " + std::to_string(m_port) + " failed. OS: '" +
-                                                       e.what() + "'"));
+            KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port " + std::to_string(m_port) + " failed."));
         }
     }
 
