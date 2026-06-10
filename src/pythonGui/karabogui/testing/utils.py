@@ -19,7 +19,6 @@ import os
 import sys
 import traceback
 import unittest
-from platform import system
 from xml.etree.ElementTree import parse
 
 import pytest
@@ -46,8 +45,6 @@ class GuiTestCase(unittest.TestCase):
 
     def setUp(self):
         os.environ["KARABO_TEST_GUI"] = "1"
-        if system() == "Darwin" and "QT_MAC_WANTS_LAYER" not in os.environ:
-            os.environ["QT_MAC_WANTS_LAYER"] = "1"
         app = QApplication.instance()
         if app is None:
             app = QApplication(sys.argv)
