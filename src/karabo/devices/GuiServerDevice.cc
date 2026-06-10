@@ -143,8 +143,8 @@ namespace karabo {
 
             UINT32_ELEMENT(expected)
                   .key("port")
-                  .displayedName("Hostport")
-                  .description("Local port for this server")
+                  .displayedName("Tcp Port")
+                  .description("Local tcp port for this server (only used if 'Active Ports' is configured accordingly)")
                   .assignmentOptional()
                   .defaultValue(44444)
                   .minInc(1024)  // Below 1024: normal users are not allowed to run servers on them
@@ -154,13 +154,22 @@ namespace karabo {
 
             UINT32_ELEMENT(expected)
                   .key("webport")
-                  .displayedName("Web port")
-                  .description("Local web port for this server")
+                  .displayedName("Websocket port")
+                  .description("Local web port for this server (only used if 'Active Ports' is configured accordingly)")
                   .assignmentOptional()
                   .defaultValue(8090)
                   .minInc(1024)  // Below 1024: normal users are not allowed to run servers on them
                                  // (https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html)
                   .maxInc(65535) // TCP port numbers are 16 bits
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("activePorts")
+                  .displayedName("Active Ports")
+                  .description("Decides which of the configured ports to use")
+                  .assignmentOptional()
+                  .defaultValue("Tcp")
+                  .options(std::vector<std::string>{"Tcp", "Websocket", "Tcp and Websocket"})
                   .commit();
 
             VECTOR_STRING_ELEMENT(expected)
@@ -516,14 +525,18 @@ namespace karabo {
             KARABO_SLOT(slotGetClientSessions, karabo::data::Hash);
 
             Hash h;
-            h.set("port", config.get<unsigned int>("port"));
             h.set("type", "server");
             h.set("serializationType", "binary"); // Will lead to binary header hashes
-            m_dataConnection = Connection::create("Tcp", h);
+            const std::string& portsToUse = config.get<std::string>("activePorts");
+            if (portsToUse.find("Tcp") != std::string::npos) {
+                h.set("port", config.get<unsigned int>("port"));
+                m_dataConnection = Connection::create("Tcp", h);
+            }
+            if (portsToUse.find("Websocket") != std::string::npos) {
+                h.set("port", config.get<unsigned int>("webport"));
+                m_webConnection = Connection::create("WebSocket", h);
+            }
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
-            // Configure websocket connection as well
-            h.set("port", config.get<unsigned int>("webport"));
-            m_webConnection = Connection::create("WebSocket", h);
         }
 
 
@@ -636,8 +649,13 @@ namespace karabo {
                     initializeAuthSessionSupport();
                 }
 
-                m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
-                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
+                if (m_dataConnection) {
+                    m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
+                }
+                if (m_webConnection) {
+                    m_webConnection->startAsync(
+                          bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
+                }
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
@@ -651,8 +669,10 @@ namespace karabo {
                 updateState(State::ON);
 
                 // Produce some information
-                KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port")
-                                << " and on web port: " << get<unsigned int>("webport");
+                KARABO_LOG_INFO << "GUI Server is up. It is " << (m_dataConnection ? "" : "NOT ")
+                                << "listening on tcp port " << get<unsigned int>("port") << " and "
+                                << (m_webConnection ? "" : "NOT ") << "listening on websocket port "
+                                << get<unsigned int>("webport");
                 if (!get<std::string>("authServer").empty()) {
                     KARABO_LOG_INFO << "Using the Karabo Authentication Server at '" << get<std::string>("authServer")
                                     << "'";
