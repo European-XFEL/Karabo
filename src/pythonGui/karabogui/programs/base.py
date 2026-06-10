@@ -18,7 +18,6 @@ import os
 import sys
 import warnings
 from pathlib import Path
-from platform import system
 from traceback import format_exception, print_exception
 
 from pyqtgraph import setConfigOptions
@@ -54,10 +53,6 @@ def set_app_info(app, company, url, name):
 
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
-    if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
-        os.environ['QT_MAC_WANTS_LAYER'] = '1'
-        # PyQt 5.12 onwards provides problems for MacOS11.
-        # https://github.com/conda-forge/pyqt-feedstock/issues/98
     app = QApplication.instance()
     if app is None:
         app = QApplication(args)
