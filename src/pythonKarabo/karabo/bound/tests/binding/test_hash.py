@@ -534,6 +534,75 @@ def test_copy_and_VectorHash():
     assert vd[0]['a'][0][0] == 0
 
 
+def test_getset_numpy_scalars():
+    h = Hash()
+    # Check that NumPy scalars can be assigned to Hash
+    # The NumPy scalars are converted into native python types
+    # The MDL Hash keeps original NumPy scalar object
+    h['a'] = np.int8(12)
+    assert h['a'] == 12
+    assert isinstance(h['a'], int)
+    assert h.getType('a') == Types.INT8
+
+    h['b'] = np.uint8(22)
+    assert h['b'] == 22
+    assert isinstance(h['b'], int)
+    assert h.isType('b', Types.UINT8)
+
+    h['c'] = np.int16(-12)
+    assert h['c'] == -12
+    assert isinstance(h['c'], int)
+    assert not isinstance(h['c'], np.int16)
+    assert h.isType('c', Types.INT16)
+
+    h['d'] = np.uint16(22)
+    assert h['d'] == np.uint16(22)
+    assert isinstance(h['d'], int)
+    assert not isinstance(h['d'], np.uint16)
+    assert h.isType('d', Types.UINT16)
+
+    h['e'] = np.int32(-12)
+    assert h['e'] == -12
+    assert h.isType('e', Types.INT32)
+
+    h['f'] = np.uint32(0xFFFFFFFF)
+    assert h['f'] == 0xFFFFFFFF
+    assert h.isType('f', Types.UINT32)
+
+    h['g'] = np.int64(1_800_000_000_000_000_000)
+    assert h['g'] == 1_800_000_000_000_000_000
+    assert isinstance(h['g'], int)
+    assert h.getType('g') == Types.INT64
+
+    h['i'] = np.uint64(18_000_000_000_000_000_000)
+    assert h['i'] == 18_000_000_000_000_000_000
+    assert isinstance(h['i'], int)
+    assert h.getType('i') == Types.UINT64
+
+    h['j'] = np.float32(2.78915)
+    assert h['j'] <= 2.78915 and h['j'] >= 2.789149
+    assert h['j'] == np.float32(2.78915)
+    assert isinstance(h['j'], float)
+    assert h.getType('j') == Types.FLOAT
+
+    h['k'] = np.float64(3.141595678)
+    assert h['k'] == 3.141595678
+    assert h['k'] == np.float64(3.141595678)
+    assert isinstance(h['k'], float)
+    assert h.getType('k') == Types.DOUBLE
+
+    a = h['a'] - 11
+    assert a == 1
+    c = h['c'] + 5
+    assert c == -7
+
+    h = Hash('abc', np.uint16(123))
+    assert h['abc'] == 123
+    assert h.get('abc') == 123
+    h.set('x.y.z', np.int32(99))
+    assert h.get('x.y.z') == 99
+
+
 def test_getAs():
     # BOOL
     h = Hash("a", True)
