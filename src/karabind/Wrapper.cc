@@ -22,9 +22,11 @@
 #include "Wrapper.hh"
 
 #include <pybind11/complex.h>
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <karabo/xms/ImageData.hh>
 
@@ -481,6 +483,12 @@ namespace karabind {
             return py::isinstance(obj, enum_type);
         }
 
+        static bool is_numpy_scalar(py::handle o) {
+            // Get 'numpy.generic' type: base class for numpy scalar objects
+            py::object np_generic = py::module_::import("numpy").attr("generic");
+            return py::isinstance(o, np_generic); // test object against that type
+        }
+
         karabo::data::Types::ReferenceType castPyToAny(const py::object& o, std::any& any) {
             if (o.is_none()) {
                 any = karabo::data::CppNone();
@@ -566,7 +574,64 @@ namespace karabind {
                 any = o;
                 return karabo::data::Types::UNKNOWN;
             }
-
+            if (is_numpy_scalar(o)) { // Check if the object is numpy scalar
+                // get 'dtype' attribute
+                py::object dtobj = o.attr("dtype");
+                // get the reference without incrementing counter
+                py::dtype dtype = py::reinterpret_borrow<py::dtype>(dtobj);
+                // get normalized number: equivalent types have same number
+                const int dtype_num = dtype.normalized_num();
+                // int8
+                if (dtype_num == py::dtype::num_of<std::int8_t>()) {
+                    any = o.cast<py::numpy_scalar<int8_t>>().value;
+                    return karabo::data::Types::INT8;
+                }
+                // numpy.uint8
+                if (dtype_num == py::dtype::num_of<std::uint8_t>()) {
+                    any = o.cast<py::numpy_scalar<uint8_t>>().value;
+                    return karabo::data::Types::UINT8;
+                }
+                // numpy.int16
+                if (dtype_num == py::dtype::num_of<std::int16_t>()) {
+                    any = o.cast<py::numpy_scalar<int16_t>>().value;
+                    return karabo::data::Types::INT16;
+                }
+                // numpy.uint16
+                if (dtype_num == py::dtype::num_of<std::uint16_t>()) {
+                    any = o.cast<py::numpy_scalar<uint16_t>>().value;
+                    return karabo::data::Types::UINT16;
+                }
+                // numpy.int32
+                if (dtype_num == py::dtype::num_of<std::int32_t>()) {
+                    any = o.cast<py::numpy_scalar<int32_t>>().value;
+                    return karabo::data::Types::INT32;
+                }
+                // numpy.uint32
+                if (dtype_num == py::dtype::num_of<std::uint32_t>()) {
+                    any = o.cast<py::numpy_scalar<uint32_t>>().value;
+                    return karabo::data::Types::UINT32;
+                }
+                // numpy.int64
+                if (dtype_num == py::dtype::num_of<std::int64_t>()) {
+                    any = static_cast<long long>(o.cast<py::numpy_scalar<std::int64_t>>().value);
+                    return karabo::data::Types::INT64;
+                }
+                // numpy.uint64
+                if (dtype_num == py::dtype::num_of<std::uint64_t>()) {
+                    any = static_cast<unsigned long long>(o.cast<py::numpy_scalar<std::uint64_t>>().value);
+                    return karabo::data::Types::UINT64;
+                }
+                // numpy.float32
+                if (dtype_num == py::dtype::num_of<float>()) {
+                    any = o.cast<py::numpy_scalar<float>>().value;
+                    return karabo::data::Types::FLOAT;
+                }
+                // numpy.float64
+                if (dtype_num == py::dtype::num_of<double>()) {
+                    any = o.cast<py::numpy_scalar<double>>().value;
+                    return karabo::data::Types::DOUBLE;
+                }
+            }
             auto lo = py::list();
             for (auto item : o) lo.append(item);
             size_t size = py::len(lo);
