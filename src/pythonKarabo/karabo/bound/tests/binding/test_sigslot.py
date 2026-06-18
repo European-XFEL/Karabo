@@ -114,10 +114,15 @@ def test_sigslot_register_function(eventLoopFixt):
     #
     # Automatic number of argument detection includes the default
     # (cannot change that for backward compatibility...).
-    sigSlot.registerSlot(funcTwoArgDef, "funcTwoArgDef3")
-    req = sigSlot.request("", "funcTwoArgDef3", 1, 2, 3)
+    # (Also test that we can use '.' in function name)
+    sigSlot.registerSlot(funcTwoArgDef, "func.TwoArgDef3")
+    req = sigSlot.request("", "func.TwoArgDef3", 1, 2, 3)
     (theSum, ) = req.waitForReply(timeout)
     assert theSum == 6
+    # Then we can also call with '_' replacing '.'
+    req = sigSlot.request("", "func_TwoArgDef3", 1, 2, 4)
+    (theSum, ) = req.waitForReply(timeout)
+    assert theSum == 7
 
     # But it is OK to register with less args to get default
     sigSlot.registerSlot(funcTwoArgDef, numArgs=2)

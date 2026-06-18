@@ -848,6 +848,16 @@ namespace karabo {
                                      const karabo::data::Hash::Pointer& body)>
                         handler);
 
+            /**
+             * Check need for slot name mangling (i.e. replacing dots from slots under node by `_`)
+             *
+             * @param unmangledSlotFunction string to mangle
+             *
+             * @return a pair - if its 'first' is true', use its 'second' as mangled function
+             *                  if its 'first' is false, no need to mangle, use unmangledSlotFunction
+             */
+            static std::pair<bool, std::string> mangleSlotFunction(const std::string& unmangledSlotFunction);
+
            private: // Functions
             /**
              * Helper for registerSignal: If signalFunction is not yet known, creates a signal corresponding
@@ -1072,16 +1082,6 @@ namespace karabo {
             ///                otherwise (default) SignalSlotException
             static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message,
                                          bool isTimeout = false);
-
-            /**
-             * Check need for slot name mangling (i.e. replacing dots from slots under node by `_`)
-             *
-             * @param unmangledSlotFunction string to mangle
-             *
-             * @return a pair - if its 'first' is true', use its 'second' as mangled function
-             *                  if its 'first' is false, no need to mangle, use unmangledSlotFunction
-             */
-            static std::pair<bool, std::string> mangleSlotFunction(const std::string& unmangledSlotFunction);
 
            private: // Members
             // Performance statistics
