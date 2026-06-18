@@ -18,6 +18,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+
 from qtpy.QtWidgets import QDialog, QMessageBox
 
 from karabo.common.api import (
@@ -30,6 +31,7 @@ from karabo.common.sanity_check import validate_macro
 from karabo.native import Hash, read_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.const import GUI_VERSION
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.request import onShutdown
 from karabogui.singletons.api import (
@@ -286,6 +288,17 @@ def save_object(obj, domain=None):
         move_to_cursor(dialog)
         dialog.exec()
         return
+
+    success, gui_version, karabo_version = _check_version_compatibility()
+    if not success:
+        dialog = QMessageBox(
+            QMessageBox.Critical, "Error",
+            f"Can not save projects from GUI {gui_version} with Karabo"
+            f" {karabo_version}.\nPlease update to the latest version.")
+        move_to_cursor(dialog)
+        dialog.exec()
+        return
+
     db_conn = get_db_conn()
     if domain is None:
         domain = db_conn.default_domain
@@ -489,3 +502,33 @@ def _is_karabo3() -> bool:
         version = attributes.get("karaboVersion", "0.0.0")
         is_karabo3 = version_compatible(version, 3, 0)
     return is_karabo3
+
+
+def _check_version_compatibility() -> tuple[bool, str, str]:
+    """Check the version compatibility between KaraboGUI and Karabo. Both
+    have to be either
+        <=3.1 or
+        >=3.2 """
+    path = f"device.{KARABO_PROJECT_MANAGER}"
+    attributes = get_topology().get_attributes(path)
+
+    version = "0.0.0"
+    if attributes is not None:
+        version = attributes.get("karaboVersion", "0.0.0")
+
+    def _parse_major_minor(v: str):
+        parts = v.split(".")
+        major = int(parts[0])
+        minor = int(parts[1])
+        return major, minor
+    gui_major, gui_minor = _parse_major_minor(GUI_VERSION)
+    karabo_major, karabo_minor = _parse_major_minor(version)
+
+    compatible = False
+    if gui_major == 3:
+        if gui_minor <= 1:
+            compatible = karabo_minor <= 1
+        elif gui_minor >= 2:
+            compatible = karabo_minor >= 2
+
+    return compatible, GUI_VERSION, version
