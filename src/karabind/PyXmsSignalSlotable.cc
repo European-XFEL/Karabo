@@ -505,6 +505,11 @@ namespace karabind {
         void registerSlotPy(const py::object& slotFunction, std::string slotName, int numArgs) {
             if (slotName.empty()) {
                 slotName = slotFunction.attr("__name__").cast<std::string>();
+            } else {
+                const std::pair<bool, std::string> needMangle = mangleSlotFunction(slotName);
+                if (needMangle.first) {
+                    slotName = needMangle.second;
+                }
             }
             std::lock_guard<std::mutex> lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(slotName);
