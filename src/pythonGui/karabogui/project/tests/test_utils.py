@@ -15,7 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.project.api import MacroModel
-from karabogui.project.utils import run_macro
+from karabogui.project.utils import _check_version_compatibility, run_macro
 
 
 def test_confirmation_dialog(gui_app, mocker):
@@ -66,3 +66,51 @@ def test_run_macro(gui_app, mocker):
     message = ("No (stable) Macro server found in system topology. "
                "Macro cannot be started.")
     message_box.show_error.assert_called_with(message)
+
+
+def test_check_version_compatibility(mocker):
+    topology = mocker.patch("karabogui.project.utils.get_topology")
+    mock_karabo_version = topology().get_attributes
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.1.0"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.1.0")
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert success
+    assert gui_version == "3.1.0"
+    assert karabo_version == "3.1.0"
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.1.0"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.2.0")
+
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert not success
+    assert gui_version == "3.2.0"
+    assert karabo_version == "3.1.0"
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.2.0"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.1.0")
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert not success
+    assert gui_version == "3.1.0"
+    assert karabo_version == "3.2.0"
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.2.0"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.2.0")
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert success
+    assert gui_version == "3.2.0"
+    assert karabo_version == "3.2.0"
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.1.0"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.2.6")
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert not success
+    assert gui_version == "3.2.6"
+    assert karabo_version == "3.1.0"
+
+    mock_karabo_version.return_value = {"karaboVersion": "3.0.12"}
+    mocker.patch("karabogui.project.utils.GUI_VERSION", "3.1.0")
+    success, gui_version, karabo_version = _check_version_compatibility()
+    assert success
+    assert gui_version == "3.1.0"
+    assert karabo_version == "3.0.12"
