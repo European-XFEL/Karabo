@@ -1,0 +1,723 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
+**************************
+What's New in Karabo 3.1.0
+**************************
+
+This entry summarizes the changes from ``3.0.0`` to ``HEAD`` on ``main``,
+including work released in the ``3.0.x`` line and additional merge requests
+queued for the ``3.1`` line as of **June 19th, 2026**. In total, this range
+contains ``291`` merge requests.
+
+Summary - Release highlights
++++++++++++++++++++++++++++++
+
+- The GUI gained more usable day-to-day workflows, including configuration
+  preview, better project search and editing, Logbook screen capture and
+  fit-to-view, and clearer extension and version feedback.
+- ``GuiServer`` and client communication became more flexible with websocket
+  support, selectable listening ports, and more reliable shutdown and data
+  forwarding behaviour.
+- Device and binding APIs improved around output channels, timestamps, schema
+  helpers, and ``Hash`` handling, which makes C++, Bound, and MDL integrations
+  easier to build and debug.
+- NDArrays and Image descriptors in the middlelayer API can specify dynamic shape dimensions
+  with a 0, e.g. (3, 0).
+- Reliability improved across project storage and deployment with ProjectDB
+  concurrency fixes, broader CI platform coverage, and refreshed Python and
+  Conan dependency stacks.
+
+Summary - Dependency changes
++++++++++++++++++++++++++++++
+
+The ``extern/requirements-*.txt`` stack was refreshed substantially during
+this range.
+
+Core scientific and runtime packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+-----------+-----------+
+| Package        | Previous  | Updated   |
++================+===========+===========+
+| ``numpy``      | ``2.0.1`` | ``2.4.6`` |
++----------------+-----------+-----------+
+| ``scipy``      | ``1.14.0``| ``1.17.1``|
++----------------+-----------+-----------+
+| ``pyzmq``      | ``25.1.1``| ``27.1.0``|
++----------------+-----------+-----------+
+| ``Pillow``     | ``10.0.0``| ``12.1.0``|
++----------------+-----------+-----------+
+| ``tornado``    | ``6.3.3`` | ``6.5.6`` |
++----------------+-----------+-----------+
+| ``traits``     | ``5.2.0`` | ``7.1.0`` |
++----------------+-----------+-----------+
+| ``Pint``       | ``0.24.3``| ``0.25.3``|
++----------------+-----------+-----------+
+
+These updates were primarily introduced in
+`!9836 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9836>`__.
+
+Build and tooling packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------------------+------------+------------+
+| Package             | Previous   | Updated    |
++=====================+============+============+
+| ``conan``           | ``2.16.1`` | ``2.21.0`` |
++---------------------+------------+------------+
+| ``pybind11``        | ``2.13.1`` | ``3.0.1``  |
++---------------------+------------+------------+
+| ``flake8``          | ``6.1.0``  | ``7.3.0``  |
++---------------------+------------+------------+
+| ``flit``            | ``3.9.0``  | ``3.12.0`` |
++---------------------+------------+------------+
+| ``isort``           | ``5.12.0`` | ``8.0.1``  |
++---------------------+------------+------------+
+| ``pre-commit``      | ``4.0.0``  | ``4.6.0``  |
++---------------------+------------+------------+
+| ``pytest-cov``      | ``6.1.1``  | ``7.1.0``  |
++---------------------+------------+------------+
+| ``pytest-mock``     | ``3.14.1`` | ``3.15.1`` |
++---------------------+------------+------------+
+| ``pytest-subtests`` | ``0.14.1`` | ``0.15.0`` |
++---------------------+------------+------------+
+
+These updates were introduced across
+`!9574 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9574>`__,
+`!9504 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9504>`__, and
+`!9836 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9836>`__.
+
+Added and removed packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++------------------+----------+--------------------+
+| Package          | Change   | Notes              |
++==================+==========+====================+
+| ``cryptography`` | Added    | MySQL auth support |
++------------------+----------+--------------------+
+| ``lxml``         | Re-added | Pinned to ``6.1.1``|
++------------------+----------+--------------------+
+| ``eulxml``       | Removed  | Legacy cleanup     |
++------------------+----------+--------------------+
+| ``pyexistdb``    | Removed  | ExistDB removal    |
++------------------+----------+--------------------+
+| ``flexparser``   | Removed  | No longer needed   |
++------------------+----------+--------------------+
+
+These changes are linked to
+`!9659 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9659>`__,
+`!9480 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9480>`__, and
+`!9836 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9836>`__.
+
+Summary - C++ / Conan dependency changes
+++++++++++++++++++++++++++++++++++++++++
+
+The ``extern/conan*`` files were also updated explicitly during this range.
+
+Core C++ package versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+------------+------------+
+| Package        | Previous   | Updated    |
++================+============+============+
+| ``gtest``      | ``1.16.0`` | ``1.17.0`` |
++----------------+------------+------------+
+| ``libpng``     | ``1.6.37`` | ``1.6.50`` |
++----------------+------------+------------+
+| ``pugixml``    | ``1.10``   | ``1.15``   |
++----------------+------------+------------+
+| ``cmake``      | ``4.0.1``  | ``4.0.3``  |
++----------------+------------+------------+
+
+These changes are linked to
+`!9628 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9628>`__,
+`!9518 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9518>`__, and
+`!9451 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9451>`__.
+
+Pinned, added, and removed Conan entries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------+----------+--------------------------------------------------+
+| Package        | Change   | Notes                                            |
++================+==========+==================================================+
+| ``libcurl``    | Added    | Pinned to ``8.17.0`` to avoid OpenSSL 3 pressure |
++----------------+----------+--------------------------------------------------+
+| ``boost``      | Changed  | ``boost/*:without_python`` switched to ``False`` |
++----------------+----------+--------------------------------------------------+
+| ``cppunit``    | Removed  | No longer listed in ``extern/conanfile.txt``     |
++----------------+----------+--------------------------------------------------+
+| ``nss``        | Removed  | ``nss/3.93@karabo/py312`` entry dropped          |
++----------------+----------+--------------------------------------------------+
+| ``cpython``    | Changed  | ``with_gdbm=False`` added in bootstrap profile    |
++----------------+----------+--------------------------------------------------+
+
+These changes are linked to
+`!9726 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9726>`__,
+`!9672 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9672>`__, and
+`!9790 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9790>`__.
+
+Conan profile and toolchain settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------------+-------------+-------------+
+| Setting              | Previous    | Updated     |
++======================+=============+=============+
+| ``compiler.cppstd``  | ``20``      | ``gnu20``   |
++----------------------+-------------+-------------+
+| ``compiler.cstd``    | not set     | ``gnu11``   |
++----------------------+-------------+-------------+
+| ``cmake`` tool       | ``4.0.1``   | ``4.0.3``   |
++----------------------+-------------+-------------+
+
+This reflects the profile update in
+`!9451 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9451>`__ and the
+ongoing Conan maintenance in the surrounding merge requests.
+
+Features
+++++++++
+
+- *(GUI)* Runtime scene handler registration for extensions and custom scene
+  flows (`!9584 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9584>`__)
+- *(GUI)* Configuration Preview dialog for inspecting pending changes before
+  applying them (`!9431 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9431>`__)
+- *(GUI)* Better project find dialog with shorter threshold and clearer status
+  updates (`!9558 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9558>`__)
+- *(GUI)* Device topology can save parameters and exposes a clearer
+  "Parameters" workflow (`!9698 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9698>`__)
+- *(GUI)* Added direct screen capture support to the Logbook workflow, making
+  it easier to send visual context without leaving the GUI
+  (`!9720 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9720>`__)
+- *(GUI)* Added a fit-to-view action in Logbook so captured content can be
+  reset quickly after zooming and panning
+  (`!9718 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9718>`__)
+- *(GUI)* The "Check for updates" dialog now shows version information from
+  the bundled GUI, which makes support and upgrade checks easier
+  (`!9601 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9601>`__)
+- *(GUI)* The About dialog now shows the GuiExtensions version, so users can
+  report the exact extension package they are running
+  (`!9599 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9599>`__)
+- *(GuiServer/C++)* Websocket support for clients in addition to the TCP
+  channel (`!9800 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9800>`__,
+  `!9841 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9841>`__)
+- *(C++)* ``GuiServer`` can now be configured to listen on selected ports
+  (`!9873 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9873>`__)
+- *(C++)* Output channels now expose connection information directly and offer
+  an async write path (`!9669 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9669>`__,
+  `!9662 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9662>`__,
+  `!9524 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9524>`__)
+- *(Bound)* New bindings for timestamps, AMQP clients, websocket support, and
+  schema helpers (`!9806 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9806>`__,
+  `!9725 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9725>`__,
+  `!9713 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9713>`__)
+- *(MDL)* ImageData gained public helpers and variable-dimension shape
+  validation (`!9734 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9734>`__,
+  `!9737 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9737>`__)
+- *(CI/Platforms)* Added CI support for macOS on Apple Silicon, improving
+  confidence that the framework and GUI work on arm64 developer machines
+  (`!9635 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9635>`__)
+- *(CI/Platforms)* Added Windows 11 to CI, extending test coverage on current
+  Windows environments
+  (`!9600 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9600>`__)
+- *(CI/Platforms)* Added a newer Ubuntu 26 runner to CI to catch platform
+  issues earlier during integration
+  (`!9787 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9787>`__)
+
+Bug Fixes
++++++++++
+
+- *(GUI)* Fixed a bug where scenes were not always attached correctly to a
+  project
+  (`!9547 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9547>`__)
+- *(GUI)* Configuration is now only applied when the target device is actually
+  shown in the editor, avoiding unintended updates
+  (`!9477 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9477>`__)
+- *(GUI)* Switching between cached and remote data now clears and rebuilds the
+  model correctly instead of keeping stale entries around
+  (`!9649 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9649>`__)
+- *(GUI)* Authentication failures caused by network problems are now shown more
+  clearly to the operator
+  (`!9624 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9624>`__)
+- *(GUI)* The login dialog can copy the authentication URL directly, which is
+  useful when the login flow needs to continue in an external browser
+  (`!9772 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9772>`__)
+- *(GUI)* Session remaining time is now displayed more cleanly as an integer,
+  making expiry easier to read at a glance
+  (`!9581 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9581>`__)
+- *(GUI)* Fixed configurator model updates so views refresh the correct rows
+  and indices when data changes
+  (`!9824 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9824>`__)
+- *(GUI)* Fixed a table context-menu issue that appeared after newer NumPy
+  versions for tables with size limits
+  (`!9655 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9655>`__)
+- *(GUI)* Fixed image graph picking for downsampled images
+  (`!9474 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9474>`__)
+- *(GUI)* Corrected the frame declaration used by sticker widgets
+  (`!9834 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9834>`__)
+- *(GUI)* Corrected pen-style handling for shapes so they render as configured
+  (`!9835 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9835>`__)
+- *(C++/GuiServer)* ``GuiServer`` now shuts down cleanly if initialization
+  fails instead of staying half-alive in a broken state
+  (`!9872 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9872>`__)
+- *(GuiServer)* Fixed websocket forwarding for pipeline data, closing a gap in
+  the new websocket client path
+  (`!9851 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9851>`__)
+- *(C++)* Reduced noisy error logging when a remote side calls a log endpoint
+  that does not exist
+  (`!9805 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9805>`__)
+- *(C++)* Fixed a ``status`` property update that incorrectly triggered sending
+  the full configuration to GUI clients
+  (`!9565 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9565>`__)
+- *(MDL)* ``slotDiscover`` now always replies, even when discovery is not
+  broadcast, which makes topology discovery more reliable
+  (`!9559 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9559>`__)
+- *(C++)* Fixed the argument passed to ``slotDiscover``
+  (`!9529 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9529>`__)
+- *(Bound)* ``PythonDevice.appendSchemaMaxSize`` now recreates affected output
+  channels when schema limits change
+  (`!9534 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9534>`__)
+- *(C++)* ``Device::appendSchemaMaxSize`` now recreates touched output channels
+  as well, keeping C++ behavior aligned with Bound
+  (`!9530 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9530>`__)
+- *(C++)* Fixed client ID generation for clients created in the same process,
+  avoiding collisions in edge cases
+  (`!9512 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9512>`__)
+- *(Bound)* Restored the binding for ``registerDeviceForMonitoring``
+  (`!9571 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9571>`__)
+- *(Bound)* Updates injected in ``preReconfigure`` are now validated and carry
+  timestamps correctly
+  (`!9792 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9792>`__)
+- *(Bound)* Python bound device startup now logs the traceback when plugin
+  initialization fails, which makes debugging much easier
+  (`!9727 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9727>`__)
+- *(Bound)* Error handling is clearer when an output channel has been removed
+  and later receives a vector update
+  (`!9535 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9535>`__)
+- *(ProjectDB)* Saving now stores items by type in chunks, reducing races
+  under concurrent writes
+  (`!9688 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9688>`__)
+- *(ProjectDB)* Added an explicit flush during configuration saving and removed
+  an unnecessary lock in that path
+  (`!9692 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9692>`__)
+- *(ProjectDB)* Added an isolation-level fix for the project database setup
+  (`!9693 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9693>`__)
+- *(ProjectDB)* Fixed client-side concurrency problems when saving very large
+  projects
+  (`!9666 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9666>`__)
+- *(Build)* Fixed Conan dependency breakage triggered by newer ``libcurl``
+  packages
+  (`!9726 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9726>`__)
+- *(Build)* Bootstrapping now makes sure Conan is not older than the bundled
+  version expected by the repository
+  (`!9605 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9605>`__)
+- *(Backend)* Added the ``cryptography`` dependency required for MySQL
+  authentication in the Python backend
+  (`!9659 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9659>`__)
+- *(GUI)* GUI extension reinstall/uninstall actions now report failures more
+  clearly
+  (`!9456 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9456>`__)
+- *(GUI)* GUI extensions are now installed using the correct system executable
+  (`!9579 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9579>`__)
+
+Refactor
+++++++++
+
+- *(Tests)* Migrated large parts of the framework test suite from ``cppunit``
+  to ``gtest`` (`!9587 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9587>`__,
+  `!9589 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9589>`__,
+  `!9590 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9590>`__,
+  `!9591 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9591>`__,
+  `!9592 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9592>`__,
+  `!9593 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9593>`__,
+  `!9594 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9594>`__,
+  `!9596 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9596>`__,
+  `!9597 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9597>`__,
+  `!9606 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9606>`__)
+- *(Python packaging)* Moved Python projects and GUI build setup to
+  ``pyproject.toml`` / ``toml`` based configuration
+  (`!9468 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9468>`__,
+  `!9469 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9469>`__,
+  `!9488 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9488>`__,
+  `!9493 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9493>`__,
+  `!9494 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9494>`__)
+- *(Legacy cleanup)* Removed ``ExistDB`` remnants, ``lxml`` usage, old conda
+  scripts, tablebinding, and remaining unused broker/data-logging helpers
+  (`!9480 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9480>`__,
+  `!9840 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9840>`__,
+  `!9521 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9521>`__,
+  `!9761 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9761>`__,
+  `!9401 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9401>`__)
+- *(MDL/C++)* Simplified MDL event-loop and queue handling and cleaned up
+  alarm/state remnants in C++/Bound
+  (`!9470 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9470>`__,
+  `!9471 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9471>`__,
+  `!9475 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9475>`__,
+  `!9476 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9476>`__,
+  `!9540 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9540>`__)
+- *(CI)* Refactored CI naming, dependency resolution, local conda tasks, and
+  mirror handling
+  (`!9689 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9689>`__,
+  `!9775 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9775>`__,
+  `!9777 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9777>`__,
+  `!9619 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9619>`__)
+
+Documentation
++++++++++++++
+
+- Added and updated developer documentation for GUI setup, supported operating
+  systems, C++/Python editor integration, device interfaces, and binary package
+  references (`!9568 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9568>`__,
+  `!9453 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9453>`__,
+  `!9553 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9553>`__,
+  `!9699 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9699>`__,
+  `!9661 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9661>`__)
+- Updated the GUI installation guide
+  (`!9595 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9595>`__)
+- Clarified macOS/Miniforge guidance so Intel-specific download steps are not
+  suggested unnecessarily
+  (`!9640 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9640>`__)
+- Documented the removal of the ``defaults`` Conda channel from the supported
+  setup
+  (`!9647 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9647>`__)
+- Cleaned up documentation for removed alarm-system details and outdated branch
+  naming (`!9503 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9503>`__,
+  `!9638 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9638>`__)
+
+Performance
++++++++++++
+
+- *(C++)* Improved ``Hash`` internals by using more ``std::string_view`` and
+  preserving cheap string handling paths
+  (`!9519 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9519>`__,
+  `!9545 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9545>`__)
+- *(GUI)* Reduced image handling overhead by passing a ``ctypes`` pointer
+  directly to ``QImage`` (`!9742 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9742>`__)
+- *(Imaging)* Improved bytescaling to reduce copies in image conversion paths
+  (`!9739 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9739>`__)
+
+Complete Merge-Log
+++++++++++++++++++
+
+The sections below list all ``291`` merge requests in this range. They are
+grouped primarily by conventional-commit type where possible and sorted by
+scope/category within each section. Merge request titles that do not follow
+the convention are sorted on a best-effort basis from their wording.
+
+Features
+++++++++
+
+- *(Bound)* Add binding for subSchemaByPaths including tests (`!9713 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9713>`__)
+- *(Bound)* Add binding Timestamp.getEpochstamp (and getTimeId) (`!9806 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9806>`__)
+- *(Bound)* Make Hash aware of numpy scalars (`!9875 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9875>`__)
+- *(BUILD)* Add timestamp to output of build procedure (`!9554 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9554>`__)
+- *(C++)* Add a way to represent an empty or invalid timestamp (`!9652 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9652>`__)
+- *(C++)* Add move constructor to Schema (`!9675 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9675>`__)
+- *(C++)* Add possibility to get rid again of a slot (`!9728 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9728>`__)
+- *(C++)* Allow selecting which ports the GuiServer listens on (`!9873 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9873>`__)
+- *(C++)* Convenience method like Device::get that allows to provide an update source (`!9820 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9820>`__)
+- *(C++)* Direct access to connection table of an OutputChannel (`!9662 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9662>`__)
+- *(C++)* Forward arguments in bind_weak (`!9832 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9832>`__)
+- *(C++)* OutputChannel directly exposes its number of connections (`!9669 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9669>`__)
+- *(C++)* Provide Device::asyncWriteChannel (`!9524 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9524>`__)
+- *(C++)* Utility to deep copy all NDArrays in a Hash (`!9681 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9681>`__)
+- *(CI)* Enable running conda tasks locally (`!9775 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9775>`__)
+- *(CI)* Run GuiExtensions test from Framework (`!9642 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9642>`__)
+- *(DataLogging)* Remove FileDataLogging from the Framework (`!9401 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9401>`__)
+- *(Deps)* Update serveral dependencies: numpy, scipy, pint, pyzmq, tornado (`!9836 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9836>`__)
+- *(GUI)* A placeholder image for supported color (`!9715 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9715>`__)
+- *(GUI)* Add an about for the project to copy paste uuid easily (`!9677 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9677>`__)
+- *(GUI)* Add ProxyStatus to KaraboGUI namespace (`!9498 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9498>`__)
+- *(GUI)* Add save parameters to Device Topology, rename Configuration to Parameters (`!9698 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9698>`__)
+- *(GUI)* Allow to copy paste from text field (`!9700 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9700>`__)
+- *(GUI)* Allow to register scene handler on run time (`!9584 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9584>`__)
+- *(GUI)* Configurator shows properties for offline proxy, if not reconfigurable via access level (`!9542 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9542>`__)
+- *(GUI)* Differentiate whether the GUI runs from a bundle or from source (`!9573 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9573>`__)
+- *(GUI)* Improve the project find dialog with a four-character threshold and clearer status updates (`!9558 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9558>`__)
+- *(GUI)* Initialize the Configuration Preview dialog (`!9431 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9431>`__)
+- *(GUI)* Logbook - Fit to view (reset Zoom) (`!9718 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9718>`__)
+- *(GUI)* Logbook ScreenCapture (`!9720 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9720>`__)
+- *(GUI)* Login Dialog- copy authentication URL (`!9772 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9772>`__)
+- *(GUI)* Make device children visible in topology search when looking for classes (`!9826 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9826>`__)
+- *(GUI)* New indicator about GuiExtension updates (`!9445 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9445>`__)
+- *(GUI)* Provide option to delete all scenes with a single action for developers (`!9711 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9711>`__)
+- *(GUI)* Show bundled GUI version information in 'Check for updates' (`!9601 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9601>`__)
+- *(GUI)* Show keys and values in the OK/Error/Bool tooltip (`!9459 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9459>`__)
+- *(GUI)* Show the GuiExtensions version in the About dialog (`!9599 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9599>`__)
+- *(MDL)* Add a get_timestamp test for timeId ticking in device-server tests (`!9516 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9516>`__)
+- *(MDL)* Allow to wait for local device (`!9621 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9621>`__)
+- *(MDL)* Expose ImageData toDataAndAttrs publicly (`!9734 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9734>`__)
+- *(MDL)* Variable dimension shape validation (`!9737 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9737>`__)
+- *(No Category)* Add a GuiServerDevice property (`!9757 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9757>`__)
+- *(No Category)* Add a reference to the binding code in libkarabind.so (`!9764 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9764>`__)
+- *(No Category)* Add binding and test for websocket (`!9841 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9841>`__)
+- *(No Category)* Add binding for AmqpConnection and AmqpHashClient (`!9725 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9725>`__)
+- *(No Category)* Add more debug output for CI environment names (`!9657 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9657>`__)
+- *(No Category)* Add project include files to the install scripts (`!9719 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9719>`__)
+- *(No Category)* Allow mirror jobs to continue after Conda-stage failures and support manual mirror triggers (`!9619 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9619>`__)
+- *(No Category)* Feature: remove minClientVersion per message type check (`!9809 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9809>`__)
+- *(No Category)* Improve help of broker message logger for selection string (`!9786 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9786>`__)
+- *(No Category)* More descriptive error message on bad chars in schema element (`!9564 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9564>`__)
+- *(No Category)* Running CI on Mac Silicon (arm64) architecture (`!9635 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9635>`__)
+- *(No Category)* Web aggregator to keep track of disappearing servers (`!9762 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9762>`__)
+
+Bug Fixes
++++++++++
+
+- *(Bound)* Also updates injected in preReconfigure need validation (and timestamp) (`!9792 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9792>`__)
+- *(Bound)* Avoid deep copy of Hash in RequestorWrap::waitForReply (`!9721 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9721>`__)
+- *(Bound)* Bindings for registerDeviceForMonitoring (`!9571 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9571>`__)
+- *(Bound)* Improve error report for bad plugins (not stopping server) (`!9613 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9613>`__)
+- *(Bound)* Improve error reporting when a removed output channel receives setVectorUpdate (`!9535 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9535>`__)
+- *(Bound)* PythonDevice.appendSchemaMaxSize may have to recreate output channels (`!9534 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9534>`__)
+- *(Bound)* Reduce the timeout used to fetch device logs (`!9461 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9461>`__)
+- *(Bound)* Release GIL before emit(..) and call(..) (`!9465 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9465>`__)
+- *(Bound testing)* Unique client id and kill hanging servers (`!9510 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9510>`__)
+- *(Bound/C++)* SetSpecialDisplayType for table was missing (Bound) or not working (C++) (`!9683 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9683>`__)
+- *(C++)* Also updates injected in preReconfigure need validation (and timestamp) (`!9789 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9789>`__)
+- *(C++)* Avoid ERROR log if remote called a non-existing log (`!9805 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9805>`__)
+- *(C++)* Default deviceId makes no sense anymore in Karabo 3 (`!9819 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9819>`__)
+- *(C++)* Device::appendSchemaMaxSize has to recreate touched output channels (`!9530 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9530>`__)
+- *(C++)* Exclusive AMQP queue (`!9514 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9514>`__)
+- *(C++)* GuiServer should go down when initialize() fails (`!9872 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9872>`__)
+- *(C++)* Mangle slot names also in registerSlot (`!9846 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9846>`__)
+- *(C++)* No internal signals anymore and fix instanceUpdate patch (`!9527 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9527>`__)
+- *(C++)* Proper argument to slotDiscover (`!9529 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9529>`__)
+- *(C++)* Remove Statics - unused since ages (or longer) (`!9812 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9812>`__)
+- *(C++)* Status" property update triggered sending of full config to gui clients (`!9565 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9565>`__)
+- *(C++)* Unique client id even if in same process (`!9512 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9512>`__)
+- *(C++ template)* In test, specify deviceId to avoid a generated one (`!9614 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9614>`__)
+- *(C++ test)* Increase a test timeout (`!9505 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9505>`__)
+- *(C++ tests)* Systematic sleep before eventloop stop to avoid that thread joining hangs (`!9536 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9536>`__)
+- *(C++/Bound)* Accept more characters for properties if tolerance is requested (`!9539 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9539>`__)
+- *(C++/Bound)* Special display type for STATE_ELEMENT and ALARM_CONDITION (`!9684 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9684>`__)
+- *(CI)* Better way to check if conda environment exists (`!9774 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9774>`__)
+- *(CI)* Check environment exists (`!9780 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9780>`__)
+- *(CI)* Never always offer to run a mirror, must come from web or tag (`!9646 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9646>`__)
+- *(CI)* Run integration tests also if SignalSlotable, Input- or OutputChannel change (`!9811 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9811>`__)
+- *(CI)* Set the environment variable correctly for the GUI build (`!9658 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9658>`__)
+- *(CI)* Typo in the function name (`!9639 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9639>`__)
+- *(CI)* Windows copy the sharded package data (`!9793 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9793>`__)
+- *(Cli)* Enable `clear` command by setting back the terminal info database in activate script (`!9732 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9732>`__)
+- *(DOC)* Properly escape stars in .rst (`!9555 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9555>`__)
+- *(DOC)* Remove alarm system remnant from C++/Bound alarm condition description (`!9503 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9503>`__)
+- *(DOC)* Update docs about supported operating systems (`!9453 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9453>`__)
+- *(GUI)* Add missing fixture to test (`!9768 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9768>`__)
+- *(GUI)* Apply configuration only if the device is shown in editor (`!9477 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9477>`__)
+- *(GUI)* Better tooltip of expert/normal slider in config editor (`!9745 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9745>`__)
+- *(GUI)* Check if the name exists in project before server edit (`!9562 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9562>`__)
+- *(GUI)* Correct path to the conda envs directory (`!9779 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9779>`__)
+- *(GUI)* Disable Screen capture on Linux wayland session (`!9735 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9735>`__)
+- *(GUI)* Do not consider injected properties in the Configuration Preview dialog (`!9722 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9722>`__)
+- *(GUI)* Don't add to drawable items, add_layout is already doing that (`!9744 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9744>`__)
+- *(GUI)* Enable tests on Mac (`!9765 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9765>`__)
+- *(GUI)* Enable the tooltip for Network Information menu (`!9650 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9650>`__)
+- *(GUI)* Enable to load from cache without remote, fill domains (`!9631 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9631>`__)
+- *(GUI)* Fix configurator model dataChanged index announcement (`!9859 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9859>`__)
+- *(GUI)* Fix image graph picker with downsampled image (`!9474 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9474>`__)
+- *(GUI)* Fix issues reported by newer flake8 versions (`!9850 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9850>`__)
+- *(GUI)* Fix order of axes (`!9717 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9717>`__)
+- *(GUI)* Fix QPalette background declaration in Configurator for Slots (`!9825 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9825>`__)
+- *(GUI)* Fix scene attachment to project (`!9547 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9547>`__)
+- *(GUI)* Fix scene view test segfault (`!9763 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9763>`__)
+- *(GUI)* Fix table context menu after numpy update with tables that have min or max size (`!9655 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9655>`__)
+- *(GUI)* Fix the toggle between cache and remote, always clear the model (`!9649 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9649>`__)
+- *(GUI)* Honor the disabled frame setting for links (`!9880 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9880>`__)
+- *(GUI)* Increase default height of the plots (`!9577 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9577>`__)
+- *(GUI)* Install GuiExtensions using the correct system executable (`!9579 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9579>`__)
+- *(GUI)* Logbook : Set correct setDevicePixelRatio() (`!9458 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9458>`__)
+- *(GUI)* Make the screen number more visible (`!9723 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9723>`__)
+- *(GUI)* Make the TextEdit read only (`!9747 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9747>`__)
+- *(GUI)* ObjectName for Expert Configuration switch button (`!9623 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9623>`__)
+- *(GUI)* Relay NetworkError in authentication to the operator (`!9624 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9624>`__)
+- *(GUI)* Remove alarm panel references from pyinstaller spec file (`!9551 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9551>`__)
+- *(GUI)* Remove the LD_LIBARARY_PATH (`!9749 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9749>`__)
+- *(GUI)* Remove the unnecessary space around question mark (`!9770 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9770>`__)
+- *(GUI)* Request to delete view on destroying the widget (`!9541 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9541>`__)
+- *(GUI)* Scintilla tests segfaults with multiple worker (`!9769 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9769>`__)
+- *(GUI)* Server Log dialog- store timestamp with millisecond (`!9755 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9755>`__)
+- *(GUI)* Set correct PenStyle in shape (`!9835 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9835>`__)
+- *(GUI)* Show the remaining login time as an integer (`!9581 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9581>`__)
+- *(GUI)* The python segfault by test on Mac (`!9785 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9785>`__)
+- *(GUI)* Update GuiExtension dialog- reinstall the packages (`!9456 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9456>`__)
+- *(GUI)* Update more QModelIndex on config update (`!9824 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9824>`__)
+- *(GUI)* Update the tag on GuiExtension before test (`!9782 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9782>`__)
+- *(GUI)* Use AccessLevel for ProjectDevices and block configuration where appropriate (`!9499 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9499>`__)
+- *(GUI)* Use correct frame declaration on sticker widget (`!9834 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9834>`__)
+- *(GUI)* Utility function to open browser from GUI (`!9687 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9687>`__)
+- *(GUI)* Verbose when install/uninstall of GuiExtensions fails (`!9457 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9457>`__)
+- *(GuiServer)* Fix websocket for pipeline data forwarding (`!9851 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9851>`__)
+- *(Macro)* Fix Macro printing with proper newline (`!9645 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9645>`__)
+- *(MDL)* Add ImageData shape validation (`!9766 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9766>`__)
+- *(MDL)* Always reply to slotDiscover even when not broadcast (`!9559 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9559>`__)
+- *(MDL)* Consider Enums before Strings in wrapping karaboValues (`!9462 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9462>`__)
+- *(MDL)* Fix concurrent shutdown of device (`!9648 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9648>`__)
+- *(MDL)* Fix initial topology gathering wait (`!9463 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9463>`__)
+- *(MDL)* Fix ordering of instanceGone when Ctrl+K on command line with server (`!9563 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9563>`__)
+- *(MDL)* Float dtype is float32, not anymore a float64 for the Float descriptor (`!9466 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9466>`__)
+- *(MDL)* Make sure to always close the tcp server (`!9660 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9660>`__)
+- *(MDL)* Remove possibility to define empty deviceClasses list in device server (`!9729 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9729>`__)
+- *(No Category)* Add cryptography dependency to the backend - for MySQL authentication (`!9659 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9659>`__)
+- *(No Category)* Add isolation level to project db (`!9693 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9693>`__)
+- *(No Category)* Add user to the bound servers (`!9754 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9754>`__)
+- *(No Category)* Allow configuring C++/Bound OutputChannel to use loopback interface (as MDL) (`!9776 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9776>`__)
+- *(No Category)* Db user for the internal office project DB (`!9508 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9508>`__)
+- *(No Category)* Fix karabind by using stubs generation (`!9740 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9740>`__)
+- *(No Category)* Fix lint stage (`!9484 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9484>`__)
+- *(No Category)* Fix Python tooling after the TOML migration and invoke pytest and the GUI build correctly (`!9493 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9493>`__)
+- *(No Category)* Fix reported vulnerabilities (`!9767 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9767>`__)
+- *(No Category)* FIX RPATH set command in C++ template (`!9569 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9569>`__)
+- *(No Category)* Increase the time between sending a final notification and disconnecting (`!9821 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9821>`__)
+- *(No Category)* Inform about possible case mismatch if 'karabo uninstall' fails (`!9549 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9549>`__)
+- *(No Category)* Log traceback for errors initialising Python bound devices (`!9727 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9727>`__)
+- *(No Category)* Need CI packages (`!9814 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9814>`__)
+- *(No Category)* Set the default mirror (`!9815 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9815>`__)
+- *(No Category)* Turn minClientVersion into an init-only parameter (`!9804 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9804>`__)
+- *(No Category)* Updating doc links (`!9731 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9731>`__)
+- *(ProjectDB)* Add a flush to configuration saving, remove lock (`!9692 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9692>`__)
+- *(ProjectDB)* Fix client concurrency when saving very large projects (`!9666 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9666>`__)
+- *(ProjectDB)* Prevent races by storing by item type in chunks (`!9688 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9688>`__)
+- *(Tests)* Failure message for call of non-existing slot was shortened (`!9810 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9810>`__)
+
+Documentation
++++++++++++++
+
+- *(GUI)* Update GUI installation doc (`!9595 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9595>`__)
+- *(No Category)* Docs stage changes (`!9473 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9473>`__)
+- *(No Category)* Document device interfaces (`!9699 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9699>`__)
+- *(No Category)* Document how to tell VSCode C++ include paths and Python editor (`!9553 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9553>`__)
+- *(No Category)* Fix device i/f description formatting (`!9716 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9716>`__)
+- *(No Category)* Link to binary packages on GitHub (`!9661 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9661>`__)
+- *(No Category)* MacOS - No need to download Miniforge Conda for amd always (`!9640 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9640>`__)
+- *(No Category)* Note about removal of 'defaults' channel (`!9647 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9647>`__)
+- *(No Category)* Official docs only on main branch (`!9612 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9612>`__)
+- *(No Category)* Refer to C++20 in CONTRIBUTING (`!9733 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9733>`__)
+- *(No Category)* Release log until 3.0.1 (`!9454 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9454>`__)
+- *(No Category)* Remove single port setting description (`!9626 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9626>`__)
+- *(No Category)* Running a local influxDB (`!9643 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9643>`__)
+- *(No Category)* Some doc/doc string fixes (`!9682 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9682>`__)
+- *(No Category)* Update doc about development gui after gui switched to toml file (`!9568 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9568>`__)
+- *(No Category)* Update merge log for karabo 3 (`!9586 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9586>`__)
+- *(No Category)* Update reference to master branch to main (`!9638 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9638>`__)
+
+Performance
++++++++++++
+
+- *(C++)* More string view in Hash API (`!9523 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9523>`__)
+- *(C++)* Use std::string_view inside Hash API to improve performance (`!9519 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9519>`__)
+- *(GUI)* Pass ctypes pointer to QImage (`!9742 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9742>`__)
+- *(No Category)* Have a better bytescaler, save copies (`!9739 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9739>`__)
+
+Refactor
+++++++++
+
+- *(Bound)* Prettify deviceClasses code (`!9730 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9730>`__)
+- *(Bound/C++)* Allow @ as part of a karabo key (`!9525 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9525>`__)
+- *(C++)* Default event loop rethrows (i.e. process terminates) (`!9630 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9630>`__)
+- *(C++)* Slash as character in properties is only tolerated (`!9557 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9557>`__)
+- *(C++/Bound)* Clean remnants of alarm handling and useless state indicators (`!9540 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9540>`__)
+- *(C++/Bound)* Schema values should be an empty Hash (`!9633 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9633>`__)
+- *(CI)* Dependencies from devenv yaml file (`!9777 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9777>`__)
+- *(CI)* Update the conda packages for GUI CI (`!9756 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9756>`__)
+- *(CI)* Update the names in the CI (`!9689 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9689>`__)
+- *(GUI)* Allow empty spaces for vector strings in table elements (`!9641 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9641>`__)
+- *(GUI)* Avoid inplace replacement of ndarry.shape (`!9783 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9783>`__)
+- *(GUI)* Don't set local scheme in version (`!9507 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9507>`__)
+- *(GUI)* ImageNode - interface to define the supported encodings by controllers (`!9743 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9743>`__)
+- *(GUI)* Move isort configuration to toml file (`!9494 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9494>`__)
+- *(GUI)* Move karaboGui build setup to pyproject.toml (`!9468 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9468>`__)
+- *(GUI)* One less patch for the karabo legend (`!9336 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9336>`__)
+- *(GUI)* Remove master wording from root project (`!9495 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9495>`__)
+- *(GUI)* Remove possibility to add a configuration for project device, as not used (`!9264 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9264>`__)
+- *(GUI)* Remove save as remnant from GUI (`!9651 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9651>`__)
+- *(GUI)* Remove tablebinding (`!9761 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9761>`__)
+- *(GUI)* Remove the env variable (`!9871 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9871>`__)
+- *(GUI)* Set back python version to 3.12 to keep going (`!9664 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9664>`__)
+- *(GUI)* SystemTopologyUpdate event only carries ProxyStatus enum (`!9497 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9497>`__)
+- *(GUI)* Update arrow reader/writer for Karabo3 (`!9432 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9432>`__)
+- *(GUI)* Use ItemFlag in Configurator proxy flag as default (`!9823 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9823>`__)
+- *(MDL)* Allow to come online with a different brokerId for queue names (`!9637 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9637>`__)
+- *(MDL)* Detach connector lock from eventloop on loop closure (`!9467 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9467>`__)
+- *(MDL)* No need for detaching connector (`!9712 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9712>`__)
+- *(MDL)* Remove loop protection decorator and change configuration for loop policy (`!9414 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9414>`__)
+- *(MDL)* Remove queue configuration from eventloop that has no effect (`!9470 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9470>`__)
+- *(MDL)* Remove unused slots slotHeartBeat and stopTracking (`!9475 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9475>`__)
+- *(MDL)* Speed up logging and simplify (`!9476 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9476>`__)
+- *(MDL)* Use non durable exclusive queues (`!9471 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9471>`__)
+- *(No Category)* Change main logo 3 color to orange and move to K (`!9479 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9479>`__)
+- *(No Category)* Change ProjectDBManager defaults (`!9478 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9478>`__)
+- *(No Category)* Change toml file for pythonKarabo and move isort (`!9488 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9488>`__)
+- *(No Category)* Fix version lookup for python tests for karaboVersion (`!9506 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9506>`__)
+- *(No Category)* Migrate Framework CPPUNIT tests to GTest. Part1 (`!9587 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9587>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/core. Part 5 (`!9592 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9592>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/data/io. Part 3 (`!9590 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9590>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/data/schema. Part 6 (`!9593 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9593>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/net. Part 7 (`!9594 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9594>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/util. Part 8 (`!9596 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9596>`__)
+- *(No Category)* Migrate framework to googletest: karabo/tests/xms. Part 9 (`!9597 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9597>`__)
+- *(No Category)* Migrate framework to googletest: tests from tests/data/time/*. Part 2 (`!9589 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9589>`__)
+- *(No Category)* Migrate framework to googletest: tests/log. Part 4 (`!9591 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9591>`__)
+- *(No Category)* Migrate integration & long cppunit to gtest (`!9606 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9606>`__)
+- *(No Category)* Move data logging test devices into their own files (`!9632 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9632>`__)
+- *(No Category)* Move pytest asyncio config into toml file (`!9464 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9464>`__)
+- *(No Category)* Remove ExistDB from ProjectDB and Karabo (`!9480 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9480>`__)
+- *(No Category)* Remove lxml from Karabo (`!9840 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9840>`__)
+- *(No Category)* Remove not required scripts for broker tools and existdb (`!9679 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9679>`__)
+- *(No Category)* Remove unused conda build script (`!9521 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9521>`__)
+- *(No Category)* Update cache for conan 2 (`!9482 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9482>`__)
+- *(No Category)* Use a single db_session for saving modified items in project (`!9695 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9695>`__)
+- *(No Category)* Use hostname not alias for project db (`!9673 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9673>`__)
+- *(No Category)* Use toml for PythonKarabo (`!9469 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9469>`__)
+- *(Tests)* Wait longer on instantiations in tests with slow broker (`!9486 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9486>`__)
+
+Testing
++++++++
+
+- *(C++)* Test that validator accepts int for unsigned int (`!9609 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9609>`__)
+- *(No Category)* Re-enable cross test_history (don't use FileLogger anymore) (`!9533 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9533>`__)
+- *(No Category)* Refator(CI): Update the conda packages to the latest (`!9781 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9781>`__)
+
+Miscellaneous Tasks
++++++++++++++++++++
+
+- *(Bound)* Device writes (semi-)async to output channels (`!9608 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9608>`__)
+- *(Bound)* Use pybind11.v3 native_enum for binding C++ enums (`!9522 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9522>`__)
+- *(C++)* Default encoding UNDEFINED (as in Bound) to judge between GRAY and RGB[A] (`!9748 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9748>`__)
+- *(C++)* Device always writes (semi-)async to output channel (`!9610 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9610>`__)
+- *(C++)* Keep Hash value as a string if input value type is string_view (`!9545 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9545>`__)
+- *(C++)* Make validator state value as string when casting fails (`!9611 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9611>`__)
+- *(C++)* Silence annoying warning from DeviceClient (`!9607 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9607>`__)
+- *(Framework)* KaraboDependencies.pc generated by CMake in .gitignore. Update projectDB host env var (`!9460 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9460>`__)
+- *(GUI)* Make the CI output more verbose (`!9813 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9813>`__)
+- *(GUI)* Update 'traits' dependency (`!9788 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9788>`__)
+- *(GUI)* Update dependencies (`!9784 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9784>`__)
+- *(GUI)* Update pyqtgraph to 0.14.0 (`!9741 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9741>`__)
+- *(GUI)* Use the latest miniforge image (`!9759 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9759>`__)
+- *(No Category)* Add JFrog's source repo as a fallback for intermittent source repos (`!9550 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9550>`__)
+- *(No Category)* Add support for CMake User Presets (`!9634 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9634>`__)
+- *(No Category)* Add Ubuntu-26 platform to the CI (`!9787 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9787>`__)
+- *(No Category)* Adjust CI setting for moving from master to main (`!9452 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9452>`__)
+- *(No Category)* Assure killing a device server actually exits it (`!9837 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9837>`__)
+- *(No Category)* Build docs on main without depending on mirror stage (`!9629 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9629>`__)
+- *(No Category)* Clean up cppunit remnants (`!9790 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9790>`__)
+- *(No Category)* Cleaning TCP channel casts in GuiServerDevice (`!9833 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9833>`__)
+- *(No Category)* Downgrade lxml and have more debug for the GUI (`!9817 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9817>`__)
+- *(No Category)* Ensure bootstraping conan is not older than bundled conan (`!9605 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9605>`__)
+- *(No Category)* Fix broken conan dependencies triggered by libcurl 8.18.0 (`!9726 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9726>`__)
+- *(No Category)* Fix for conan not found on ubuntu24 runner (`!9760 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9760>`__)
+- *(No Category)* Increase internal mirror job timeout (`!9653 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9653>`__)
+- *(No Category)* Isort.cfg can be merged to toml template (`!9455 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9455>`__)
+- *(No Category)* Pyinstaller improvements (`!9556 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9556>`__)
+- *(No Category)* Re-enable Boost Python on the Karabo Framework (`!9672 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9672>`__)
+- *(No Category)* Resolve "WebSocket on GuiServer in addition to TcpChannel for Clients (`!9800 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9800>`__)
+- *(No Category)* Revert "deps: Update KaraboGUI dependencies, Python 3.14 (`!9617 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9617>`__)
+- *(No Category)* Run CI on Windows11 (`!9600 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9600>`__)
+- *(No Category)* Set core.http.timeout for Conan; centralize global Conan setup in one function (`!9552 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9552>`__)
+- *(No Category)* Set Framework tag as CI variable on GuiExtensions (`!9644 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9644>`__)
+- *(No Category)* Update CMake to a version that provides an aarch64 installer (`!9451 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9451>`__)
+- *(No Category)* Update conan to latest version (`!9574 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9574>`__)
+- *(No Category)* Update google test to 1.17.0 (`!9628 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9628>`__)
+- *(No Category)* Update KaraboGUI dependencies, Python 3.13 (`!9618 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9618>`__)
+- *(No Category)* Update KaraboGUI dependencies, Python 3.14 (`!9616 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9616>`__)
+- *(No Category)* Update pugixml and libpng conan packages to 1.15 and 1.6.50, respectively (`!9518 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9518>`__)
+- *(No Category)* Upgrade pybind11 to 3.0.1 (`!9504 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9504>`__)
+- *(No Category)* Use remove-destination option if copy in karabo.py (`!9828 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9828>`__)
