@@ -134,13 +134,17 @@ struct TcpServer {
 
 
     void readHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                             karabo::data::Hash& header, karabo::data::Hash& body) {
+                             const karabo::data::Hash& headerIn, const karabo::data::Hash& bodyIn) {
         if (ec) {
             errorHandler(ec, channel);
             return;
         }
 
         m_count++;
+
+        Hash header = headerIn;
+        Hash body = bodyIn;
+
         KARABO_LOG_FRAMEWORK_DEBUG << "\nSERVER_INFO: count " << m_count << "\n"
                                    << header << body << "-----------------\n";
 
@@ -235,7 +239,7 @@ struct TcpClient {
 
 
     void readHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                             karabo::data::Hash& header, karabo::data::Hash& body) {
+                             const karabo::data::Hash& headerIn, const karabo::data::Hash& bodyIn) {
         if (ec) {
             errorHandler(ec, channel);
             return;
@@ -243,6 +247,9 @@ struct TcpClient {
 
         // inspect here the server reply.... just count
         m_count++;
+
+        Hash header = headerIn;
+        Hash body = bodyIn;
 
         KARABO_LOG_FRAMEWORK_DEBUG << "TcpClient readHashHashHandler count = " << m_count;
 
@@ -422,7 +429,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncStringHandler(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                std::string& str) {
+                                const std::string& str) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncStringHandler: " << ec.value() << " -- "
                                        << ec.message();
@@ -447,8 +454,8 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHashHandlerCopyFalse(const boost::system::error_code& ec,
-                                           const karabo::net::Channel::Pointer& channel, karabo::data::Hash& header,
-                                           karabo::data::Hash& body) {
+                                           const karabo::net::Channel::Pointer& channel,
+                                           const karabo::data::Hash& header, const karabo::data::Hash& body) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyFalse: " << ec.value()
                                        << " -- " << ec.message();
@@ -476,8 +483,8 @@ struct WriteAsyncSrv {
 
 
     void readAsyncHashHashHandlerCopyTrue(const boost::system::error_code& ec,
-                                          const karabo::net::Channel::Pointer& channel, karabo::data::Hash& header,
-                                          karabo::data::Hash& body) {
+                                          const karabo::net::Channel::Pointer& channel,
+                                          const karabo::data::Hash& header, const karabo::data::Hash& body) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyTrue: " << ec.value()
                                        << " -- " << ec.message();
@@ -504,7 +511,7 @@ struct WriteAsyncSrv {
 
 
     void readAsyncCharArrayHandler(const boost::system::error_code& ec, const karabo::net::Channel::Pointer& channel,
-                                   std::vector<char>& vector) {
+                                   const std::vector<char>& vector) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorHandler: " << ec.value() << " -- "
                                        << ec.message();
@@ -528,7 +535,7 @@ struct WriteAsyncSrv {
 
     void readAsyncVectorPointerHandler(const boost::system::error_code& ec,
                                        const karabo::net::Channel::Pointer& channel,
-                                       std::shared_ptr<std::vector<char>>& vectorCharPointer) {
+                                       const std::shared_ptr<std::vector<char>>& vectorCharPointer) {
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorPointerHandler: " << ec.value()
                                        << " -- " << ec.message();

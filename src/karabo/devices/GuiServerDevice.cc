@@ -908,7 +908,7 @@ namespace karabo {
                 setupConnection(channel, "webport");
                 m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onWsConnect(): " << e.what();
                 m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
             }
         }
@@ -2818,6 +2818,7 @@ namespace karabo {
 
                     for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                         const std::string clientAddr = getChannelAddress(it->first);
+                        if (clientAddr == "unknown") continue;
                         const std::vector<std::string> monitoredDevices(it->second.visibleInstances.begin(),
                                                                         it->second.visibleInstances.end());
                         const Channel::Pointer channel = it->first;
@@ -2842,6 +2843,7 @@ namespace karabo {
                             Channel::Pointer channel = weakChannel.lock(); // promote to shared pointer
                             if (channel) {
                                 const std::string clientAddr = getChannelAddress(channel);
+                                if (clientAddr == "unknown") continue;
                                 if (data.has(clientAddr)) {
                                     std::vector<std::string>& pipelineConnections =
                                           data.get<std::vector<std::string>>(clientAddr + ".pipelineConnections");
@@ -2932,6 +2934,7 @@ namespace karabo {
                 for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                     const Channel::Pointer& channel = it->first;
                     const std::string clientAddr = getChannelAddress(channel);
+                    if (clientAddr == "unknown") continue;
                     queueInfos.set(clientAddr, channel->queueInfo());
                 }
             }

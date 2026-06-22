@@ -57,3 +57,4 @@ tomli==2.0.1
 tornado==6.5.6
 traits==7.1.0
 tzlocal==5.0.1
+websockets==16.0

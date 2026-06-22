@@ -70,7 +70,7 @@ class TestMQTcpNetworking : public ::testing::Test {
     void serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
     void serverReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                                   karabo::data::Hash& header, karabo::data::Hash& body);
+                                   const karabo::data::Hash& header, const karabo::data::Hash& body);
 
     void serverPublish(const karabo::net::Channel::Pointer& channel);
 
@@ -83,7 +83,7 @@ class TestMQTcpNetworking : public ::testing::Test {
     void clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
     void clientReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
-                                   karabo::data::Hash& header, karabo::data::Hash& body);
+                                   const karabo::data::Hash& header, const karabo::data::Hash& body);
 
     void onClientEnd(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 };
@@ -152,7 +152,7 @@ void TestMQTcpNetworking::serverErrorHandler(const karabo::net::ErrorCode& ec,
 
 void TestMQTcpNetworking::serverReadHashHashHandler(const karabo::net::ErrorCode& ec,
                                                     const karabo::net::Channel::Pointer& channel,
-                                                    karabo::data::Hash& header, karabo::data::Hash& body) {
+                                                    const karabo::data::Hash& header, const karabo::data::Hash& body) {
     EXPECT_EQ(ec.value(), boost::system::errc::success) << __FUNCTION__ << "; " << ec.message();
     if (ec) {
         serverErrorHandler(ec, channel);
@@ -258,7 +258,7 @@ void TestMQTcpNetworking::clientChannelErrorHandler(const karabo::net::ErrorCode
 
 void TestMQTcpNetworking::clientReadHashHashHandler(const karabo::net::ErrorCode& e,
                                                     const karabo::net::Channel::Pointer& channel,
-                                                    karabo::data::Hash& header, karabo::data::Hash& body) {
+                                                    const karabo::data::Hash& header, const karabo::data::Hash& body) {
     EXPECT_EQ(e.value(), boost::system::errc::success) << __FUNCTION__ << "; " << e.message();
     if (e) {
         clientChannelErrorHandler(e, channel);

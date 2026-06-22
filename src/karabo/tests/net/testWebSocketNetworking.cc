@@ -124,10 +124,18 @@ struct WsServer {
         // Reads the next piece of data sent by WsClient as part of the test.
         // m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
         if (channel) {
-            channel->close(); // It closes the current channel on this server and not acts on other channels (?!)
-            channel->getConnection()->stop(); // it stops the whole server
+            boost::asio::post(EventLoop::getIOService(), std::bind(&WsServer::stopTests, this, channel));
         }
         std::clog << "[Srv] ... server read all data in the sequence." << std::endl;
+    }
+
+
+    void stopTests(const karabo::net::Channel::Pointer& channel) {
+        if (channel) {
+            channel->close();                 // Here WebSocket close is synchroous, sends 'close' frame
+            channel->getConnection()->stop(); // it stops the whole server
+        }
+        EventLoop::stop();
     }
 };
 
