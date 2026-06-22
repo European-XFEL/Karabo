@@ -42,9 +42,9 @@
   Create or update if present a doc/whatsnew/<VERSION>.rst with:
 
   - a concise release summary
-  - a concise dependency changes summary (previous and now) and in an rst table format 
   - selective curated highlights in user-language
   - MR-linked grouped changelog sections
+  - a concise dependency changes summary (previous and now) and in a rst table format
   - an exhaustive complete merge log
   - verified full MR coverage for the chosen range.
 
