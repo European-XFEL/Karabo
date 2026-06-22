@@ -57,12 +57,6 @@ namespace karabo::net {
     const size_t kDefaultQueueCapacity = 5000; // JW: Moved from Queue.h
 
 
-    static void fail(beast::error_code ec, char const* what) {
-        std::ostringstream oss;
-        oss << what << ": " << ec.message();
-        throw KARABO_NETWORK_EXCEPTION(oss.str());
-    }
-
     karabo::data::Hash WebSocketChannel::getChannelInfo(
           const std::shared_ptr<karabo::net::WebSocketChannel>& wsChannel) {
         if (!wsChannel)
@@ -90,11 +84,19 @@ namespace karabo::net {
     std::string WebSocketChannel::remoteAddress() const {
         std::string address("unknown");
 
-        if (m_ws->is_open()) {
-            try {
-                address = boost::lexical_cast<std::string>(m_ws->next_layer().socket().remote_endpoint());
-            } catch (...) {
+        // To get remote endpoint address it is enough to have TCP connection open:
+        if (m_ws) {
+            if (m_ws->is_open() || m_ws->next_layer().socket().is_open()) {
+                try {
+                    address = boost::lexical_cast<std::string>(m_ws->next_layer().socket().remote_endpoint());
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Fail to get remote address: " << e.what();
+                }
+            } else {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Remote address was requested, but websocket not opened";
             }
+        } else {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Remote address was requested, but websocket not created";
         }
         return address;
     }
@@ -106,6 +108,7 @@ namespace karabo::net {
           m_connectionPointer(connection),
           m_binarySerializer(BinarySerializer<Hash>::create("Bin")),
           m_activeHandlerType(WebSocketChannel::NONE),
+          m_writeCompleteHandlers(),
           m_queue(10),
           m_queueWrittenBytes(m_queue.size(), 0),
           m_readBytes(0),
@@ -130,31 +133,38 @@ namespace karabo::net {
 
 
     void WebSocketChannel::onRead(beast::error_code ec, std::size_t bytes_transferred) {
-        KARABO_LOG_FRAMEWORK_DEBUG << "onRead: ec=" << ec.value() << " -- " << ec.message()
-                                   << ", bytes_transferred=" << bytes_transferred;
-
         // This indicates that the session was closed
         if (ec == websocket::error::closed) return;
-        if (ec) fail(ec, "read");
-        m_readBytes += bytes_transferred;
-        std::size_t len = m_buffer.size();
-        assert(len == bytes_transferred);
-        const char* archive = static_cast<const char*>(m_buffer.data().data());
-#ifndef NO_SIZE_PREFIX
-        // serialized archive prefixed with 4 bytes size field
-        len -= sizeof(unsigned int);
-        archive += sizeof(unsigned int);
-#endif
-        // Deserialize into hash
-        Hash hash;
-        m_binarySerializer->load(hash, archive, len);
-        // Clear the buffer
-        m_buffer.consume(bytes_transferred);
-        // Allow next read request
-        m_activeHandlerType = WebSocketChannel::NONE;
-        if (m_readHandler) {
-            auto success = boost::system::errc::make_error_code(boost::system::errc::success);
-            asio::dispatch(beast::bind_handler(std::move(m_readHandler), success, hash));
+
+        const char* archive = nullptr;
+        std::size_t len = 0;
+        if (!ec) {
+            m_readBytes += bytes_transferred;
+            len = m_buffer.size();
+            assert(len == bytes_transferred);
+
+            archive = static_cast<const char*>(m_buffer.data().data());
+            // serialized archive prefixed with 4 bytes size field
+            len -= sizeof(unsigned int);
+            archive += sizeof(unsigned int);
+        }
+
+        HandlerType type = m_activeHandlerType;
+
+        switch (type) {
+            case HASH: {
+                Hash h;
+                if (!ec) m_binarySerializer->load(h, archive, len);
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRead : HASH len=" << len << ", ec=" << ec;
+                if (bytes_transferred > 0) m_buffer.consume(bytes_transferred);
+                m_activeHandlerType = WebSocketChannel::NONE;
+                std::any_cast<ReadHashHandler>(m_readHandler)(ec, h);
+                return;
+            }
+            default:
+                m_activeHandlerType = WebSocketChannel::NONE;
+                throw KARABO_LOGIC_EXCEPTION("UNKNOWN HANDLER TYPE: " + str(boost::format("%1%") % type) +
+                                             " (this should never happen)");
         }
     }
 
@@ -170,10 +180,11 @@ namespace karabo::net {
         this->doRead();
     }
 
+
     // NOTE: There is the potential for a race condition here. However,
     // we are not worried about it. This method and `dataQuantityWritten` should only be used for rough statistics
-    // gathering to be used in understanding aggregate network usage. If a message here and there gets overlooked, it's
-    // not a dealbreaker. The complexity needed to protect access here is not worth the risk.
+    // gathering to be used in understanding aggregate network usage. If a message here and there gets overlooked,
+    // it's not a dealbreaker. The complexity needed to protect access here is not worth the risk.
 
 
     size_t WebSocketChannel::dataQuantityRead() {
@@ -191,7 +202,16 @@ namespace karabo::net {
 
 
     void WebSocketChannel::close() {
-        beast::close_socket(beast::get_lowest_layer(*m_ws));
+        // This function call means the exchange of 'close' with remote peer to close
+        // connection gracefully. It is important to follow this protocol for remote
+        // application like python or nodejs based. If simple close low-level socket
+        // the remote peers will not be noticed.
+        if (m_ws) {
+            // Capture the 'guard' to prevent premature ~WebSocketChannel() call
+            m_ws->async_close(websocket::close_code::normal, [guard{shared_from_this()}](const ErrorCode& ec) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Websocket closed: #" << ec.value() << " -- " << ec.message();
+            });
+        }
     }
 
 
@@ -256,6 +276,22 @@ namespace karabo::net {
                 std::lock_guard<std::mutex> lock(m_queueMutex);
                 for (int i = 9; i >= 0; --i) {
                     if (!m_queue[i] || m_queue[i]->empty()) continue;
+                    // this queue is not empty
+                    if (!m_ws->is_open()) {
+                        auto timer = std::make_shared<boost::asio::steady_timer>(get_executor());
+                        timer->expires_after(std::chrono::milliseconds(100));
+                        // Bind timer shared_ptr to lambda to keep it alive as long as needed
+                        auto func = bind_weak(&WebSocketChannel::doWrite, this);
+                        auto exec = get_executor();
+                        timer->async_wait([exec{std::move(get_executor())}, func{std::move(func)},
+                                           timer](const boost::system::error_code& e) {
+                            if (e) return;
+                            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketChannel")
+                                  << "doWrite: Websocket is not yet fully open. Sleep 100ms and try again";
+                            asio::post(exec, func);
+                        });
+                        return;
+                    }
                     mp = m_queue[i]->front();
                     m_queue[i]->pop_front();
                     queueIndex = i;
@@ -268,19 +304,13 @@ namespace karabo::net {
                 }
             }
 
-            if (!m_ws->is_open()) {
-                KARABO_LOG_FRAMEWORK_ERROR << "WebSocketChannel::doWrite : unexpectedly the websocket is not open!";
-                m_writeInProgress = false;
-                return;
-            }
-
             const BufferSet::Pointer& bptr = mp->body();
             m_vbuf.clear();
-#ifndef NO_SIZE_PREFIX
+
             // Serialized archive is prefixed with 4 bytes 'size' field (for KIWI compatibility)
             m_messageSize = bptr->totalSize();
             m_vbuf.push_back(asio::buffer(reinterpret_cast<char*>(&m_messageSize), sizeof(m_messageSize)));
-#endif
+
             bptr->appendTo(m_vbuf);
             m_ws->binary(true); // the payload is binary. The default is utf8
             // Keep mp alive until the async write completes
@@ -316,4 +346,65 @@ namespace karabo::net {
         Message::Pointer mp = std::make_shared<Message>(archive);
         dispatchWriteAsync(mp, prio);
     }
+
+
+    void WebSocketChannel::writeAsyncHash(const karabo::data::Hash& data, const WriteCompleteHandler& handler) {
+        try {
+            auto archive = std::make_shared<std::vector<char>>();
+            // serialized archive should be prefixed with 4 bytes 'size' field (for KIWI compatibility)
+            archive->resize(sizeof(unsigned int));     // resize vector to allocate space for 'size' field
+            m_binarySerializer->save2(data, *archive); // 'save2' store binary data after 'size' field
+            // Fill the 'size' field ...
+            unsigned int* sizePtr = reinterpret_cast<unsigned int*>(archive->data());
+            *sizePtr = archive->size() - sizeof(unsigned int);
+
+            asio::const_buffer buf(archive->data(), archive->size());
+            const unsigned int handlerIdx = storeCompleteHandler(handler);
+            m_ws->binary(true); // the payload is binary. The default is utf8
+            m_ws->async_write(buf, bind_weak(&WebSocketChannel::asyncWriteHandler, this, _1, _2, handlerIdx, archive));
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    unsigned int WebSocketChannel::storeCompleteHandler(const Channel::WriteCompleteHandler& handler) {
+        // 32-bit index means 13.6 years at 10 Hz is OK without duplication/overflow since
+        // 13.6 * 365.25 * 24 * 3600 * 10 < (2^32 - 1)
+        // And even then, overflow harms only if the 13.6 years old completion handler was not called due to delays
+        unsigned int index = 0;
+
+        std::lock_guard<std::mutex> lock(m_writeCompleteHandlersMutex);
+        const auto it = m_writeCompleteHandlers.rbegin();
+        if (it != m_writeCompleteHandlers.rend()) {
+            index = it->first + 1u;
+        }
+        m_writeCompleteHandlers[index] = handler;
+
+        return index;
+    }
+
+
+    void WebSocketChannel::asyncWriteHandler(const ErrorCode& e, const size_t length, unsigned int handlerIndex,
+                                             const std::shared_ptr<std::vector<char>>& data) {
+        try {
+            m_writtenBytes += length;
+
+            WriteCompleteHandler handler;
+            {
+                std::lock_guard<std::mutex> lock(m_writeCompleteHandlersMutex);
+                auto it = m_writeCompleteHandlers.find(handlerIndex);
+                if (it != m_writeCompleteHandlers.end()) {
+                    handler.swap(it->second);
+                    m_writeCompleteHandlers.erase(it);
+                }
+            }
+            if (handler) {
+                handler(e);
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
 } // namespace karabo::net

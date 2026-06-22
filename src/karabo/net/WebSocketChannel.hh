@@ -41,10 +41,12 @@ namespace karabo::net {
         std::shared_ptr<boost::beast::websocket::stream<boost::beast::tcp_stream>> m_ws; // websocket ptr
         Connection::WeakPointer m_connectionPointer;
         karabo::data::BinarySerializer<karabo::data::Hash>::Pointer m_binarySerializer;
-        ReadHashHandler m_readHandler;
+        std::any m_readHandler;
         HandlerType m_activeHandlerType;
         boost::beast::flat_buffer m_buffer;
         std::vector<boost::asio::const_buffer> m_vbuf;
+        std::mutex m_writeCompleteHandlersMutex;
+        std::map<unsigned int, WriteCompleteHandler> m_writeCompleteHandlers;
         std::mutex m_queueMutex;
         std::vector<karabo::net::Queue::Pointer> m_queue;
         std::vector<size_t> m_queueWrittenBytes;
@@ -74,6 +76,8 @@ namespace karabo::net {
 
         void readAsyncHash(const ReadHashHandler& handler) override;
 
+        void writeAsyncHash(const karabo::data::Hash& data, const WriteCompleteHandler& handler) override;
+
         /**
          *  When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
          */
@@ -83,7 +87,7 @@ namespace karabo::net {
 
         virtual size_t dataQuantityWritten();
 
-        virtual void close();
+        void close() override;
 
         virtual bool isOpen();
 
@@ -123,6 +127,11 @@ namespace karabo::net {
 
         void onWrite(const Message::Pointer& mp, boost::beast::error_code ec, std::size_t bytes_transferred,
                      int queueIndex);
+
+        unsigned int storeCompleteHandler(const WriteCompleteHandler& handler);
+
+        void asyncWriteHandler(const ErrorCode& e, const size_t length, unsigned int handlerIndex,
+                               const std::shared_ptr<std::vector<char>>& data);
     };
 
 } // namespace karabo::net

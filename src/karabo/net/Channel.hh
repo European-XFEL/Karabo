@@ -57,30 +57,32 @@ namespace karabo {
 
             typedef std::function<void(const size_t&)> ReadSizeInBytesHandler;
             typedef std::function<void(const boost::system::error_code&)> ReadRawHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&)> ReadHashRawHandler;
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&)> ReadHashRawHandler;
 
             typedef std::function<void(const boost::system::error_code&,
                                        const std::vector<karabo::data::BufferSet::Pointer>&)>
                   ReadVectorBufferSetPointerHandler;
-            typedef std::function<void(const boost::system::error_code&, std::vector<char>&)> ReadVectorHandler;
-            typedef std::function<void(const boost::system::error_code&, std::string&)> ReadStringHandler;
+            typedef std::function<void(const boost::system::error_code&, const std::vector<char>&)> ReadVectorHandler;
+            typedef std::function<void(const boost::system::error_code&, const std::string&)> ReadStringHandler;
             typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&)> ReadHashHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash::Pointer&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash::Pointer&)>
                   ReadHashPointerHandler;
-            typedef std::function<void(const boost::system::error_code&, std::shared_ptr<std::vector<char> >&)>
+            typedef std::function<void(const boost::system::error_code&, const std::shared_ptr<std::vector<char>>&)>
                   ReadVectorPointerHandler;
 
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&, std::vector<char>&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
+                                       const std::vector<char>&)>
                   ReadHashVectorHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&, std::string&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&, const std::string&)>
                   ReadHashStringHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&, karabo::data::Hash&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
+                                       const karabo::data::Hash&)>
                   ReadHashHashHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash::Pointer&,
-                                       karabo::data::Hash::Pointer&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash::Pointer&,
+                                       const karabo::data::Hash::Pointer&)>
                   ReadHashPointerHashPointerHandler;
-            typedef std::function<void(const boost::system::error_code&, karabo::data::Hash&,
-                                       std::shared_ptr<std::vector<char> >&)>
+            typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
+                                       const std::shared_ptr<std::vector<char>>&)>
                   ReadHashVectorPointerHandler;
             typedef std::function<void(const boost::system::error_code&, const karabo::data::Hash&,
                                        const karabo::data::BufferSet&)>
@@ -161,7 +163,7 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            virtual void read(std::shared_ptr<std::vector<char> >& data) {
+            virtual void read(std::shared_ptr<std::vector<char>>& data) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
@@ -213,7 +215,7 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            virtual void read(karabo::data::Hash& header, std::shared_ptr<std::vector<char> >& data) {
+            virtual void read(karabo::data::Hash& header, std::shared_ptr<std::vector<char>>& data) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
@@ -463,7 +465,7 @@ namespace karabo {
              * @param header containing metadata for the data being written
              * @param data vector of chars containing the data to be written, passed as a shared pointer
              */
-            virtual void write(const karabo::data::Hash& header, std::shared_ptr<const std::vector<char> >& data) {
+            virtual void write(const karabo::data::Hash& header, std::shared_ptr<const std::vector<char>>& data) {
                 this->write(header, &(*data)[0], data->size());
             }
 
@@ -502,6 +504,10 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
+            virtual void writeAsyncString(const std::string& data, const WriteCompleteHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
             /**
              * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is
              * called
@@ -520,7 +526,7 @@ namespace karabo {
              * @param handler to be called upon write completion handler. Needs to be a function wrapped into a
              * std::function which takes const boost::system::error_code& as its only argument.
              */
-            virtual void writeAsyncVectorPointer(const std::shared_ptr<std::vector<char> >& data,
+            virtual void writeAsyncVectorPointer(const std::shared_ptr<std::vector<char>>& data,
                                                  const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -577,7 +583,7 @@ namespace karabo {
              * std::function which takes const boost::system::error_code& as its only argument.
              */
             virtual void writeAsyncHashVectorPointer(const karabo::data::Hash& header,
-                                                     const std::shared_ptr<std::vector<char> >& data,
+                                                     const std::shared_ptr<std::vector<char>>& data,
                                                      const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
@@ -679,7 +685,7 @@ namespace karabo {
              * @param data vector of chars containing the data to be written, passed as a shared pointer
              * @param prio the priority of this write operation
              */
-            virtual void writeAsync(const std::shared_ptr<std::vector<char> >& data, int prio = 4) {
+            virtual void writeAsync(const std::shared_ptr<std::vector<char>>& data, int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
@@ -737,7 +743,7 @@ namespace karabo {
              * @param data vector of chars containing the data to be written, passed as a shared pointer
              * @param prio the priority of this write operation
              */
-            virtual void writeAsync(const karabo::data::Hash& header, const std::shared_ptr<std::vector<char> >& data,
+            virtual void writeAsync(const karabo::data::Hash& header, const std::shared_ptr<std::vector<char>>& data,
                                     int prio = 4) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }

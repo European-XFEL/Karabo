@@ -79,7 +79,8 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         return py::cast(channel);
                     },
                     "Starts the connection synchronously, i.e. it blocks until connection "
-                    "with remote peer is established.  It returns a handle a.k.a channel used in all IO operations.")
+                    "with remote peer is established.  It returns a handle a.k.a channel used in all IO "
+                    "operations.")
               .def(
                     "startAsync",
                     [](const Connection::Pointer& self, const py::object& handler) -> py::int_ {
@@ -126,7 +127,8 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         }
                         return py::str(v.data(), v.size());
                     },
-                    "Read message and return it as a python string.  This function will block until the message has "
+                    "Read message and return it as a python string.  This function will block until the message "
+                    "has "
                     "arrived.")
               .def(
                     "readHash",
@@ -138,7 +140,8 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         }
                         return py::cast(std::move(hash));
                     },
-                    "Read message and return it as a Hash.  This function will block until the message has arrived.")
+                    "Read message and return it as a Hash.  This function will block until the message has "
+                    "arrived.")
               .def(
                     "readHashStr",
                     [](const Channel::Pointer& self) -> py::tuple {
@@ -152,7 +155,8 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         }
                         return py::make_tuple(py::cast(std::move(header)), py::str(v.data(), v.size()));
                     },
-                    "Read logical message that consists of two parts: header (Hash) & body (str). This function blocks "
+                    "Read logical message that consists of two parts: header (Hash) & body (str). This function "
+                    "blocks "
                     "until all the parts have arrived.")
               .def(
                     "readHashHash",
@@ -276,8 +280,10 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         self->write(header, s.c_str(), s.size());
                     },
                     py::arg("header"), py::arg("body"),
-                    "Helper method. It writes sequentially two messages: the header (Hash) and the body (Hash, str, "
-                    "bytes, bytearray). The operation is synchronous, i.e. the method blocks until the IO operation "
+                    "Helper method. It writes sequentially two messages: the header (Hash) and the body (Hash, "
+                    "str, "
+                    "bytes, bytearray). The operation is synchronous, i.e. the method blocks until the IO "
+                    "operation "
                     "is completed.")
 
               .def(
@@ -295,8 +301,8 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         const char* strPtr = s->data();
                         const size_t strSize = s->size();
                         // bind 's' to keep its memory alive and valid - need variables strXxx instead of directly
-                        // passing s->func() to ensure things are not moved away before passed (argument determination
-                        // order is not defined by standard, IIRC)
+                        // passing s->func() to ensure things are not moved away before passed (argument
+                        // determination order is not defined by standard, IIRC)
                         self->writeAsyncRaw(
                               strPtr, strSize,
                               [handler = std::move(handlerWrap), s = std::move(s)](const ErrorCode& e) { handler(e); });
