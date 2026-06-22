@@ -99,10 +99,9 @@ class BaseLinkWidget(KaraboSceneWidget, QPushButton):
                      QRectF(QRect((pt) + QPoint(11, 0), QSize(7, 7)))]
             painter.fillRect(boundary, QColor(self.model.background))
             pen = QPen(Qt.black)
-            if self.model.frame_width:
-                pen.setWidth(self.model.frame_width)
-                painter.setPen(pen)
-                painter.drawRect(boundary)
+            pen.setWidth(self.model.frame_width)
+            painter.setPen(pen)
+            painter.drawRect(boundary)
             pen.setColor(self.iconColor)
             pen.setWidth(3)
             painter.setPen(pen)
