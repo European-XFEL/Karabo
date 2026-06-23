@@ -136,7 +136,7 @@ namespace karabo::net {
             // From derived to base
             Channel::Pointer channel = std::static_pointer_cast<Channel>(wschannel);
             constexpr auto success = boost::system::errc::make_error_code(boost::system::errc::success);
-            asio::post(beast::bind_handler(std::move(m_handler), success, channel));
+            asio::post(wschannel->get_executor(), beast::bind_handler(std::move(m_handler), success, channel));
             // After leaving this function the WebSocketListener destructor is called
         }
     };
@@ -225,7 +225,7 @@ namespace karabo::net {
             auto wschannel = std::make_shared<WebSocketChannel>(std::move(m_ws), m_connectionPointer);
             Channel::Pointer channel = std::static_pointer_cast<Channel>(wschannel);
             constexpr auto success = boost::system::errc::make_error_code(boost::system::errc::success);
-            asio::post(beast::bind_handler(std::move(m_handler), success, channel));
+            asio::post(wschannel->get_executor(), beast::bind_handler(std::move(m_handler), success, channel));
             // After leaving this function the WebSocketListener destructor is called
         }
     };
