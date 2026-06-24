@@ -18,7 +18,7 @@ from abc import abstractmethod
 from bisect import bisect
 
 from qtpy.QtWidgets import QBoxLayout
-from traits.api import Callable, Int
+from traits.api import Callable, Instance
 
 from karabo.common.scenemodel.api import (
     BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutChildData,
@@ -95,14 +95,20 @@ class BoxSceneAction(BaseLayoutAction):
     """A base class for actions which create a box layout
     """
     # What's the layout direction?
-    direction = Int
+    direction = Instance(QBoxLayout.Direction)
 
     def create_layout(self, gui_objects, models, selection_rect):
         x, y, *_ = selection_rect
         width, height = self._calculate_size(gui_objects)
+        direction = self.direction
+        try:
+            direction = direction.value
+        except AttributeError:
+            # for Qt5 compatibility
+            pass
         layout_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
                                       children=models,
-                                      direction=self.direction)
+                                      direction=direction)
         return layout_model
 
     def _calculate_size(self, gui_objects):

@@ -24,7 +24,7 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import (
-    MouseWheelEventBlocker, SignalBlocker, generateObjectName)
+    SignalBlocker, WheelKeyEventFilter, generateObjectName)
 from karabogui.widgets.api import DoubleSpinBox
 
 
@@ -33,7 +33,7 @@ from karabogui.widgets.api import DoubleSpinBox
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     model = Instance(FloatSpinBoxModel, args=())
-    _blocker = Instance(MouseWheelEventBlocker)
+    _blocker = Instance(WheelKeyEventFilter)
     _style_sheet = String
 
     def create_widget(self, parent):
@@ -41,7 +41,7 @@ class FloatSpinBox(BaseBindingController):
         widget.setDecimals(self.model.decimals)
         widget.setSingleStep(self.model.step)
         widget.valueChanged[float].connect(self._on_user_edit)
-        self._blocker = MouseWheelEventBlocker(widget)
+        self._blocker = WheelKeyEventFilter(widget)
         widget.installEventFilter(self._blocker)
 
         objectName = generateObjectName(self)

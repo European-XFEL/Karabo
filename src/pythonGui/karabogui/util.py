@@ -59,17 +59,42 @@ def get_application_icon():
     return QIcon(logo_path)
 
 
-class MouseWheelEventBlocker(QObject):
-    """A QObject which can be used for event filtering of mouse wheel events.
+_EDIT_KEYS = {Qt.Key_Escape, Qt.Key_Enter, Qt.Key_Return}
+
+
+class EditKeyEventFilter(QObject):
+    """A QObject which can be used for event filtering of edit keys
     """
 
     def __init__(self, widget):
-        super().__init__()
+        super().__init__(widget)
         self.widget = widget
 
     def eventFilter(self, obj, event):
         # Block wheel events
-        return event.type() == QEvent.Wheel and obj is self.widget
+        if event.type() == QEvent.KeyPress and event.key() in _EDIT_KEYS:
+            return True
+
+        return super().eventFilter(obj, event)
+
+
+class WheelKeyEventFilter(QObject):
+    """A QObject which can be used for event filtering of mouse wheel events
+    and edit key events
+    """
+
+    def __init__(self, widget):
+        super().__init__(widget)
+        self.widget = widget
+
+    def eventFilter(self, obj, event):
+        # Block wheel events
+        if event.type() == QEvent.Wheel and obj is self.widget:
+            return True
+        if event.type() == QEvent.KeyPress and event.key() in _EDIT_KEYS:
+            return True
+
+        return super().eventFilter(obj, event)
 
 
 class SignalBlocker:
@@ -372,8 +397,8 @@ def process_qt_events(app=None, timeout=100):
 def create_table_string(info):
     """This creates a html table string from an `info` dictionary"""
     rows = (
-         f"<tr><td><b>{attr}</b>:   </td><td>{escape(str(value))}</td></tr>"
-         for attr, value in info.items()
+        f"<tr><td><b>{attr}</b>:   </td><td>{escape(str(value))}</td></tr>"
+        for attr, value in info.items()
     )
     return f"<table>{''.join(rows)}</table>"
 

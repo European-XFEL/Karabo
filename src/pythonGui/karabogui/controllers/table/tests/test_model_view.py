@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import pytest
 from qtpy.QtCore import (
-    QEvent, QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt)
+    QEvent, QItemSelectionModel, QMimeData, QModelIndex, QPoint, QPointF, Qt)
 from qtpy.QtGui import QDropEvent, QKeySequence
 
 from karabo.common.api import State
@@ -373,7 +373,7 @@ def test_table_model_view_invalid_model_index(table_model_view_setup):
     ret = model.setData(QModelIndex(), 2, Qt.EditRole)
     assert not ret
     assert model.data(QModelIndex()) is None
-    assert model.flags(QModelIndex()) == 0
+    assert model.flags(QModelIndex()) == Qt.NoItemFlags
 
 
 def test_table_model_view_model_flags(table_model_view_setup):
@@ -450,7 +450,7 @@ def test_table_model_view_drag_drop_view(table_model_view_setup):
     index = model.index(0, 0)
     assert index.data() == "a"
 
-    event = QDropEvent(QPoint(0, 0), Qt.CopyAction, items,
+    event = QDropEvent(QPointF(0, 0), Qt.CopyAction, items,
                        Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
     # Patch the source
     event.source = lambda: controller.widget
@@ -465,7 +465,7 @@ def test_table_model_view_drag_drop_view(table_model_view_setup):
 
     items.setData("tableData", create_mime_data(row=2))
     # Drag somewhere to outer regions, it will modify last row
-    event = QDropEvent(QPoint(0, 1000), Qt.CopyAction, items,
+    event = QDropEvent(QPointF(0, 1000), Qt.CopyAction, items,
                        Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
     event.source = lambda: controller.widget
     view.dropEvent(event)
@@ -524,7 +524,7 @@ def test_table_model_view_string_button_delegate(gui_app, mocker):
     assert model.rowCount() == 1
     index = model.index(0, 0)
     table_view = controller.tableWidget()
-    delegate = table_view.itemDelegate(index)
+    delegate = table_view.itemDelegateForIndex(index)
     assert isinstance(delegate, StringButtonDelegate)
     topology = SystemTopology()
     network = mocker.Mock()
@@ -551,7 +551,7 @@ def test_table_model_view_string_button_delegate(gui_app, mocker):
         # 1.2 Check the url web link delegate
         index = model.index(0, 1)
         table_view = controller.tableWidget()
-        delegate = table_view.itemDelegate(index)
+        delegate = table_view.itemDelegateForIndex(index)
         assert isinstance(delegate, StringButtonDelegate)
         path = "karabogui.util.webbrowser"
         web = mocker.patch(path)
@@ -560,7 +560,7 @@ def test_table_model_view_string_button_delegate(gui_app, mocker):
 
         # Retrieve default scene if no name is provided
         index = model.index(0, 0)
-        delegate = table_view.itemDelegate(index)
+        delegate = table_view.itemDelegateForIndex(index)
         s = "deviceScene|device_id=XHQ_EG_DG/CAM/CAMERA"
         table_hash = Hash(
             "prop", [Hash("arch", s,

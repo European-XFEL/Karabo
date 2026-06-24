@@ -93,8 +93,7 @@ def test_selection_model_unknown(gui_app):
     with open(path, "rb") as fp:
         b = fp.read()
 
-    ar = QByteArray.fromRawData(b)
-    renderer = QSvgRenderer(ar)
+    renderer = QSvgRenderer(QByteArray(b))
     assert renderer.isValid()
     svg_widget = UnknownSvgWidget(renderer=renderer)
 

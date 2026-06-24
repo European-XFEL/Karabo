@@ -20,6 +20,7 @@ from traits.trait_types import Enum, Int, String
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import (
     NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
+from karabo.common.scenemodel.io_utils import format_font_string
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 from karabo.common.scenemodel.widgets.simple import (
@@ -73,8 +74,13 @@ def read_base_link(element):
 def write_base_link(model, element, klass):
     """Write the common base link information"""
     _write_class_and_geometry(model, element, klass)
-    for name in ("background", "text", "font", "foreground", "target"):
+    for name in ("background", "text", "foreground", "target"):
         element.set(NS_KARABO + name, getattr(model, name))
+
+    font_str = getattr(model, "font")
+    formatted_font_str = format_font_string(font_str)
+    element.set(NS_KARABO + "font", formatted_font_str)
+
     element.set(NS_KARABO + "frameWidth", str(model.frame_width))
 
 

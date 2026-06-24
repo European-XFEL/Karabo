@@ -196,7 +196,7 @@ def test_drawing_tools(dialog, mocker):
 
     pos = QPoint(100, 100)
     widget = dialog.view.viewport()
-    line_tool = LineTool()
+    line_tool = LineTool(pen_color=QColor())
     canvas.set_drawing_tool(line_tool)
     QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier)
     QTest.mouseMove(widget, pos)
@@ -205,7 +205,7 @@ def test_drawing_tools(dialog, mocker):
     assert isinstance(canvas.items()[0], QGraphicsLineItem)
     assert isinstance(canvas.items()[1], QGraphicsPixmapItem)
 
-    rect_tool = RectTool()
+    rect_tool = RectTool(pen_color=QColor())
     canvas.set_drawing_tool(rect_tool)
     QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
     QTest.mouseMove(widget, QPoint(200, 200))

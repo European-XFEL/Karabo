@@ -17,6 +17,7 @@
 from unittest import main, mock
 
 from qtpy.QtCore import QPoint, QRect
+from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QDialog, QWidget
 
 from karabo.common.scenemodel.api import (
@@ -54,8 +55,14 @@ class TestSceneLink(GuiTestCase):
     # Actual tests
 
     def test_font_replacement(self):
-        font = self.widget.model.font
-        self.assertEqual(font, "Source Sans Pro,10,-1,5,50,0,0,0,0,0")
+        font_str = self.widget.model.font
+        font = QFont()
+        font.fromString(font_str)
+        assert font.family() == "Source Sans Pro"
+        assert font.pointSize() == 10
+        assert not font.italic()
+        assert not font.underline()
+        assert not font.strikeOut()
 
     def test_basics(self):
         model_rect = QRect(self.model.x, self.model.y,

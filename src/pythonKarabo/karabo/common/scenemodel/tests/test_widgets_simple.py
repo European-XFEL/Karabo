@@ -20,7 +20,7 @@ from .. import api
 from .utils import (
     assert_base_traits, base_widget_traits, single_model_round_trip)
 
-UBUNTU_FONT_SPEC = "Ubuntu,48,-1,5,63,0,0,0,0,0"
+UBUNTU_FONT_SPEC = "Ubuntu,48,-1,5,50,0,0,0,0,0"
 
 
 def _assert_geometry_traits(model):

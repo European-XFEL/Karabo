@@ -101,9 +101,9 @@ def create_icon_from_colormap(colormap):
     return QIcon(pixmap)
 
 
-def create_colormap_menu(colormaps, current_cmap, on_selection):
+def create_colormap_menu(colormaps, current_cmap, on_selection, parent=None):
     """Create a color map menu for an image widget"""
-    menu = QMenu()
+    menu = QMenu(parent=parent)
     action_group = QActionGroup(menu)
 
     for colormap in colormaps:

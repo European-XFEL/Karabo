@@ -18,15 +18,15 @@ import argparse
 import sys
 from collections import OrderedDict
 
-from qtpy.QtWidgets import QApplication, QBoxLayout
-
 import karabogui.binding.api as bindings
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
 from karabogui import icons
+from karabogui.const import LEFT_TO_RIGHT, TOP_TO_BOTTOM
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class,
     populate_controller_registry)
 from karabogui.panels.scenepanel import ScenePanel
+from karabogui.programs.base import create_gui_app
 from karabogui.singletons.api import get_manager, get_network
 
 
@@ -107,13 +107,13 @@ def _create_scene_model(devs, controllers=None):
                     traits['klass'] = get_class_const_trait(klass,
                                                             '_klassname')
                 widget_model = model_klass(**traits)
-                model = BoxLayoutModel(direction=QBoxLayout.TopToBottom,
+                model = BoxLayoutModel(direction=TOP_TO_BOTTOM,
                                        children=[class_label, widget_model])
                 row.append(model)
-            box = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
+            box = BoxLayoutModel(direction=LEFT_TO_RIGHT,
                                  children=row)
             rows.append(box)
-    vbox = BoxLayoutModel(direction=QBoxLayout.TopToBottom, children=rows)
+    vbox = BoxLayoutModel(direction=TOP_TO_BOTTOM, children=rows)
     scene = SceneModel(children=[vbox])
 
     print('\n'+'='*60+'\n')
@@ -125,7 +125,7 @@ def _create_scene_model(devs, controllers=None):
 
 
 def main():
-    app = QApplication(sys.argv)
+    app = create_gui_app(sys.argv)
 
     icons.init()  # Very important!
     populate_controller_registry()

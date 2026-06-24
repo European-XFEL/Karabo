@@ -16,9 +16,15 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from pathlib import Path
 
+from qtpy import QtBindingMissingModuleError
 from qtpy.QtCore import QSize
-from qtpy.QtSvg import QSvgWidget
 from qtpy.QtWidgets import QLabel, QWidget
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except QtBindingMissingModuleError:
+    # for Qt5 compatibility
+    from qtpy.QtSvg import QSvgWidget
 
 from karabo.common.scenemodel.api import ImageRendererModel, create_base64image
 from karabogui import icons

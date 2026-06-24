@@ -64,7 +64,7 @@ class KaraboImageView(QWidget):
 
         # Image can have transparent background!
         palette = self.image_layout.palette()
-        palette.setColor(QPalette.Background, Qt.transparent)
+        palette.setColor(QPalette.Window, Qt.transparent)
         self.image_layout.setPalette(palette)
 
         # Add our basic plotItem to this widget
@@ -280,7 +280,8 @@ class KaraboImageView(QWidget):
 
     def add_colormap_action(self, cmap="none"):
         if self._colormap_action is None:
-            menu = create_colormap_menu(COLORMAPS, cmap, self.set_colormap)
+            menu = create_colormap_menu(COLORMAPS, cmap, self.set_colormap,
+                                        parent=self)
             self._colormap_action = QAction(self)
             self._colormap_action.setIconText("Colormap")
             self._colormap_action.setMenu(menu)

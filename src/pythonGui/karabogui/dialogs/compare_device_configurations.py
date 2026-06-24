@@ -182,7 +182,7 @@ class DeviceSelectorDialog(QDialog):
         self.devices_combobox.addItems(matching_devices)
         line_edit = QLineEdit()
         completer = QCompleter(matching_devices, parent=line_edit)
-        completer.setCaseSensitivity(False)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setCompletionMode(QCompleter.PopupCompletion)
         line_edit.setCompleter(completer)
         self.devices_combobox.setLineEdit(line_edit)

@@ -54,7 +54,7 @@ class UnknownSvgWidget(QWidget):
         Returns None if there would be nothing to display.
         """
         xml = write_single_model(model).encode("utf-8")
-        ar = QByteArray.fromRawData(xml)
+        ar = QByteArray(xml)
         renderer = QSvgRenderer(ar)
 
         if renderer.isValid() and not renderer.defaultSize().isNull():

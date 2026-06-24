@@ -19,7 +19,6 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 
-
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import (
     QApplication, QComboBox, QMessageBox, QStyle, QStyledItemDelegate,
@@ -37,7 +36,8 @@ from karabogui.logger import get_logger
 from karabogui.request import (
     call_device_slot, get_scene_from_server, retrieve_default_scene)
 from karabogui.topology.api import is_device_online
-from karabogui.util import SignalBlocker, get_reason_parts, open_browser
+from karabogui.util import (
+    SignalBlocker, WheelKeyEventFilter, get_reason_parts, open_browser)
 from karabogui.widgets.edits import LineEditEditor
 
 from .button_delegate import TableButtonDelegate
@@ -243,6 +243,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate"""
         editor = QComboBox(parent)
         editor.addItems(self._options)
+        editor.installEventFilter(WheelKeyEventFilter(editor))
         editor.currentIndexChanged.connect(self._on_editor_changed)
         return editor
 

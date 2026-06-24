@@ -19,9 +19,15 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 
+from qtpy import QtBindingMissingModuleError
 from qtpy.QtCore import QLocale, QSize, Qt
 from qtpy.QtGui import QFontMetrics
-from qtpy.QtSvg import QSvgWidget
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except QtBindingMissingModuleError:
+    from qtpy.QtSvg import QSvgWidget
+
 from qtpy.QtWidgets import QDoubleSpinBox, QFrame, QLabel, QLineEdit, QSpinBox
 
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH

@@ -50,9 +50,9 @@ class TestTipWizard(GuiTestCase):
         # Test the deactivation for next time
         config = Configuration()
         with singletons(configuration=config):
-            self.wizard.update_start(0)
+            self.wizard.update_start(False)
             assert config["wizard"] is True
-            self.wizard.update_start(1)
+            self.wizard.update_start(True)
             assert config["wizard"] is False
 
     def test_button_object_names(self):

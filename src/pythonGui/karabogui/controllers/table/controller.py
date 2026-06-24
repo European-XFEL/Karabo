@@ -71,8 +71,7 @@ class BaseTableController(BaseBindingController):
         assert self.model is not Undefined
 
         table_widget = KaraboTableView(parent=parent)
-        table_widget.setSelectionBehavior(QAbstractItemView.SelectItems
-                                          | QAbstractItemView.SelectRows)
+        table_widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         table_widget.horizontalHeader().setStretchLastSection(True)
         # Create an internal weak ref to subclass create widget
         self._table_widget = table_widget
@@ -555,7 +554,7 @@ class BaseFilterTableController(BaseTableController):
         key = self.model.filterKeyColumn
         filter_model.setFilterKeyColumn(key)
         filter_model.setFilterRole(Qt.DisplayRole)
-        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         filter_model.setFilterFixedString("")
         self.searchLabel.textChanged.connect(filter_model.setFilterFixedString)
         self.columnCombo.currentIndexChanged.connect(

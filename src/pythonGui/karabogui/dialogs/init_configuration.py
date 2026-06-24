@@ -112,7 +112,7 @@ class InitConfigurationDialog(QDialog):
         self.model.setSourceModel(TableModel(parent=self))
         self.model.setFilterRole(Qt.DisplayRole)
         self.model.setFilterFixedString("")
-        self.model.setFilterCaseSensitivity(False)
+        self.model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.model.setFilterKeyColumn(0)
 
         self.ui_table_widget.setModel(self.model)

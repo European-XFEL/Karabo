@@ -14,7 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from qtpy.QtCore import QEvent, QPoint, Qt, Slot
+from qtpy.QtCore import QEvent, QPointF, Qt, Slot
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QStyle
 
@@ -84,7 +84,7 @@ def test_range_slider_widget(gui_app):
 
     move_event = QMouseEvent(
         QEvent.MouseMove,
-        QPoint(20, 0),
+        QPointF(20, 0),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -97,7 +97,7 @@ def test_range_slider_widget(gui_app):
     assert widget.pressedControl == QStyle.SC_None
     press_event = QMouseEvent(
         QEvent.MouseButtonPress,
-        QPoint(80, 0),
+        QPointF(80, 0),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -108,7 +108,7 @@ def test_range_slider_widget(gui_app):
 
     move_event = QMouseEvent(
         QEvent.MouseMove,
-        QPoint(35, 45),
+        QPointF(35, 45),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -128,7 +128,7 @@ def test_range_slider_widget(gui_app):
     # Release event triggers unclicked
     release_event = QMouseEvent(
         QEvent.MouseButtonRelease,
-        QPoint(80, 0),
+        QPointF(80, 0),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -138,7 +138,7 @@ def test_range_slider_widget(gui_app):
 
     press_event = QMouseEvent(
         QEvent.MouseButtonPress,
-        QPoint(30, 0),
+        QPointF(30, 0),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -148,7 +148,7 @@ def test_range_slider_widget(gui_app):
 
     move_event = QMouseEvent(
         QEvent.MouseMove,
-        QPoint(35, 45),
+        QPointF(35, 45),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)
@@ -163,7 +163,7 @@ def test_range_slider_widget(gui_app):
     # Release event triggers unclicked
     release_event = QMouseEvent(
         QEvent.MouseButtonRelease,
-        QPoint(80, 0),
+        QPointF(80, 0),
         Qt.LeftButton,
         Qt.LeftButton,
         Qt.NoModifier)

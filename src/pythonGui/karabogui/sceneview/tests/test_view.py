@@ -25,7 +25,7 @@ from unittest import mock
 import pytest
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QRegion
-from qtpy.QtWidgets import QBoxLayout, QDialog
+from qtpy.QtWidgets import QDialog
 
 import karabo.common.scenemodel.api as sm
 import karabo.common.scenemodel.tests as sm_tests
@@ -37,7 +37,7 @@ from karabogui.binding.api import (
     SignedIntBinding, Uint8Binding, UnsignedIntBinding, VectorBinding,
     VectorNoneBinding, VectorNumberBinding, VectorUint8Binding,
     WidgetNodeBinding, build_binding)
-from karabogui.const import IS_MAC_SYSTEM
+from karabogui.const import IS_MAC_SYSTEM, LEFT_TO_RIGHT
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import (
     ALL_PROPERTIES_MAP, assert_no_throw, get_all_props_schema)
@@ -358,7 +358,7 @@ def get_layout_model(model, x=10, y=10, modified=False):
 
     # Initialize layout model
     hbox_model = sm.BoxLayoutModel(x=x, y=y, children=children_model,
-                                   direction=QBoxLayout.LeftToRight)
+                                   direction=LEFT_TO_RIGHT)
 
     # Correct the position from the initial position and width
     x0, y0 = (x, y)

@@ -152,7 +152,7 @@ class DestinationWidget(QWidget):
         if toggled:
             self.combo_topic.setEditable(True)
             self.combo_topic.lineEdit().selectAll()
-            self.combo_topic.setFocus(True)
+            self.combo_topic.setFocus()
             self.combo_topic.lineEdit().editingFinished.connect(
                 self.add_new_topic)
         else:

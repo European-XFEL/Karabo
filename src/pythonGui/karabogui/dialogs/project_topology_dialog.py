@@ -129,7 +129,7 @@ class ProjectTopologyDialog(QDialog):
         self.delegate = ButtonDelegate(parent=self)
         self.table_model = ProjectTopologyModel()
         self.filter_model = QSortFilterProxyModel()
-        self.filter_model.setFilterCaseSensitivity(False)
+        self.filter_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.filter_model.setFilterRole(Qt.DisplayRole)
         self.filter_model.setFilterKeyColumn(DEVICE_ID_COLUMN)
         self.filter_model.setSourceModel(self.table_model)
@@ -207,10 +207,9 @@ class ProjectTopologyDialog(QDialog):
 
     def _resize_table(self):
         """Resize columns to contents"""
-        columns = self.table_model.columnCount() - 1
         hor_header = self.table.horizontalHeader()
         hor_header.resizeSections(QHeaderView.ResizeToContents)
-        hor_header.resizeSection(columns, QHeaderView.Stretch)
+        hor_header.setStretchLastSection(True)
         ver_header = self.table.verticalHeader()
         ver_header.resizeSections(QHeaderView.ResizeToContents)
 

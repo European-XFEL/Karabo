@@ -178,8 +178,6 @@ class Configuration(QObject):
                   dtype=bool)
     check_updates = Item(default=True, q_set=True, group=USER, editable=True,
                          dtype=bool)
-    highDPI = Item(default=True, q_set=True, group=USER, editable=False,
-                   dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER, dtype=bool)
     project_sort_column = Item(default=0, q_set=True, group=USER, dtype=int)

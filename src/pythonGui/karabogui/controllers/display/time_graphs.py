@@ -420,7 +420,7 @@ class BaseSeriesGraph(BaseBindingController):
     def _draw_start_time(self, proxy, value, timestamp):
         if proxy in self._curves_start:
             self._curves_start.remove(proxy)
-            start = self._start_time.toTime_t()
+            start = self._start_time.toSecsSinceEpoch()
             if start > timestamp:
                 self._curve_points[proxy].add_point(value, start)
 

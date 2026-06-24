@@ -26,7 +26,7 @@ from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui.binding.api import BoolBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, is_proxy_allowed, register_binding_controller)
-from karabogui.util import SignalBlocker
+from karabogui.util import EditKeyEventFilter, SignalBlocker
 
 
 @register_binding_controller(ui_name='Toggle Field', can_edit=True,
@@ -35,11 +35,14 @@ from karabogui.util import SignalBlocker
 class EditableCheckBox(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(CheckBoxModel, args=())
+    _filter = Instance(EditKeyEventFilter)
 
     def create_widget(self, parent):
         widget = QCheckBox(parent)
+        self._filter = EditKeyEventFilter(widget)
+        widget.installEventFilter(self._filter)
         widget.setFocusPolicy(Qt.StrongFocus)
-        widget.stateChanged.connect(self._on_user_edit)
+        widget.toggled.connect(self._on_user_edit)
         return widget
 
     def value_update(self, proxy):
@@ -51,7 +54,7 @@ class EditableCheckBox(BaseBindingController):
         enable = is_proxy_allowed(proxy)
         self.widget.setEnabled(enable)
 
-    def _on_user_edit(self, state):
+    def _on_user_edit(self, enabled):
         if self.proxy.binding is None:
             return
-        self.proxy.edit_value = (state == Qt.Checked)
+        self.proxy.edit_value = enabled

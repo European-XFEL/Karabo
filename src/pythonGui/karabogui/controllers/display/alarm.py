@@ -20,7 +20,11 @@
 #############################################################################
 from pathlib import Path
 
-from qtpy.QtSvg import QSvgWidget
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except ImportError:
+    from qtpy.QtSvg import QSvgWidget
+
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import GlobalAlarmModel

@@ -30,7 +30,7 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import (
-    MouseWheelEventBlocker, SignalBlocker, generateObjectName)
+    SignalBlocker, WheelKeyEventFilter, generateObjectName)
 from karabogui.widgets.api import SpinBox
 
 INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Uint8Binding,
@@ -42,14 +42,14 @@ INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Uint8Binding,
                              binding_type=INT_BINDINGS)
 class EditableSpinBox(BaseBindingController):
     model = Instance(EditableSpinBoxModel, args=())
-    _blocker = Instance(MouseWheelEventBlocker)
+    _blocker = Instance(WheelKeyEventFilter)
     _style_sheet = String
 
     def create_widget(self, parent):
         widget = SpinBox(parent)
         widget.valueChanged[int].connect(self._on_user_edit)
         widget.setSingleStep(1)
-        self._blocker = MouseWheelEventBlocker(widget)
+        self._blocker = WheelKeyEventFilter(widget)
         widget.installEventFilter(self._blocker)
 
         objectName = generateObjectName(self)

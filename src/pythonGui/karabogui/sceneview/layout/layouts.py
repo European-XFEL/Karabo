@@ -126,6 +126,8 @@ VERTICAL_LAYOUTS = (QBoxLayout.TopToBottom, QBoxLayout.BottomToTop)
 
 class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, model, direction, parent=None):
+        # for Qt5 compatibility
+        direction = QBoxLayout.Direction(direction)
         super().__init__(model, direction, parent)
         self.setContentsMargins(0, 0, 0, 0)
 

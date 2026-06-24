@@ -99,10 +99,9 @@ class KaraboTableView(QTableView):
         """Resize the table view to the model contents"""
         model = self.model()
         if model is not None and model.columnCount() > 1:
-            columns = model.columnCount() - 1
             header = self.horizontalHeader()
             header.resizeSections(QHeaderView.ResizeToContents)
-            header.resizeSection(columns, QHeaderView.Stretch)
+            header.setStretchLastSection(True)
 
     def dragEnterEvent(self, event):
         """Reimplemented method of `QTableView`"""

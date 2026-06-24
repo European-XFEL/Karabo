@@ -22,12 +22,17 @@ from pathlib import Path
 
 from qtpy.QtCore import QSize
 from qtpy.QtGui import QPixmap
-from qtpy.QtSvg import QSvgRenderer, QSvgWidget
+from qtpy.QtSvg import QSvgRenderer
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from karabo.common.scenemodel.api import extract_base64image
 from karabogui import icons
 from karabogui.widgets.hints import KaraboSceneWidget
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except ImportError:
+    from qtpy.QtSvg import QSvgWidget
 
 MISSING_ICON = str(Path(icons.__file__).parent / "image-missing.svg")
 

@@ -64,7 +64,8 @@ def test_horz_layout_action(scene_view):
 
     # Check layout model
     layout_model = _get_layout_model(scene_view, model_klass=BoxLayoutModel)
-    assert layout_model.direction == QBoxLayout.LeftToRight
+    assert (QBoxLayout.Direction(layout_model.direction) ==
+            QBoxLayout.LeftToRight)
 
     # Check order. The expected is: (x, y)
     # 1. The label bar goes first (10, 10)
@@ -92,7 +93,8 @@ def test_vert_layout_action(scene_view):
 
     # Check layout model
     layout_model = _get_layout_model(scene_view, model_klass=BoxLayoutModel)
-    assert layout_model.direction == QBoxLayout.TopToBottom
+    assert (QBoxLayout.Direction(layout_model.direction) ==
+            QBoxLayout.TopToBottom)
 
     # Check order. The expected is: (x, y)
     # 1. The label bar goes first (10, 10)

@@ -15,7 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import pytest
-from qtpy.QtCore import QEvent, QPoint, Qt
+from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QWidget
 from traits.api import Dict, Instance
@@ -87,7 +87,7 @@ def test_scene_widget_handler(gui_app, display_widget, mocker):
 
         event = QMouseEvent(
             QEvent.MouseButtonPress,
-            QPoint(80, 0),
+            QPointF(80, 0),
             Qt.RightButton,
             Qt.RightButton,
             Qt.NoModifier)
