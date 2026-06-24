@@ -47,7 +47,7 @@ class ObjectDuplicateDialog(QDialog):
         self.sbEnd = UIntSpinbox(self)
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.sbEnd)
         self.sbEnd.valueChanged.connect(self._indexChanged)
-        self.cbNoIndex.stateChanged.connect(self._updateIndex)
+        self.cbNoIndex.toggled.connect(self._updateIndex)
 
         validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
@@ -66,9 +66,8 @@ class ObjectDuplicateDialog(QDialog):
         text = f'You are about to create <b>{nb_dupe}</b> duplicate(s)'
         self.laText.setText(text)
 
-    @Slot(int)
-    def _updateIndex(self, value):
-        enabled = True if not value else False
+    @Slot(bool)
+    def _updateIndex(self, enabled):
         self.sbStart.setEnabled(enabled)
         self.sbEnd.setEnabled(enabled)
         self._update_text()

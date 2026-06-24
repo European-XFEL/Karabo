@@ -172,7 +172,7 @@ def test_authReply(gui_app, mocker):
     with singletons(configuration=configuration):
         dialog = ReactiveLoginDialog()
         reply = mocker.Mock(spec=QNetworkReply)
-        reply.error.return_value = QNetworkReply.NoError
+        reply.error.return_value = QNetworkReply.NetworkError.NoError
 
         failure = (
             b'{"success":false,"once_token":null,"refresh_token":null,'
@@ -227,7 +227,7 @@ def test_access_widget(gui_app):
 
     # Backspace when focus is on first cell.
     first_cell = widget.cells[0]
-    first_cell.setFocus(True)
+    first_cell.setFocus()
     keySequence(first_cell, Qt.Key_Backspace)
     assert first_cell == widget.focusWidget()
 
@@ -253,14 +253,14 @@ def test_access_widget(gui_app):
     # Backspace deletes the number when cursor is on its right.
     fourth_cell = cells[4]
     third_cell = cells[3]
-    fourth_cell.setFocus(True)
+    fourth_cell.setFocus()
     fourth_cell.setCursorPosition(1)
     keySequence(fourth_cell, Qt.Key_Backspace)
     assert not bool(fourth_cell.text())
     assert fourth_cell == widget.focusWidget()
 
     # Backspace switches to previous cell if the cursor is on left.
-    third_cell.setFocus(True)
+    third_cell.setFocus()
     third_cell.setCursorPosition(0)
     keySequence(third_cell, Qt.Key_Backspace)
     assert bool(third_cell.text())

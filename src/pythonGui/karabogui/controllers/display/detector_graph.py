@@ -35,7 +35,7 @@ from .util import get_ui_file
 
 
 class FrameSlider(QWidget):
-    axisChanged = Signal(str)
+    axisChanged = Signal(int)
     cellChanged = Signal(int)
 
     def __init__(self, parent=None):
@@ -47,7 +47,7 @@ class FrameSlider(QWidget):
         self.cb_axis.addItems([
             DetectorAxes.X.name, DetectorAxes.Y.name, DetectorAxes.Z.name])
 
-        self.cb_axis.currentIndexChanged[str].connect(self.axisChanged.emit)
+        self.cb_axis.currentIndexChanged.connect(self.axisChanged.emit)
         self.sl_cell.valueChanged.connect(self.on_slider_moved)
         self.sb_cell.valueChanged.connect(self.on_value_changed)
 
@@ -176,7 +176,7 @@ class DisplayDetectorGraph(BaseBindingController):
         if self._image_node is None:
             return
 
-        self._axis = DetectorAxes[axis]
+        self._axis = DetectorAxes(axis)
         self._set_slider_max(self._image_node.get_detector_axis_dimension(
             self._axis))
         self._frame_slider.reset()

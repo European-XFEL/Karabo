@@ -25,7 +25,7 @@ from pycodestyle import Checker, StyleGuide
 from pyflakes.api import check
 from qtpy.Qsci import QsciAPIs, QsciScintilla
 from qtpy.QtCore import (
-    Property as pyqtProperty, QRegularExpression, Qt, Signal, Slot)
+    Property as pyqtProperty, QRegularExpression, Signal, Slot)
 from qtpy.QtGui import QColor, QKeySequence
 from qtpy.QtWidgets import QShortcut, QVBoxLayout, QWidget
 
@@ -88,10 +88,10 @@ class CodeBook(QWidget):
         find_toolbar.replaceRequested.connect(self._replace)
         find_toolbar.setVisible(False)
 
-        find = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
+        find = QShortcut(QKeySequence("Ctrl+F"), self)
         find.activated.connect(self.showFindToolbar)
 
-        replace = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_R), self)
+        replace = QShortcut(QKeySequence("Ctrl+R"), self)
         replace.activated.connect(self.showReplaceToolbar)
 
         self.find_toolbar = find_toolbar
@@ -202,7 +202,7 @@ class CodeEditor(QsciScintilla):
         self.setIndentationGuidesForegroundColor(MARGIN_BACKGROUND)
 
         # Auto completion
-        self.setAutoCompletionSource(QsciScintilla.AcsAll)
+        self.setAutoCompletionSource(QsciScintilla.AutoCompletionSource.AcsAll)
         self.setAutoCompletionReplaceWord(True)
         self.setAutoCompletionCaseSensitivity(False)
         self.autoCompleteFromDocument()
@@ -225,14 +225,14 @@ class CodeEditor(QsciScintilla):
 
         # Brace matching: highlight the brace when the cursor is on left or
         # on right
-        self.setBraceMatching(QsciScintilla.SloppyBraceMatch)
+        self.setBraceMatching(QsciScintilla.BraceMatch.SloppyBraceMatch)
 
         # Code folding
-        self.setFolding(QsciScintilla.PlainFoldStyle)
+        self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)
         self.setFoldMarginColors(MARGIN_BACKGROUND, MARGIN_BACKGROUND)
 
         # A vertical line to indicate the line-length limit
-        self.setEdgeMode(QsciScintilla.EdgeLine)
+        self.setEdgeMode(QsciScintilla.EdgeMode.EdgeLine)
         self.setEdgeColumn(LINE_LENGTH)
         self.setEdgeColor(QColor("gray"))
 
@@ -245,9 +245,13 @@ class CodeEditor(QsciScintilla):
         self.setLexer(lexer)
 
         self._highlights = []
-        self.indicatorDefine(self.StraightBoxIndicator, HIGHLIGHT_INDICATOR)
-        self.indicatorDefine(self.SquiggleLowIndicator, ERROR_INDICATOR)
-        self.indicatorDefine(self.SquiggleLowIndicator, STYLE_ISSUE_INDICATOR)
+        indicator_style = QsciScintilla.IndicatorStyle
+        self.indicatorDefine(
+           indicator_style.StraightBoxIndicator, HIGHLIGHT_INDICATOR)
+        self.indicatorDefine(
+            indicator_style.SquiggleLowIndicator, ERROR_INDICATOR)
+        self.indicatorDefine(
+            indicator_style.SquiggleLowIndicator, STYLE_ISSUE_INDICATOR)
         self.setIndicatorForegroundColor(QColor("red"), ERROR_INDICATOR)
         self.setIndicatorForegroundColor(QColor("blue"), STYLE_ISSUE_INDICATOR)
         self.has_annotation = False
@@ -401,7 +405,8 @@ class CodeEditor(QsciScintilla):
                 self.fillIndicatorRange(line_number, col_start,
                                         line_number, col_end, indicator)
             message = "\n".join(messages)
-            self.annotate(line_number,  message, self.annotationDisplay())
+            self.annotate(
+                line_number,  message, self.annotationDisplay().value)
 
     def clearAllIndicators(self):
         line_start = 0

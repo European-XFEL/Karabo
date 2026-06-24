@@ -15,7 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import pytest
-from qtpy.QtCore import QEvent, QPoint, Qt
+from qtpy.QtCore import QEvent, QPointF, Qt
 from qtpy.QtGui import QDropEvent
 from qtpy.QtWidgets import QWidget
 from traits.api import Dict, Instance
@@ -83,8 +83,7 @@ def test_scene_dnd_handler(gui_app, display_widget, mocker):
     # 1. Reconfigurable item
     items = dragged_configurator_items([proxy])
     assert items is not None
-
-    event = QDropEvent(QPoint(0, 0), Qt.CopyAction, items,
+    event = QDropEvent(QPointF(0, 0), Qt.CopyAction, items,
                        Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
     handler = ConfigurationDropHandler()
     assert handler.can_handle(event)
@@ -107,7 +106,7 @@ def test_scene_dnd_handler(gui_app, display_widget, mocker):
     items = dragged_configurator_items([state_proxy])
     assert items is not None
 
-    event = QDropEvent(QPoint(0, 0), Qt.CopyAction, items,
+    event = QDropEvent(QPointF(0, 0), Qt.CopyAction, items,
                        Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
     assert handler.can_handle(event)
     assert len(scene_model.children) == 1

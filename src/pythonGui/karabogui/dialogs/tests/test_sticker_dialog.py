@@ -40,8 +40,14 @@ def test_sticker_dialog(gui_app, mocker):
     assert text_widget.toPlainText() == model.text
     assert dialog.pbFont.text() == "Sans Serif, 10pt"
 
-    text = "Source Sans Pro,10,-1,5,50,0,0,0,0,0"
-    assert dialog.text_font.toString() == text
+    font = dialog.text_font
+    assert font.family() == "Source Sans Pro"
+    assert font.pointSize() == 10
+    assert font.pixelSize() == -1
+    assert font.styleHint() == QFont.StyleHint.AnyStyle
+    assert not font.italic()
+    assert not font.underline()
+    assert not font.strikeOut()
 
     # Only the internal dialog model is modified
     text_widget.setPlainText("XFEL2")

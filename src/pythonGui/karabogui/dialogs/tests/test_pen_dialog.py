@@ -45,7 +45,7 @@ class TestLoginDialog(GuiTestCase):
         dialog = PenDialog(pen)
         assert dialog is not None
         assert dialog.pen.style() == Qt.CustomDashLine
-        assert dialog.wDashType.penStyle() == 1
+        assert dialog.wDashType.penStyle() == Qt.PenStyle.SolidLine
 
         # 3. Initialize with pen and brush, brush is no brush
         pen = QPen()

@@ -24,6 +24,7 @@ from qtpy.QtWidgets import QBoxLayout
 
 import karabo.common.scenemodel.tests as sm
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, LineModel
+from karabogui.const import LEFT_TO_RIGHT, TOP_TO_BOTTOM
 from karabogui.sceneview.layout.api import BoxLayout
 from karabogui.sceneview.shapes import LineShape
 from karabogui.sceneview.widget.api import LabelWidget
@@ -33,7 +34,7 @@ DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')
 
 def test_horizontal_box_layouts(gui_app):
     # Horizonal layout
-    model = BoxLayoutModel(direction=QBoxLayout.LeftToRight)
+    model = BoxLayoutModel(direction=LEFT_TO_RIGHT)
     boxLayout = BoxLayout(model, model.direction)
     assert boxLayout.count() == 0
     # Add a child to layout model
@@ -46,7 +47,13 @@ def test_horizontal_box_layouts(gui_app):
 
 def test_vertical_box_layout(gui_app):
     # Vertical layout
-    model = BoxLayoutModel(direction=QBoxLayout.TopToBottom)
+    direction = QBoxLayout.TopToBottom
+    try:
+        direction = direction.value
+    except AttributeError:
+        # for Qt5 compatibility
+        pass
+    model = BoxLayoutModel(direction=TOP_TO_BOTTOM)
     boxLayout = BoxLayout(model, model.direction)
     assert boxLayout.count() == 0
 

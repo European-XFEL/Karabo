@@ -26,8 +26,9 @@ from pathlib import Path
 from qtpy.QtCore import QPoint, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QIcon
 from qtpy.QtWidgets import (
-    QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
-    QPushButton, QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
+    QAction, QActionGroup, QApplication, QFrame, QLabel, QMainWindow, QMenu,
+    QMessageBox, QPushButton, QSizePolicy, QSplitter, QTextBrowser,
+    QToolButton)
 
 import karabogui.access as krb_access
 from karabo.common.api import KARABO_PROJECT_MANAGER
@@ -383,7 +384,7 @@ class MainWindow(QMainWindow):
         QMainWindow.closeEvent(self, event)
         # Process eventual events to gracefully close main window
         process_qt_events(timeout=1000)
-        qApp.quit()
+        QApplication.instance().quit()
 
     # --------------------------------------
     # public methods
@@ -533,7 +534,7 @@ class MainWindow(QMainWindow):
         self.acWizard.triggered.connect(self.onWizard)
 
         self.acHelpAboutQt = QAction("About Qt", self)
-        self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
+        self.acHelpAboutQt.triggered.connect(QApplication.instance().aboutQt)
 
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
@@ -606,13 +607,6 @@ class MainWindow(QMainWindow):
 
         mSettingsMenu = mFileMenu.addMenu(SETTINGS_TITLE)
         self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
-
-        self.acEnableHighDPI = QAction('Enable HighDPI', self)
-        self.acEnableHighDPI.setCheckable(True)
-        enable = get_config()["highDPI"]
-        self.acEnableHighDPI.setChecked(enable)
-        self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
-        mSettingsMenu.addAction(self.acEnableHighDPI)
 
         mGeometryMenu = mSettingsMenu.addMenu(GEOMETRY_TITLE)
         self.acStoreMainWindowGeometry = QAction('Store', self)
@@ -826,16 +820,6 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt slots
-
-    @Slot()
-    def _store_dpi_setting(self):
-        enabled = get_config()['highDPI']
-        get_config()['highDPI'] = not enabled
-        self.acEnableHighDPI.setChecked(not enabled)
-        text = ("Changing the high dpi settings requires a restart of the "
-                "client application of the setting to become active.")
-        messagebox.show_information(text)
-
     @Slot()
     def onRegisterApplication(self):
         register_protocol()

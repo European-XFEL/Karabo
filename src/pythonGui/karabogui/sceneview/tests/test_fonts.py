@@ -73,7 +73,11 @@ def setup_widget_fonts(gui_app):
 def setup_scene_fonts(setup_widget_fonts):
     view, property_proxy = setup_widget_fonts
     # Prepare the fonts
-    font_families = QFontDatabase().families()
+    try:
+        font_families = QFontDatabase.families()
+    except TypeError:
+        # For Qt5 compatibility
+        font_families = QFontDatabase().families()
     if len(font_families) > NUM_TESTED_FONTS:
         font_families = random.sample(font_families, NUM_TESTED_FONTS)
     yield view, property_proxy, font_families

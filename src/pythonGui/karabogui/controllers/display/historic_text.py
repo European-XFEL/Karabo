@@ -158,7 +158,7 @@ class DisplayHistoricText(BaseBindingController):
         filter_model = QSortFilterProxyModel(parent=list_view)
         filter_model.setSourceModel(self.list_model)
         filter_model.setFilterRole(Qt.DisplayRole)
-        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         filter_model.setFilterFixedString("")
         list_view.setModel(filter_model)
 

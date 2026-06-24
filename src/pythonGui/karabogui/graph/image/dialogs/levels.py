@@ -56,7 +56,7 @@ class LevelsDialog(QDialog):
         # Check if autolevel: image levels and range are almost equal.
         # This is with a tolerance of 1%.
         self.automatic_checkbox.setChecked(auto_levels)
-        self.automatic_checkbox.stateChanged.connect(self.set_automatic_levels)
+        self.automatic_checkbox.toggled.connect(self.set_automatic_levels)
 
         self._image_range = image_range
         self.slider = RangeSlider(Qt.Horizontal, parent=self)
@@ -130,9 +130,8 @@ class LevelsDialog(QDialog):
         self.min_spinbox.setValue(low)
         self.max_spinbox.setValue(high)
 
-    @Slot(int)
-    def set_automatic_levels(self, state):
-        auto_levels = state == Qt.Checked
+    @Slot(bool)
+    def set_automatic_levels(self, auto_levels):
         self.values_widget.setEnabled(not auto_levels)
         low, high = self._image_range
         with SignalBlocker(self.min_spinbox, self.max_spinbox, self.slider):

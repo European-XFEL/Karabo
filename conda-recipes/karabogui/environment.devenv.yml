@@ -27,7 +27,7 @@ channels:
 # the meta.yaml file
 dependencies:
     # +++ build
-  - python=3.12.*
+  - python=3.14.*
   - setuptools>=69.*
   - setuptools_scm>=7.*
   - pip>=23.3.*
@@ -41,11 +41,10 @@ dependencies:
   - pytest-subtests=0.15.0
   - pytest-xdist=3.8.*
   # GUI
-  - qtpy=2.4.1
+  - qtpy=2.4.3
   - pyqtgraph=0.14.0
-  - qt-main=5.15.*
-  - pyqt=5.15.9
-  - qscintilla2=2.14.0
+  - pyqt6=6.11.0
+  - qscintilla2=2.14.1
   # Plotting and utils
   - numpy=2.4.3
   - scipy=1.17.1
@@ -66,3 +65,4 @@ environment:
   KARABO_GUI_ROOT:
     - {{ root }}
   OMP_NUM_THREADS: 1
+  QT_API: "pyqt6"

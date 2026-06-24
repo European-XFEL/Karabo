@@ -162,7 +162,7 @@ class TableModel(QAbstractTableModel):
             key = self._header[column]
             binding = self._bindings[key]
             if isinstance(binding, BoolBinding):
-                value = True if value == Qt.Checked else False
+                value = True if Qt.CheckState(value) == Qt.Checked else False
                 self._data[row][key] = value
                 self.dataChanged.emit(index, index)
                 self._set_edit_value(self._data)

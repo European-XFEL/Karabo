@@ -48,6 +48,8 @@ PROJECT_DATA[UUID] = "UUID"
 ProjectEntry = namedtuple("ProjectEntry", list(PROJECT_DATA))
 HEADER = list(PROJECT_DATA.values())
 
+SORT_ORDER = (Qt.SortOrder.AscendingOrder, Qt.SortOrder.DescendingOrder)
+
 
 def get_column_index(project_data_key):
     """Return `index` in ``PROJECT_DATA`` for `project_data_key`"""
@@ -81,11 +83,12 @@ class LoadProjectDialog(QDialog):
         self.model.setSourceModel(TableModel(parent=self))
         self.model.setFilterRole(Qt.DisplayRole)
         self.model.setFilterFixedString("")
-        self.model.setFilterCaseSensitivity(False)
+        self.model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.model.setFilterKeyColumn(0)
 
         column = int(get_config()["project_sort_column"])
-        order = int(get_config()["project_sort_order"])
+        order_index = int(get_config()["project_sort_order"])
+        order = SORT_ORDER[order_index]
         self.twProjects.horizontalHeader().setSortIndicator(column, order)
 
         # QTableview in ui file
@@ -210,6 +213,11 @@ class LoadProjectDialog(QDialog):
     def _sorting_changed(self, column, order):
         """Change the view when sorting the table"""
         get_config()["project_sort_column"] = column
+        try:
+            order = order.value
+        except AttributeError:
+            # For Qt5 compatibility
+            pass
         get_config()["project_sort_order"] = order
         self.update_view()
 
@@ -412,7 +420,8 @@ class TableModel(QAbstractTableModel):
 
         # Sort the table according to the column
         column = int(get_config()["project_sort_column"])
-        order = int(get_config()["project_sort_order"])
+        order_index = int(get_config()["project_sort_order"])
+        order = SORT_ORDER[order_index]
         self.sort(column, order)
 
     def rowCount(self, parent=None):

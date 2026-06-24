@@ -24,7 +24,7 @@ from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 
 # Import via the API module so that all the readers/writers get registered
 from .. import api
-from ..io_utils import set_numbers
+from ..io_utils import format_font_string, set_numbers
 
 DATA_DIR = op.join(op.abspath(op.dirname(__file__)), "data")
 INKSCAPE_DIR = op.join(DATA_DIR, "inkscape")
@@ -49,7 +49,7 @@ SCENE_SVG = """
             width="309"
             x="175" y="125"
             krb:class="Label"
-            krb:font="Ubuntu,48,-1,5,63,0,0,0,0,0"
+            krb:font="Ubuntu,48,-1,5,50,0,0,0,0,0"
             krb:foreground="#4c4c4c"
             krb:frameWidth="0"
             krb:text="Some text" />
@@ -368,3 +368,27 @@ def _get_xml_element_from_model(model):
     return tree.find(
         f"*[@{api.NS_KARABO}widget='{name}']"
     )
+
+
+def test_font_string_formatting():
+    qt6_font_normal_str = "Sans Serif,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0"
+    expected = "Sans Serif,12,-1,5,50,0,0,0,0,0"
+    assert format_font_string(qt6_font_normal_str) == expected
+
+    qt6_font_bold_str = "Sans Serif,12,-1,5,700,0,0,0,0,0,0,0,0,0,0,1,,0,0"
+    expected = "Sans Serif,12,-1,5,75,0,0,0,0,0"
+    assert format_font_string(qt6_font_bold_str) == expected
+
+    qt6_font_italics_str = "Sans Serif,12,-1,5,400,1,0,0,0,0,0,0,0,0,0,1,,0,0"
+    expected = "Sans Serif,12,-1,5,50,1,0,0,0,0"
+    assert format_font_string(qt6_font_italics_str) == expected
+
+    qt6_font_under_str = "Sans Serif,12,-1,5,400,0,1,0,0,0,0,0,0,0,0,1,,0"
+    expected = "Sans Serif,12,-1,5,50,0,1,0,0,0"
+    assert format_font_string(qt6_font_under_str) == expected
+
+    qt6_font_strike_str = "Sans Serif,12,-1,5,400,0,0,1,0,0,0,0,0,0,0,1,,0,0"
+    expected = "Sans Serif,12,-1,5,50,0,0,1,0,0"
+    assert format_font_string(qt6_font_strike_str) == expected
+
+    assert format_font_string("") == ""

@@ -20,7 +20,7 @@ from struct import calcsize, pack, unpack
 
 from qtpy.QtCore import QByteArray, QObject, Signal, Slot
 from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
-from qtpy.QtWidgets import QDialog, QMessageBox, qApp
+from qtpy.QtWidgets import QApplication, QDialog, QMessageBox
 
 import karabogui.access as krb_access
 from karabo.common.api import (
@@ -70,7 +70,8 @@ class Network(QObject):
         self._load_login_settings()
 
         # Listen for the quit notification
-        qApp.aboutToQuit.connect(self.onQuitApplication)
+        app = QApplication.instance()
+        app.aboutToQuit.connect(self.onQuitApplication)
 
         if get_config()["development"]:
             self.togglePerformanceMonitor()
@@ -136,7 +137,7 @@ class Network(QObject):
         self._tcp_socket.connected.connect(self.onConnected)
         self._tcp_socket.readyRead.connect(self.onReadServerData)
         self._tcp_socket.disconnected.connect(self.onDisconnected)
-        self._tcp_socket.error.connect(self.onSocketError)
+        self._tcp_socket.errorOccurred.connect(self.onSocketError)
         self._tcp_socket.connectToHost(self.hostname, self.port)
 
     def endServerConnection(self):
@@ -147,7 +148,8 @@ class Network(QObject):
             return
 
         self._tcp_socket.disconnectFromHost()
-        if (self._tcp_socket.state() == QAbstractSocket.UnconnectedState or
+        if ((self._tcp_socket.state() ==
+             QAbstractSocket.SocketState.UnconnectedState) or
                 self._tcp_socket.waitForDisconnected(5000)):
             get_logger().info(
                 "Disconnected from the gui server "
@@ -204,7 +206,7 @@ class Network(QObject):
 
         self.disconnectFromServer()
 
-        if socketError == QAbstractSocket.ConnectionRefusedError:
+        if socketError == QAbstractSocket.SocketError.ConnectionRefusedError:
             msg = ('The connection to GUI server <b>{}[:{}]</b> '
                    'failed.').format(self.hostname, self.port)
             reply = QMessageBox.question(
@@ -213,7 +215,7 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
-        elif socketError == QAbstractSocket.RemoteHostClosedError:
+        elif socketError == QAbstractSocket.SocketError.RemoteHostClosedError:
             msg = ('The remote host <b>{}[:{}]</b> closed the '
                    'connection').format(self.hostname, self.port)
             reply = QMessageBox.question(
@@ -222,7 +224,7 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
-        elif socketError == QAbstractSocket.HostNotFoundError:
+        elif socketError == QAbstractSocket.SocketError.HostNotFoundError:
             msg = 'The host address <b>{}</b> was not found.'.format(
                 self.hostname)
             reply = QMessageBox.question(
@@ -231,7 +233,7 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
-        elif socketError == QAbstractSocket.NetworkError:
+        elif socketError == QAbstractSocket.SocketError.NetworkError:
             msg = ('An error occurred with the network (e.g., <br>the network '
                    'cable was accidentally plugged out).')
             reply = QMessageBox.question(
@@ -240,7 +242,7 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
-        elif socketError == QAbstractSocket.SocketAccessError:
+        elif socketError == QAbstractSocket.SocketError.SocketAccessError:
             msg = ('The socket operation failed because the application '
                    'lacked the required privileges.')
             reply = QMessageBox.question(
@@ -622,10 +624,11 @@ class Network(QObject):
         self.port = int(self.port)
 
     def _write_hash(self, h):
+        state = QAbstractSocket.SocketState
         # There might be a connect to server in progress, but without success
         if (self._tcp_socket is None or
-                self._tcp_socket.state() == QAbstractSocket.HostLookupState or
-                self._tcp_socket.state() == QAbstractSocket.ConnectingState):
+                self._tcp_socket.state() == state.HostLookupState or
+                self._tcp_socket.state() == state.ConnectingState):
             # Save request for connection established
             self._request_queue.append(h)
             return

@@ -18,9 +18,15 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+from qtpy import QtBindingMissingModuleError
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QIcon, QPixmap, QStandardItem, QStandardItemModel
-from qtpy.QtSvg import QSvgWidget
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except QtBindingMissingModuleError:
+    from qtpy.QtSvg import QSvgWidget
+
 from qtpy.QtWidgets import QDialog, QListView
 from traits.api import Instance
 

@@ -262,7 +262,8 @@ class TestConfiguratorDevice(GuiTestCase):
             menu.assert_called_once()
 
         # Show the pop up widget
-        event_pos = QPoint(20, 20)
+        rect = self.view.visualRect(self.model.index(0, 0))
+        event_pos = QPoint(rect.x(), rect.y())
         with mock.patch("karabogui.configurator.view.PopupWidget") as widget:
             self.view._show_popup_widget(self.model.index(0, 0), event_pos)
             widget.assert_called_once()

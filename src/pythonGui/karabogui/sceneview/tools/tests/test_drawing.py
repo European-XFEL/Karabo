@@ -17,7 +17,7 @@
 from pathlib import Path
 from unittest import mock
 
-from qtpy.QtCore import QEvent, QPoint, Qt
+from qtpy.QtCore import QEvent, QPointF, Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QDialog
 
@@ -55,7 +55,7 @@ class TestDrawingTools(GuiTestCase):
 
             event = QMouseEvent(
                 QEvent.MouseMove,
-                QPoint(20, 0),
+                QPointF(20, 0),
                 Qt.LeftButton,
                 Qt.LeftButton,
                 Qt.NoModifier)
@@ -80,7 +80,7 @@ class TestDrawingTools(GuiTestCase):
 
             event = QMouseEvent(
                 QEvent.MouseMove,
-                QPoint(20, 0),
+                QPointF(20, 0),
                 Qt.LeftButton,
                 Qt.LeftButton,
                 Qt.NoModifier)
@@ -106,7 +106,7 @@ class TestDrawingTools(GuiTestCase):
 
             event = QMouseEvent(
                 QEvent.MouseMove,
-                QPoint(20, 0),
+                QPointF(20, 0),
                 Qt.LeftButton,
                 Qt.LeftButton,
                 Qt.NoModifier)

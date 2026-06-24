@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtGui import QFont, QFontDatabase, QPalette, QValidator
+from qtpy.QtGui import QFont, QPalette, QValidator
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES
@@ -38,7 +38,6 @@ class FontDialog(QDialog):
 
         # Instantiate variables
         self.qfont = QFont(qfont)
-        self._font_database = QFontDatabase()
 
         # Populate font family
         self.font_combobox.addItems(FONT_ALIAS)

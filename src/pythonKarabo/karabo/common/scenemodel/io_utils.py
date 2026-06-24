@@ -25,6 +25,10 @@ from .exceptions import SceneWriterException
 
 SVG_DEF_REGEX = re.compile(r"url\(\#(.*?)\)")
 
+# Qt5 writes 10 font properties to string
+QT5_FONT_PROP_COUNT = 10
+WEIGHT_INDEX = 4
+
 
 def get_numbers(names, element):
     """Read a list of float values from an `Element` instance."""
@@ -159,3 +163,24 @@ def convert_number_or_string(value):
     except ValueError:
         # Value is not a number, we consider the string as-is instead.
         return value
+
+
+def format_font_string(font_str: str):
+    """
+    Convert font string to the format as in Qt5. This is to avoid braking
+    compatibility of Karabo3.2 (with Qt6) to older version.
+    """
+    if font_str == "":
+        return font_str
+    font_params = font_str.split(",")[:QT5_FONT_PROP_COUNT]
+    weight = font_params[WEIGHT_INDEX]
+    # We don't have all the weights in KaraboGUI, just whether bold or not.
+    if int(weight) >= 700:
+        # In Qt5 weight 75 is Bold , but in Qt6, it is 700
+        weight = '75'
+    else:
+        # In Qt5 weight 50 is Normal , but in Qt6, it is 400
+        weight = '50'
+    font_params[4] = weight
+    font = ",".join(font_params)
+    return font

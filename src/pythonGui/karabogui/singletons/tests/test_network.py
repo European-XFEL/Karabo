@@ -342,12 +342,12 @@ def test_socket_connect_login_protocol(mocker, subtests, gui_app):
         mbox = mocker.patch('karabogui.singletons.network.QMessageBox')
         dia = mocker.patch('karabogui.singletons.network.ReactiveLoginDialog')
         call_count = 0
-        for error in [QAbstractSocket.ConnectionRefusedError,
-                      QAbstractSocket.RemoteHostClosedError,
-                      QAbstractSocket.HostNotFoundError,
-                      QAbstractSocket.NetworkError,
-                      QAbstractSocket.SocketAccessError,
-                      QAbstractSocket.DatagramTooLargeError]:
+        for error in [QAbstractSocket.SocketError.ConnectionRefusedError,
+                      QAbstractSocket.SocketError.RemoteHostClosedError,
+                      QAbstractSocket.SocketError.HostNotFoundError,
+                      QAbstractSocket.SocketError.NetworkError,
+                      QAbstractSocket.SocketError.SocketAccessError,
+                      QAbstractSocket.SocketError.DatagramTooLargeError]:
             # Last error not in list of expected !
             network.onSocketError(error)
             call_count += 1

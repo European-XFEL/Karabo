@@ -24,7 +24,7 @@ from karabo.common.scenemodel.const import (
     SCENE_FONT_SIZES, SCENE_FONT_WEIGHT, SCENE_FONT_WEIGHTS,
     WIDGET_ELEMENT_TAG)
 from karabo.common.scenemodel.io_utils import (
-    get_numbers, read_alarm_data, read_base_widget_data,
+    format_font_string, get_numbers, read_alarm_data, read_base_widget_data,
     read_empty_display_editable_widget, read_font_format_data,
     read_value_format_data, set_numbers, write_alarm_data,
     write_base_widget_data, write_font_format_data, write_value_format_data)
@@ -249,8 +249,11 @@ def __label_writer(model, parent):
 
     _write_class_and_geometry(model, element, "Label")
 
-    for name in ("text", "font", "foreground"):
+    for name in ("text", "foreground"):
         element.set(NS_KARABO + name, getattr(model, name))
+    font_str = getattr(model, "font")
+    formatted_font_str = format_font_string(font_str)
+    element.set(NS_KARABO + "font", formatted_font_str)
 
     element.set(NS_KARABO + "frameWidth", str(model.frame_width))
     if model.background != "":
@@ -394,8 +397,12 @@ def __sticker_widget_reader(element):
 def __sticker_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, "StickerWidget")
-    for name in ("text", "font", "foreground"):
+    for name in ("text", "foreground"):
         element.set(NS_KARABO + name, getattr(model, name))
+
+    font_str = getattr(model, "font")
+    formatted_font_str = format_font_string(font_str)
+    element.set(NS_KARABO + "font", formatted_font_str)
 
     if model.background != "":
         element.set(NS_KARABO + "background", model.background)

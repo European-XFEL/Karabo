@@ -20,7 +20,13 @@
 #############################################################################
 import os.path as op
 
-from qtpy.QtSvg import QSvgWidget
+from qtpy import QtBindingMissingModuleError
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except QtBindingMissingModuleError:
+    from qtpy.QtSvg import QSvgWidget
+
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel

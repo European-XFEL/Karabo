@@ -20,8 +20,13 @@
 #############################################################################
 from pathlib import Path
 
+from qtpy import QtBindingMissingModuleError
 from qtpy.QtCore import Qt
-from qtpy.QtSvg import QSvgWidget
+
+try:
+    from qtpy.QtSvgWidgets import QSvgWidget
+except QtBindingMissingModuleError:
+    from qtpy.QtSvg import QSvgWidget
 
 import karabogui.const as global_constants
 from karabo.common.api import InstanceStatus

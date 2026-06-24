@@ -17,7 +17,7 @@ from .. import api
 from .utils import (
     assert_base_traits, base_widget_traits, single_model_round_trip)
 
-FONT_SPEC = "Source Sans Pro,48,-1,5,63,0,0,0,0,0"
+FONT_SPEC = "Source Sans Pro,48,-1,5,50,0,0,0,0,0"
 
 
 def _geometry_traits():

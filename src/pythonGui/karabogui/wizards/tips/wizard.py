@@ -65,7 +65,8 @@ class TipsTricksWizard(QWizard):
         checkbox = QCheckBox("Don't show tips at startup!")
         show_wizard = get_config()['wizard']
         checkbox.setChecked(not show_wizard)
-        checkbox.stateChanged.connect(self.update_start)
+
+        checkbox.toggled.connect(self.update_start)
         self.setButton(QWizard.CustomButton1, checkbox)
         self.setOption(QWizard.HaveCustomButton1)
 
@@ -104,7 +105,6 @@ class TipsTricksWizard(QWizard):
 
             self.addPage(page)
 
-    @Slot(int)
-    def update_start(self, state):
-        show_wizard = not bool(state)
-        get_config()['wizard'] = show_wizard
+    @Slot(bool)
+    def update_start(self, show_wizard):
+        get_config()['wizard'] = not show_wizard

@@ -22,6 +22,8 @@ import socket
 from os import environ, getpid, path
 from platform import system
 
+from qtpy.QtWidgets import QBoxLayout
+
 from karabo.common.packaging import utils
 from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
 
@@ -88,3 +90,17 @@ try:
 except (ImportError, AttributeError):
     print('Version file not found! Please generate the _version.py file.')
     exit(1)
+
+LEFT_TO_RIGHT = QBoxLayout.LeftToRight
+RIGHT_TO_LEFT = QBoxLayout.RightToLeft
+TOP_TO_BOTTOM = QBoxLayout.TopToBottom
+BOTTOM_TO_TOP = QBoxLayout.BottomToTop
+
+try:
+    LEFT_TO_RIGHT = LEFT_TO_RIGHT.value
+    RIGHT_TO_LEFT = RIGHT_TO_LEFT.value
+    TOP_TO_BOTTOM = TOP_TO_BOTTOM.value
+    BOTTOM_TO_TOP = BOTTOM_TO_TOP.value
+except AttributeError:
+    # For Qt5 compatibility
+    pass

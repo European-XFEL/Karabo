@@ -22,7 +22,6 @@ import json
 from abc import abstractmethod
 
 from qtpy.QtCore import QPoint
-from qtpy.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits, Undefined
 
 from karabo.common.enums import Capabilities
@@ -32,6 +31,7 @@ from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.native import AccessMode
 from karabogui import messagebox
 from karabogui.binding.api import ImageBinding, SlotBinding
+from karabogui.const import LEFT_TO_RIGHT
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.fonts import get_font_metrics
@@ -115,9 +115,8 @@ class ConfigurationDropHandler(SceneDnDHandler):
             klasses = get_compatible_controllers(proxy.binding)
             if klasses:
                 return _create_model(klasses[0], proxy.key)
-
         # Horizonal layout
-        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
+        layout_model = BoxLayoutModel(direction=LEFT_TO_RIGHT,
                                       x=round_down_to_grid(pos.x()),
                                       y=round_down_to_grid(pos.y()))
         # Add label to layout model

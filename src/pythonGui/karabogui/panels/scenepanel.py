@@ -102,7 +102,7 @@ class ScenePanel(BasePanelWidget):
         """Called before this panel is undocked from the main window.
         """
         width, height = self._compute_panel_size()
-        screen_rect = QApplication.desktop().screenGeometry()
+        screen_rect = QApplication.primaryScreen().geometry()
         scene_view = self.scene_view
         if (width < screen_rect.width() and height < screen_rect.height()):
             # Resize panel
@@ -364,14 +364,14 @@ class ScenePanel(BasePanelWidget):
         self.qactions.extend(tool_qactions)
         self.qactions.append(self._build_separator())
 
-        link_menu = QMenu()
+        link_menu = QMenu(parent=self)
         for q_action in link_qactions:
             link_menu.addAction(q_action)
         link_action = QAction(icons.scenelink, "Link", self)
         link_action.setMenu(link_menu)
         self.qactions.extend([link_action, self._build_separator()])
 
-        menu = QMenu()
+        menu = QMenu(parent=self)
         group_actions = self.create_group_tool_actions()
         for action in group_actions:
             q_action = self._build_qaction(action)
@@ -385,7 +385,7 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.append(self._build_separator())
 
-        menu = QMenu()
+        menu = QMenu(parent=self)
         move_actions = self.create_move_actions()
         for action in move_actions:
             q_action = self._build_qaction(action)
@@ -394,7 +394,7 @@ class ScenePanel(BasePanelWidget):
         move_action.setMenu(menu)
         self.qactions.extend([move_action, self._build_separator()])
 
-        menu = QMenu()
+        menu = QMenu(parent=self)
         align_actions = self.create_align_actions()
         for action in align_actions:
             q_action = self._build_qaction(action)
@@ -501,7 +501,7 @@ class ScenePanel(BasePanelWidget):
         actions.append(GroupSceneAction(
             icon=icons.group,
             text="Group in Fixed Layout",
-            shortcut=QKeySequence(Qt.CTRL + Qt.Key_G),
+            shortcut=QKeySequence("Ctrl+G"),
             tooltip="Group selected items"))
         actions.append(BoxVSceneAction(
             icon=icons.groupVertical,
@@ -515,7 +515,7 @@ class ScenePanel(BasePanelWidget):
                     "horizontal layout"))
         actions.append(UngroupSceneAction(
             icon=icons.ungroup,
-            shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_G),
+            shortcut=QKeySequence("Ctrl+Shift+G"),
             text="Ungroup",
             tooltip="Ungroup selected items"))
         actions.append(GroupEntireSceneAction(

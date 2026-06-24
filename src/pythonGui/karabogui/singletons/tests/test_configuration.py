@@ -44,7 +44,7 @@ def test_configuration_namespace():
     config = Configuration()
     config['broker_topic'] = 'FXE'
     config['domain'] = 'CAS_INTERNAL'
-    assert len(config) == 19
+    assert len(config) == 18
     assert config['domain'] == 'CAS_INTERNAL'
 
     keys = [
@@ -55,7 +55,6 @@ def test_configuration_namespace():
         'development',
         'domain',
         'gui_servers',
-        'highDPI',
         'logbook_header_style',
         'logbook_stream',
         'logbook_topic',
@@ -89,7 +88,7 @@ def test_default_value():
         if item.dtype is not None:
             counter += 1
             assert item.default is not None
-    assert counter == 6
+    assert counter == 5
 
 
 def test_set_bool_value(mocker):
@@ -126,10 +125,9 @@ def test_configuration_groups_info():
     groups = config.groups()
     assert len(groups) == 5
     user_group = [item.name for item in groups[USER]]
-    assert len(user_group) == 10
+    assert len(user_group) == 9
     assert 'wizard' in user_group
     assert 'main_geometry' in user_group
-    assert 'highDPI' in user_group
     assert 'development' in user_group
     assert 'project_sort_column' in user_group
     assert 'project_sort_order' in user_group

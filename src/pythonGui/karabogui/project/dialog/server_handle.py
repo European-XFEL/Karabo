@@ -36,7 +36,7 @@ class ServerHandleDialog(QDialog):
         servers = self.get_available_servers()
         self.ui_server_id.addItems(servers)
         completer = QCompleter(servers, parent=self)
-        completer.setCaseSensitivity(False)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setCompletionMode(QCompleter.PopupCompletion)
         completer.setFilterMode(Qt.MatchContains)
         self.ui_server_id.setCompleter(completer)

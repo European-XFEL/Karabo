@@ -15,11 +15,11 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtCore import QPoint, QRectF
-from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayLabelModel, LabelModel, SceneModel)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
+from karabogui.const import LEFT_TO_RIGHT
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.tools.clipboard import (
     SceneAlignAction, SceneMoveAction, _add_models_to_clipboard,
@@ -162,7 +162,7 @@ def _assert_model(actual, expected):
 
 
 def _get_label_model(text, x=0, y=0):
-    UBUNTU_FONT_SPEC = 'Ubuntu,48,-1,5,63,0,0,0,0,0'
+    UBUNTU_FONT_SPEC = 'Ubuntu,48,-1,5,50,0,0,0,0,0'
     traits = {'x': x, 'y': y, 'height': 100, 'width': 100,
               'text': text, 'font': UBUNTU_FONT_SPEC,
               'foreground': '#000000', 'background': '#ffffff',
@@ -180,7 +180,7 @@ def _get_layout_model(model, x=0, y=0):
 
     # Initialize layout model
     hbox_model = BoxLayoutModel(x=x, y=y, children=children_model,
-                                direction=QBoxLayout.LeftToRight)
+                                direction=LEFT_TO_RIGHT)
 
     # Correct the position from the initial position and width
     x0, y0 = (x, y)

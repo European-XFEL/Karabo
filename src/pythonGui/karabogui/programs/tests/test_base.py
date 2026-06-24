@@ -17,7 +17,9 @@
 import os
 import sys
 
-from qtpy.QtCore import QLocale
+from qtpy.QtCore import QLocale, Qt
+from qtpy.QtGui import QColor, QPalette
+from qtpy.QtWidgets import QStyleFactory
 
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.programs.base import create_gui_app, init_gui
@@ -39,3 +41,17 @@ def test_start_app(mocker):
     locale = QLocale()
     assert locale.country() == QLocale.UnitedStates
     assert locale.language() == QLocale.English
+
+    palette = app.palette()
+    standard_palette = QStyleFactory.create("Fusion").standardPalette()
+    window_color = standard_palette.color(QPalette.Window)
+    base_color = standard_palette.color(QPalette.Base)
+
+    if IS_MAC_SYSTEM:
+        window_color = QColor(248, 248, 248)
+        base_color = QColor(Qt.white)
+
+    assert palette.color(QPalette.Window) == window_color
+    assert palette.color(QPalette.Base) == base_color
+    # text color is same in all styles.
+    assert palette.color(QPalette.Text) == QColor(Qt.black)

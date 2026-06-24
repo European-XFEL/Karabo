@@ -38,15 +38,14 @@ class HistogramDialog(QDialog):
         self.ui_stop.setEnabled(not state)
         self.ui_bins.setValue(config['bins'])
 
-        self.ui_auto.stateChanged.connect(self.check_scales)
+        self.ui_auto.toggled.connect(self.check_scales)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-    @Slot()
-    def check_scales(self):
-        state = self.ui_auto.isChecked()
-        self.ui_start.setEnabled(not state)
-        self.ui_stop.setEnabled(not state)
+    @Slot(bool)
+    def check_scales(self, toggled):
+        self.ui_start.setEnabled(not toggled)
+        self.ui_stop.setEnabled(not toggled)
 
     @property
     def settings(self):

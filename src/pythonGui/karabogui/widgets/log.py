@@ -151,7 +151,7 @@ class LogWidget(QWidget):
 
         self.table_model = TableLogModel()
         self.filter_model = LogFilterModel()
-        self.filter_model.setFilterCaseSensitivity(False)
+        self.filter_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.filter_model.setFilterRole(Qt.DisplayRole)
         self.filter_model.setFilterKeyColumn(INSTANCE_COLUMN)
         self.filter_model.setSourceModel(self.table_model)
@@ -207,11 +207,10 @@ class LogWidget(QWidget):
     @Slot()
     def _resize_contents(self):
         """Resize columns to contents"""
-        columns = self.table_model.columnCount() - 1
         hor_header = self.table.horizontalHeader()
         hor_header.setMaximumSectionSize(MAX_COLUMN_SIZE)
         hor_header.resizeSections(QHeaderView.ResizeToContents)
-        hor_header.resizeSection(columns, QHeaderView.Stretch)
+        hor_header.setStretchLastSection(True)
 
         ver_header = self.table.verticalHeader()
         ver_header.setMinimumSectionSize(MIN_ROW_SIZE)

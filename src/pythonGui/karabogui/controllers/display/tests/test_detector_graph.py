@@ -25,6 +25,7 @@ from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
+from karabogui.graph.common.api import DetectorAxes
 from karabogui.graph.image.api import karabo_invalid_image
 from karabogui.util import process_qt_events
 
@@ -54,12 +55,12 @@ def test_detector_graph_signals(gui_app):
     assert axis.value is None
     cb_axis = frame_slider.cb_axis
     cb_axis.setCurrentIndex(1)
-    cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
-    assert axis.value == 'Y'
+    cb_axis.currentIndexChanged.emit(axis.value)
+    assert axis.value == DetectorAxes.Y
 
     cb_axis.setCurrentIndex(2)
-    cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
-    assert axis.value == 'Z'
+    cb_axis.currentIndexChanged.emit(axis.value)
+    assert axis.value == DetectorAxes.X
 
     # Test slider
     assert cell.value is None
@@ -134,7 +135,7 @@ def test_detector_graph_basics(detectorGraphTest):
 
     # Assert initial state
     assert not frame_slider.isVisible()
-    assert controller._axis == 0
+    assert controller._axis == DetectorAxes.X
     assert controller._cell == 0
     assert controller._image_node.color_mode is ColorMode.GRAY
 
@@ -142,7 +143,7 @@ def test_detector_graph_basics(detectorGraphTest):
     apply_configuration(image_hash, output_proxy.binding)
 
     # Viewing through X axis
-    frame_slider.axisChanged.emit('X')
+    frame_slider.axisChanged.emit(DetectorAxes.X.value)
 
     image = controller.widget.plot().imageItem.image
     assert image.shape == (30, 40)
@@ -154,14 +155,14 @@ def test_detector_graph_basics(detectorGraphTest):
     assert controller._cell == 4
 
     # Change axis, this should change the viewed image
-    frame_slider.axisChanged.emit('Y')
+    frame_slider.axisChanged.emit(DetectorAxes.Y.value)
     image = controller.widget.plot().imageItem.image
     assert image.shape == (30, 5)
     assert frame_slider.sb_cell.maximum() == 39
     assert frame_slider.sb_cell.value() == 0
 
     # Viewing through Z axis
-    frame_slider.axisChanged.emit('Z')
+    frame_slider.axisChanged.emit(DetectorAxes.Z.value)
     image = controller.widget.plot().imageItem.image
     assert image.shape == (40, 5)
     assert frame_slider.sb_cell.maximum() == 29

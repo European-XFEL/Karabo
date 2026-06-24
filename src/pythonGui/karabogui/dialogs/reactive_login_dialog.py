@@ -222,13 +222,13 @@ class ReactiveLoginDialog(QDialog):
         # verification as soon as real production SSL certificates are
         # used.
         ssl = QSslConfiguration.defaultConfiguration()
-        ssl.setPeerVerifyMode(QSslSocket.VerifyNone)
+        ssl.setPeerVerifyMode(QSslSocket.PeerVerifyMode.VerifyNone)
         QSslConfiguration.setDefaultConfiguration(ssl)
 
         # The socket used to get information from a GUI Server
         self._tcp_socket = QTcpSocket(self)
         self._tcp_socket.readyRead.connect(self.onReadServerData)
-        self._tcp_socket.error.connect(self.onSocketError)
+        self._tcp_socket.errorOccurred.connect(self.onSocketError)
 
         self._timer = QTimer(self)
         self._timer.setInterval(TIMER_DELAY)
@@ -356,7 +356,7 @@ class ReactiveLoginDialog(QDialog):
     @Slot()
     def _connect_to_server(self):
         """Connect to the server"""
-        if self._tcp_socket.state() != QTcpSocket.UnconnectedState:
+        if self._tcp_socket.state() != QTcpSocket.SocketState.UnconnectedState:
             self._tcp_socket.abort()
 
         self._queried_port = self.edit_port.text()
@@ -434,7 +434,7 @@ class ReactiveLoginDialog(QDialog):
             self._clear_refresh_token()
 
         error = reply.error()
-        if error != QNetworkReply.NoError:
+        if error != QNetworkReply.NetworkError.NoError:
             text = reply.errorString()
             self._error = f"Network Error in Authentication: {text}"
             self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
@@ -538,7 +538,7 @@ class ReactiveLoginDialog(QDialog):
 
         request = QNetworkRequest(QUrl(url))
         request.setHeader(
-            QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+            QNetworkRequest.KnownHeaders.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
 
     def _refresh_authentication(self):
@@ -554,7 +554,8 @@ class ReactiveLoginDialog(QDialog):
         url = f"{self._auth_url}refresh_tokens"
 
         request = QNetworkRequest(QUrl(url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
 
     def _clear_refresh_token(self):
@@ -645,7 +646,7 @@ class UserSessionDialog(QDialog):
     @Slot(QNetworkReply)
     def onAuthReply(self, reply: QNetworkReply):
         error = reply.error()
-        if error != QNetworkReply.NoError:
+        if error != QNetworkReply.NetworkError.NoError:
             text = f"Network Error in Authentication: {reply.errorString()}"
             self.error_label.setStyleSheet(
                 "QLabel#error_label {color:red;}")
@@ -755,7 +756,8 @@ class UserSessionDialog(QDialog):
         url = f"{self._auth_url}user_tokens"
 
         request = QNetworkRequest(QUrl(url))
-        request.setHeader(QNetworkRequest.ContentTypeHeader, REQUEST_HEADER)
+        request.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader, REQUEST_HEADER)
         self.access_manager.post(request, info)
 
     def _clear_refresh_token(self):

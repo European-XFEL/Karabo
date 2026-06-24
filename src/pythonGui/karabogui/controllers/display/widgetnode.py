@@ -53,7 +53,9 @@ class DisplayWidgetNode(BaseBindingController):
                        f" {{ background-color : rgba{ALL_OK_COLOR}; }}")
         widget.setStyleSheet(style_sheet)
         widget.setFrameStyle(QFrame.Box)
-        widget.setFont(QFont("Times", 8, QFont.Cursive))
+        font = QFont("Times", 8)
+        font.setStyleHint(QFont.Cursive)
+        widget.setFont(font)
 
         return widget
 

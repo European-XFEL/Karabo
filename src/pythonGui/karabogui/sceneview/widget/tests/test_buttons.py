@@ -1,5 +1,5 @@
 import pytest
-from qtpy.QtCore import QEvent, QPoint, QSize, Qt
+from qtpy.QtCore import QEvent, QPointF, QSize, Qt
 from qtpy.QtGui import QMouseEvent
 
 from karabo.common.scenemodel.api import PopupButtonModel
@@ -34,7 +34,7 @@ def test_button_widget(poup_button_widget):
 
 def test_popup_widget(poup_button_widget):
     """Verify that the popup widget appears with correc text on mouse click."""
-    event = QMouseEvent(QEvent.MouseButtonPress, QPoint(0, 0), Qt.LeftButton,
+    event = QMouseEvent(QEvent.MouseButtonPress, QPointF(0, 0), Qt.LeftButton,
                         Qt.LeftButton, Qt.NoModifier)
     poup_button_widget.mousePressEvent(event)
 

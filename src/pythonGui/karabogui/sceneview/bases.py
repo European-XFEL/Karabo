@@ -32,6 +32,8 @@ class BaseSceneAction(ABCHasStrictTraits):
     # A keyboard shortcut for the action (QKeySequence::StandardKey value)
     # or a QKeySequence
     shortcut = Either(Int, Instance(QKeySequence))
+    shortcut = Either(Int, Instance(QKeySequence),
+                      Instance(QKeySequence.StandardKey))
     # Whether or not this action is checkable
     checkable = Bool(False)
 
