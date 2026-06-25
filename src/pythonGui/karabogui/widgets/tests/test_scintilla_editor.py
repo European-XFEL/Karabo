@@ -15,19 +15,11 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import pytest
-from qtpy import QtModuleNotInstalledError
 
 from karabogui.widgets.scintilla_api import create_symbols
-
-try:
-    from karabogui.widgets.scintilla_editor import (
-        ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,
-        FlakeReporter, check_style)
-    skip_scintilla_tests = False
-except QtModuleNotInstalledError:
-    # QScintilla is not available for Qt6 , yet.
-    skip_scintilla_tests = True
-
+from karabogui.widgets.scintilla_editor import (
+    ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,
+    FlakeReporter, check_style)
 
 MULTILINE_CODE = """
 This is a dummy code
@@ -48,13 +40,8 @@ class New(Macro):  # miss blank lines above
 """
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def code_book(gui_app):
-    # XXX: Remove this check when QScintilla is available for Qt6. Also
-    # don't 'autouse' the fixture.
-    if skip_scintilla_tests:
-        pytest.skip("QScintilla is not supported on Qt6,yet. Skipping the "
-                    "tests")
     book = CodeBook()
     yield book
     book.destroy()

@@ -18,7 +18,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-from qtpy import QtModuleNotInstalledError
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import QDialog, QMenu, QPlainTextEdit, QSplitter
@@ -36,15 +35,10 @@ from karabogui.project.utils import restart_macro, run_macro, run_macro_debug
 from karabogui.singletons.api import get_config, get_topology
 from karabogui.topology.api import is_macro_online
 from karabogui.util import getSaveFileName
+from karabogui.widgets.scintilla_editor import CodeBook
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
-
-try:
-    from karabogui.widgets.scintilla_editor import CodeBook
-except QtModuleNotInstalledError:
-    # for Qt5 compatibility
-    from karabogui.widgets.codeeditor import CodeBook
 
 
 class MacroPanel(BasePanelWidget):

@@ -15,17 +15,11 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from qtpy import QtModuleNotInstalledError
 
 from .hints import (
     DoubleSpinBox, ElidingLabel, FrameWidget, Label, LineEdit, SpinBox,
     SvgWidget)
 from .popup import TextPopupWidget
 from .range_slider import RangeSlider
+from .scintilla_editor import CodeBook
 from .toolbar import ToolBar
-
-try:
-    from .scintilla_editor import CodeBook
-except QtModuleNotInstalledError:
-    # for Qt5 compatibility
-    from .codeeditor import CodeBook
