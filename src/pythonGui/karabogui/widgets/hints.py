@@ -28,7 +28,8 @@ try:
 except QtBindingMissingModuleError:
     from qtpy.QtSvg import QSvgWidget
 
-from qtpy.QtWidgets import QDoubleSpinBox, QFrame, QLabel, QLineEdit, QSpinBox
+from qtpy.QtWidgets import (
+    QCheckBox, QComboBox, QDoubleSpinBox, QFrame, QLabel, QLineEdit, QSpinBox)
 
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.fonts import substitute_font
@@ -42,6 +43,8 @@ STATE_MIN_SIZE = 10
 STATE_WIDTH_HINT = 30
 
 LOCALE = QLocale("en_US")
+
+_EDIT_KEYS = {Qt.Key.Key_Escape, Qt.Key.Key_Enter, Qt.Key.Key_Return}
 
 
 class KaraboSceneWidget:
@@ -204,3 +207,22 @@ class FrameWidget(QLabel):
 
     def sizeHint(self):
         return QSize(STATE_WIDTH_HINT, DEFAULT_SIZE_HINT)
+
+
+class CheckBox(QCheckBox):
+
+    def keyPressEvent(self, event):
+        if event.key() in _EDIT_KEYS:
+            event.ignore()
+            return None
+        return super().keyPressEvent(event)
+
+
+class ComboBox(QComboBox):
+
+    def keyPressEvent(self, event):
+        if event.key() in {Qt.Key_Escape, Qt.Key_Enter, Qt.Key_Return}:
+            event.ignore()
+            return None
+
+        return super().keyPressEvent(event)

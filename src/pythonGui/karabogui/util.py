@@ -62,22 +62,6 @@ def get_application_icon():
 _EDIT_KEYS = {Qt.Key_Escape, Qt.Key_Enter, Qt.Key_Return}
 
 
-class EditKeyEventFilter(QObject):
-    """A QObject which can be used for event filtering of edit keys
-    """
-
-    def __init__(self, widget):
-        super().__init__(widget)
-        self.widget = widget
-
-    def eventFilter(self, obj, event):
-        # Block wheel events
-        if event.type() == QEvent.KeyPress and event.key() in _EDIT_KEYS:
-            return True
-
-        return super().eventFilter(obj, event)
-
-
 class WheelKeyEventFilter(QObject):
     """A QObject which can be used for event filtering of mouse wheel events
     and edit key events
@@ -89,12 +73,7 @@ class WheelKeyEventFilter(QObject):
 
     def eventFilter(self, obj, event):
         # Block wheel events
-        if event.type() == QEvent.Wheel and obj is self.widget:
-            return True
-        if event.type() == QEvent.KeyPress and event.key() in _EDIT_KEYS:
-            return True
-
-        return super().eventFilter(obj, event)
+        return event.type() == QEvent.Wheel and obj is self.widget
 
 
 class SignalBlocker:
