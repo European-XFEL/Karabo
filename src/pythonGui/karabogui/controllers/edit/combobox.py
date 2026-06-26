@@ -19,14 +19,14 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableComboBoxModel
 from karabogui.binding.api import BaseBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, is_proxy_allowed, register_binding_controller)
-from karabogui.util import SignalBlocker, WheelKeyEventFilter
+from karabogui.util import SignalBlocker
+from karabogui.widgets.hints import ComboBox
 
 
 def _is_compatible(binding):
@@ -41,14 +41,11 @@ class EditableComboBox(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(EditableComboBoxModel, args=())
     # Internal traits
-    _filter = Instance(WheelKeyEventFilter)
 
     def create_widget(self, parent):
-        widget = QComboBox(parent)
+        widget = ComboBox(parent)
         widget.setFrame(False)
 
-        self._filter = WheelKeyEventFilter(widget)
-        widget.installEventFilter(self._filter)
         widget.currentIndexChanged.connect(self._on_user_edit)
         widget.setFocusPolicy(Qt.StrongFocus)
         return widget
