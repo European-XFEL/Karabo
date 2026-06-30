@@ -16,8 +16,8 @@
 import pytest
 
 from karabo.bound import (
-    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema,
-    Timestamp)
+    DOUBLE_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, Configurator, Hash,
+    PythonDevice, Schema, Timestamp)
 from karabo.bound_devices import property_test  # noqa
 
 from .device_with_limit import DeviceWithLimit
@@ -97,6 +97,23 @@ def test_schema_injection(device_cfg):
     assert "somethingElse" not in device.getFullSchema().getPaths()
     assert device.getFullSchema().getPaths() == PythonDevice.getSchema(
         device.classId).getPaths()
+
+    # Inject with a node with a leave
+    schema = Schema()
+    NODE_ELEMENT(schema).key("node").commit()
+    INT32_ELEMENT(schema).key("node.int32").readOnly().commit()
+    device.updateSchema(schema)
+    config = device.getCurrentConfiguration()
+    assert "node" in config
+    assert "node.int32" in config
+
+    # Inject again that node - without any leaf
+    schema = Schema()
+    NODE_ELEMENT(schema).key("node").commit()
+    device.updateSchema(schema)
+    config = device.getCurrentConfiguration()
+    assert "node.int32" not in config
+    assert "node" in config
 
     schema = Schema()
     INT32_ELEMENT(schema).key(

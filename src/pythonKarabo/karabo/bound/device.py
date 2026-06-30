@@ -801,11 +801,12 @@ class PythonDevice:
                 if not (self._staticSchema.has(path) or schema.has(path)):
                     self._parameters.erasePath(path)
                     # Now we might have removed 'n.m.l.c' completely although
-                    # 'n.m' is in static schema - restore (empty) node 'n.m':
+                    # 'n.m' is in static schema or injected again as empty.
+                    # So restore (empty) node 'n.m':
                     pathSplit = path.split('.')
                     for i in range(1, len(pathSplit)):
                         p = ".".join(pathSplit[0:-i])  # 'n.m.l', 'n.m', 'n'
-                        if (self._staticSchema.has(p)
+                        if ((self._staticSchema.has(p) or schema.has(p))
                                 and not self._parameters.has(p)):
                             self._parameters[p] = Hash()
                             # 'n.m' added added back (after 'n.m.l' failed)
