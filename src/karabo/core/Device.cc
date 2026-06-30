@@ -507,13 +507,13 @@ namespace karabo {
                 for (const std::string& path : m_injectedSchema.getPaths()) {
                     if (!(m_staticSchema.has(path) || schema.has(path))) {
                         m_parameters.erasePath(path);
-                        // Now we might have removed 'n.m.l.c' completely although 'n.m' is in static schema:
-                        // need to restore (empty) node 'n.m':
+                        // Now we might have removed 'n.m.l.c' completely although 'n.m' is in static schema
+                        // or reinjected (as empty): need to restore (empty) node 'n.m':
                         size_t pos = path.rfind(data::Hash::k_defaultSep); // Last dot to cut path
                         while (pos != std::string::npos) {
                             const std::string& p =
                                   path.substr(0, pos); // first 'n.m.l', then 'n.m' (without break below then 'n')
-                            if (m_staticSchema.has(p) && !m_parameters.has(p)) {
+                            if ((m_staticSchema.has(p) || schema.has(p)) && !m_parameters.has(p)) {
                                 m_parameters.set(p, karabo::data::Hash());
                                 break; // 'n.m' added added back (after 'n.m.l' failed)
                             }

@@ -980,6 +980,34 @@ void TestDeviceTest::testSchemaInjection() {
     const Hash& firstRowAfterInsert = tableAfterInsert[0];
     ASSERT_TRUE(firstRowAfterInsert.get<std::string>("name") == "firstLine");
 
+    // Check that, when injecting a node a second time, but now as empty, that node is in the configuration.
+    {
+        Schema nodeSchema;
+        NODE_ELEMENT(nodeSchema).key("laterEmptyNode").commit();
+        INT32_ELEMENT(nodeSchema).key("laterEmptyNode.int_32").assignmentOptional().defaultValue(42).commit();
+        ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", nodeSchema)
+                              .timeout(requestTimeoutMs)
+                              .receive());
+
+        Hash cfg;
+        std::string dummy;
+        sigSlotA->request("DeviceExampleTest", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
+        EXPECT_TRUE(cfg.has("laterEmptyNode"));
+        EXPECT_TRUE(cfg.has("laterEmptyNode.int_32"));
+
+        // Inject node again, but now as empty
+        Schema emptyNodeSchema;
+        NODE_ELEMENT(emptyNodeSchema).key("laterEmptyNode").commit();
+        ASSERT_NO_THROW(sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", emptyNodeSchema)
+                              .timeout(requestTimeoutMs)
+                              .receive());
+
+        cfg.clear();
+        sigSlotA->request("DeviceExampleTest", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
+        EXPECT_FALSE(cfg.has("laterEmptyNode.int_32"));
+        EXPECT_TRUE(cfg.has("laterEmptyNode"));
+    }
+
     // Reset to static Schema for next test
     ASSERT_NO_THROW(
           sigSlotA->request("DeviceExampleTest", "slotUpdateSchema", Schema()).timeout(requestTimeoutMs).receive());
