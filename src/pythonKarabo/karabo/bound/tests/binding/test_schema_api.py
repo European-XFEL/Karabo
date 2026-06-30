@@ -1050,6 +1050,15 @@ def test_subSchema():
     assert sub.getAliasFromKey("c") == alias
     assert sub.getRootName() == ""
 
+    sub = schema.subSchema("")
+    assert sub.getPaths() == schema.getPaths()
+
+    sub = schema.subSchema("", "prop")
+    assert sub.has("antiAlias")
+    assert sub.has("color")
+    assert sub.has("bold")
+    assert len(sub.getPaths()) == 3
+
     sub = schema.subSchema("rectangle", "b")  # filter for tag "b"
     assert sub.has("b")
     assert not sub.has("c")

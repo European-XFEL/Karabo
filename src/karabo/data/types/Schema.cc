@@ -933,8 +933,8 @@ namespace karabo {
         }
 
         Schema Schema::subSchema(const std::string& subNodePath, const std::string& filterTags) const {
+            const karabo::data::Hash& subHash = (subNodePath.empty() ? m_hash : m_hash.get<Hash>(subNodePath));
             Schema sub;
-            const karabo::data::Hash& subHash = m_hash.get<Hash>(subNodePath);
             sub.setParameterHash(subHash);
             if (!filterTags.empty()) {
                 karabo::data::Hash filteredHash;

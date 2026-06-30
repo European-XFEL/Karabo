@@ -825,7 +825,13 @@ void exportPyUtilSchema(py::module_& m) {
               [](Schema& self, const std::string& subNodePath, const std::string& filterTags) {
                   return self.subSchema(subNodePath, filterTags);
               },
-              py::arg("subNodePath"), py::arg("filterTags") = "");
+              py::arg("subNodePath"), py::arg("filterTags") = "",
+              R"doc(
+      Retrieve a sub-schema for a given subnode path
+
+      If tags are given (as comma separated list), filter accordingly.
+      If subNodePath is empty, just filter the full schema for the given tags.
+            )doc");
 
         s.def(
               "subSchemaByRules",
