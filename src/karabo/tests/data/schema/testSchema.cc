@@ -1614,6 +1614,16 @@ TEST_F(TestSchema, testSubSchema) {
         EXPECT_STREQ("", sub.getRootName().c_str()); // we have another hierarchy level, not match anymore
     }
     {
+        Schema sub = schema.subSchema(std::string());
+        EXPECT_EQ(sub.getPaths(), schema.getPaths());
+
+        sub = schema.subSchema(std::string(), "prop");
+        EXPECT_TRUE(sub.has("antiAlias"));
+        EXPECT_TRUE(sub.has("color"));
+        EXPECT_TRUE(sub.has("bold"));
+        EXPECT_EQ(sub.getPaths().size(), 3) << sub;
+    }
+    {
         Schema sub = schema.subSchema("rectangle", "b"); // filter for tag "b"
         EXPECT_TRUE(sub.has("b"));
         EXPECT_TRUE(!sub.has("c"));
