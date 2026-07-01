@@ -15,6 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+from qtpy.QtCore import QRectF
 from qtpy.QtGui import QImage
 
 from karabogui.graph.image.api import karabo_default_image
@@ -108,6 +109,41 @@ class TestKaraboImageItem(_BaseImageItemTest):
         self.assert_indexed_image(indexed_image, downsampling=1.5)
         self.assert_rgb_image(rgb_image)
         self.assert_indexed_image(indexed_image, downsampling=1.5)
+
+    def test_render_does_not_mutate_source_array(self):
+        image = np.arange(100, dtype=np.float32).reshape(10, 10)
+        original = image.copy()
+
+        self.imageItem.autoDownsample = False
+        self.imageItem.setImage(image)
+        self.imageItem.setLevels([20.0, 80.0], update=False)
+        self.imageItem._slice_rect = QRectF(0, 0, image.shape[1],
+                                            image.shape[0])
+        self.imageItem.render()
+
+        np.testing.assert_array_equal(image, original)
+
+    def test_scaler_receives_effective_levels(self):
+        class RecordingScaler:
+            levels = None
+
+            def scale(self, data, cmin, cmax, low=0, high=255, levels=None):
+                self.levels = levels
+                return np.zeros(data.shape, dtype=np.uint8)
+
+        image = np.linspace(20.0, 80.0, num=4,
+                            dtype=np.float32).reshape(2, 2)
+        scaler = RecordingScaler()
+
+        self.imageItem.autoDownsample = False
+        self.imageItem.scaler = scaler
+        self.imageItem.setImage(image)
+        self.imageItem.setLevels([0.0, 100.0], update=False)
+        self.imageItem._slice_rect = QRectF(0, 0, image.shape[1],
+                                            image.shape[0])
+        self.imageItem.render()
+
+        assert scaler.levels == (0.0, 100.0)
 
     def test_translation(self):
         """Test the translation of an image which is used by external clients

@@ -49,6 +49,8 @@ class KaraboImagePlot(PlotItem):
     imageLevelsChanged = Signal(object)
     imageAxesChanged = Signal()
 
+    image_item_class = KaraboImageItem
+
     def __init__(self, parent=None):
         super().__init__(
             viewBox=KaraboImageViewBox(parent=None),
@@ -57,7 +59,7 @@ class KaraboImagePlot(PlotItem):
             parent=parent)
 
         # Initialize widgets
-        self.imageItem = KaraboImageItem(parent=self)
+        self.imageItem = self.image_item_class(parent=self)
         # aligning the image coords to view coords
         self.imageItem.axisOrder = AXIS_ORDER
 

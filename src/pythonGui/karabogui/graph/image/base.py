@@ -46,6 +46,9 @@ class KaraboImageView(QWidget):
     stateChanged = Signal(object)
     toolTipChanged = Signal()
 
+    plot_item_class = KaraboImagePlot
+    colorbar_class = ColorBarWidget
+
     def __init__(self, parent=None):
         """ The main image view widget for a single ImagePlot
 
@@ -68,7 +71,7 @@ class KaraboImageView(QWidget):
         self.image_layout.setPalette(palette)
 
         # Add our basic plotItem to this widget
-        self.plotItem = KaraboImagePlot(parent=self.image_layout.ci)
+        self.plotItem = self.plot_item_class(parent=self.image_layout.ci)
         self.plotItem.imageLevelsChanged.connect(self._image_levels_changed)
         self.plotItem.imageItem.sigImageChanged.connect(self._image_changed)
 
@@ -147,7 +150,7 @@ class KaraboImageView(QWidget):
             plotItem = self.plotItem
 
             image = plotItem.imageItem
-            self._colorbar = ColorBarWidget(image, parent=plotItem)
+            self._colorbar = self.colorbar_class(image, parent=plotItem)
 
             top_axis_checked = plotItem.getAxis("top").style["showValues"]
             top_margin = X_AXIS_HEIGHT * top_axis_checked

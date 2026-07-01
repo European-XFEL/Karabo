@@ -21,6 +21,9 @@ from karabogui.graph.common.api import AuxPlots, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..base import KaraboImageView
+from ..colorbar import ColorBarWidget
+from ..item import KaraboImageItem
+from ..plot import KaraboImagePlot
 
 
 class TestKaraboImageView(GuiTestCase):
@@ -36,6 +39,28 @@ class TestKaraboImageView(GuiTestCase):
         self.aux_plots.destroy()
         self.widget.destroy()
         self.widget = None
+
+    def test_factories_can_be_overridden(self):
+        class CustomImageItem(KaraboImageItem):
+            pass
+
+        class CustomPlot(KaraboImagePlot):
+            image_item_class = CustomImageItem
+
+        class CustomColorBar(ColorBarWidget):
+            pass
+
+        class CustomView(KaraboImageView):
+            plot_item_class = CustomPlot
+            colorbar_class = CustomColorBar
+
+        widget = CustomView()
+        try:
+            assert isinstance(widget.plotItem, CustomPlot)
+            assert isinstance(widget.plotItem.imageItem, CustomImageItem)
+            assert isinstance(widget.add_colorbar(), CustomColorBar)
+        finally:
+            widget.destroy()
 
     def test_first_image(self):
         """ This test checks when the image is set,

@@ -309,12 +309,14 @@ class KaraboImageItem(GraphicsObject):
                 # Typically, levels are not `None` due to auto_levels assigning
                 # the levels
                 image_min, image_max = image.min(), image.max()
+                levels = (image_min, image_max)
             else:
                 # Levels are assigned and we have to clip the
                 # image and rescale the minimum and maximum.
                 level_min, level_max = self.levels.astype(image.dtype)
-                # In place clipping with correct dtype
-                image = np.clip(image, level_min, level_max, out=image)
+                levels = (level_min, level_max)
+                # Clip with correct dtype without mutating source data.
+                image = np.clip(image, level_min, level_max)
                 image_min, image_max = image.min(), image.max()
                 # Calculate new color ranges with the ratio of the image
                 # extrema and the preset levels.
@@ -322,9 +324,11 @@ class KaraboImageItem(GraphicsObject):
                     image_min, image_max, cmin=level_min, cmax=level_max,
                     low=low, high=high)
             # 4. Rescale values to 0-255 relative to the image min/max
-            # for the QImage
+            # for the QImage. Pass the effective levels so subclasses can
+            # apply non-linear mappings against the configured value range.
             image = self.scaler.scale(
-                image, cmin=image_min, cmax=image_max, low=low, high=high)
+                image, cmin=image_min, cmax=image_max, low=low, high=high,
+                levels=levels)
 
             # 6. Create QImage
             qimage = self._build_qimage(image,
