@@ -580,7 +580,7 @@ Bug Fixes
 - *(No Category)* Fix karabind by using stubs generation (`!9740 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9740>`__)
 - *(No Category)* Fix lint stage (`!9484 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9484>`__)
 - *(No Category)* Fix Python tooling after the TOML migration and invoke pytest and the GUI build correctly (`!9493 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9493>`__)
-- *(No Category)* Fix reported vulnerabilities (`!9767 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9767>`__)
+- *(No Category)* Fix reported vulnerabilities (thank you to Klaurx, klaurxzzz@gmail.com, for finding and reporting) (`!9767 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9767>`__)
 - *(No Category)* FIX RPATH set command in C++ template (`!9569 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9569>`__)
 - *(No Category)* Increase the time between sending a final notification and disconnecting (`!9821 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9821>`__)
 - *(No Category)* Inform about possible case mismatch if 'karabo uninstall' fails (`!9549 <https://git.xfel.eu/Karabo/Framework/-/merge_requests/9549>`__)
