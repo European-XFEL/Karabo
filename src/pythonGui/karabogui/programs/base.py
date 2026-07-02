@@ -21,12 +21,11 @@ from traceback import format_exception, print_exception
 
 from pyqtgraph import setConfigOptions
 from qtpy.QtCore import QLocale, Qt
-from qtpy.QtGui import QColor, QFont, QFontDatabase, QPalette, QPixmap
+from qtpy.QtGui import QFont, QFontDatabase, QPixmap
 from qtpy.QtWidgets import QApplication, QSplashScreen, QStyleFactory
 
 from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
 from karabogui.background import create_background_timer
-from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import get_manager, get_panel_wrangler
@@ -49,55 +48,17 @@ def set_app_info(app, company, url, name):
     app.setApplicationName(name)
 
 
-def _create_light_palette():
-    """Create a light application palette independent of the system theme."""
-    palette = QPalette()
-
-    window = QColor(248, 248, 248)
-    base = QColor(Qt.white)
-    alternate_base = QColor(242, 242, 242)
-    text = QColor(Qt.black)
-    accent = QColor(0, 120, 215)
-
-    for role, color in (
-        (QPalette.Window, window),
-        (QPalette.Base, base),
-        (QPalette.AlternateBase, alternate_base),
-        (QPalette.Button, window),
-        (QPalette.ToolTipBase, base),
-        (QPalette.WindowText, text),
-        (QPalette.Text, text),
-        (QPalette.ButtonText, text),
-        (QPalette.ToolTipText, text),
-        (QPalette.Highlight, accent),
-        (QPalette.HighlightedText, QColor(Qt.white)),
-        (QPalette.Link, QColor(0, 102, 204)),
-        (QPalette.LinkVisited, QColor(102, 0, 153)),
-    ):
-        palette.setColor(role, color)
-
-    disabled_text = QColor(127, 127, 127)
-    for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
-        palette.setColor(QPalette.Disabled, role, disabled_text)
-
-    return palette
-
-
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     app = QApplication.instance()
     if app is None:
         app = QApplication(args)
+    app.styleHints().setColorScheme(Qt.ColorScheme.Light)
     # Set directly the QSettings environment to have access
     set_app_info(app, "XFEL", "xfel.eu", "KaraboGUI")
     create_background_timer()
     style = QStyleFactory.create("Fusion")
     palette = style.standardPalette()
-    if IS_MAC_SYSTEM:
-        # MacOS do not use the pallet for drawing, it uses system native theme.
-        # To avoid showing GUI in dark theme , if the system is dark, we use a
-        # custom light palette.
-        palette = _create_light_palette()
     app.setStyle(style)
     app.setPalette(palette)
 

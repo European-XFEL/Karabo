@@ -47,10 +47,6 @@ def test_start_app(mocker):
     window_color = standard_palette.color(QPalette.Window)
     base_color = standard_palette.color(QPalette.Base)
 
-    if IS_MAC_SYSTEM:
-        window_color = QColor(248, 248, 248)
-        base_color = QColor(Qt.white)
-
     assert palette.color(QPalette.Window) == window_color
     assert palette.color(QPalette.Base) == base_color
     # text color is same in all styles.
