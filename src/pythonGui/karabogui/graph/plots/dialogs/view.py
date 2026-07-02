@@ -44,7 +44,7 @@ class GraphViewDialog(QDialog):
 
     @Slot(int)
     def on_ui_cb_background_stateChanged(self, state):
-        if state != Qt.Checked:
+        if Qt.CheckState(state) != Qt.CheckState.Checked:
             self.graph_bg_color = "transparent"
 
     @Slot(bool)
