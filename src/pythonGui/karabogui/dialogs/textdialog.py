@@ -96,7 +96,7 @@ class TextDialog(QDialog):
 
     @Slot(int)
     def on_cbBackground_stateChanged(self, state):
-        if state != Qt.Checked:
+        if Qt.CheckState(state) != Qt.CheckState.Checked:
             self.label_model.background = 'transparent'
             self.set_text_background_button()
 
