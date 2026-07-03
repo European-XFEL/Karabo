@@ -16,6 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from unittest import main, mock
 
+import numpy as np
 from qtpy.QtCore import QItemSelectionModel, QPoint, Qt
 from qtpy.QtGui import QColor
 
@@ -262,9 +263,9 @@ class TestConfiguratorDevice(GuiTestCase):
             menu.assert_called_once()
 
         # Show the pop up widget
-        rect = self.view.visualRect(self.model.index(0, 0))
-        event_pos = QPoint(rect.x(), rect.y())
         with mock.patch("karabogui.configurator.view.PopupWidget") as widget:
+            rect = self.view.visualRect(self.model.index(0, 0))
+            event_pos = QPoint(rect.x(), rect.y())
             self.view._show_popup_widget(self.model.index(0, 0), event_pos)
             widget.assert_called_once()
             widget().setInfo.assert_called_with(
@@ -276,9 +277,28 @@ class TestConfiguratorDevice(GuiTestCase):
                       ('Assignment', 'OPTIONAL'),
                       ('Value on device', 'ON'),
                       ('displayType', "State"),
+                      ]))
+            assert self.view.popup_widget is not None
+
+            rect = self.view.visualRect(self.model.index(2, 0))
+            event_pos = QPoint(rect.x(), rect.y())
+            widget.reset_mock()
+            self.view._show_popup_widget(self.model.index(2, 0), event_pos)
+            # widget.assert_called_once()
+            widget().setInfo.assert_called_with(
+                dict([('Property', 'bar'), ('Key', 'bar'),
+                      ('Default Value', np.float32(1.2)),
+                      ('Value Type', 'Float'),
+                      ('AccessLevel', 'OPERATOR'),
+                      ('AccessMode', 'RECONFIGURABLE'),
+                      ('Assignment', 'OPTIONAL'),
+                      ('Value on device', np.float32(1.2)),
                       ('metricPrefixSymbol', ''),
                       ('unitSymbol', ''),
-                      ]))
+                      ('maxInc', np.float32(10.0)),
+                      ('minInc', np.float32(0.0)),
+                      ])
+            )
             assert self.view.popup_widget is not None
 
     def test_modeltester_qt(self):

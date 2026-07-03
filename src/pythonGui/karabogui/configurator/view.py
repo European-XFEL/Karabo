@@ -41,7 +41,8 @@ from karabo.common.api import (
 from karabo.native import AccessLevel, AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
-    BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
+    BaseBinding, DeviceProxy, PropertyProxy, StringBinding, VectorHashBinding,
+    VectorStringBinding)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.widgets.popup import PopupWidget
@@ -268,12 +269,14 @@ class ConfigurationTreeView(QTreeView):
         if isinstance(obj.root_proxy, DeviceProxy):
             info['Value on device'] = get_proxy_value(index, obj)
 
-        # Unit related attributes
-        additional_attrs = (KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-                            KARABO_SCHEMA_UNIT_SYMBOL)
-        for attr_name in additional_attrs:
-            attr = attributes.get(attr_name)
-            info[attr_name] = attr
+        _NO_UNIT = (StringBinding, VectorStringBinding, VectorHashBinding)
+        if not isinstance(binding, _NO_UNIT):
+            # Unit related attributes
+            additional_attrs = (KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+                                KARABO_SCHEMA_UNIT_SYMBOL)
+            for attr_name in additional_attrs:
+                attr = attributes.get(attr_name)
+                info[attr_name] = attr
 
         # Other additional attributes
         additional_attrs = [
