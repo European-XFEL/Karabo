@@ -16,11 +16,30 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import argparse
 import sys
+from importlib import import_module
 
 from karabo.common.scenemodel.api import set_scene_reader
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_config
+from karabogui.util import is_bundled_gui
+
+GUI = "gui"
+CINEMA = "cinema"
+CONCERT = "concert"
+THEATRE = "theatre"
+
+PROGRAM_MODULES = {
+    GUI: "karabogui.programs.gui_runner",
+    CINEMA: "karabogui.programs.cinema",
+    CONCERT: "karabogui.programs.concert",
+    THEATRE: "karabogui.programs.theatre",
+}
+
+
+def _get_program_main(program):
+    module_name = PROGRAM_MODULES[program]
+    return import_module(module_name).main
 
 
 def run_gui(ns):
@@ -42,10 +61,40 @@ def run_gui(ns):
     sys.exit()
 
 
+def create_gui_parser():
+    parser = argparse.ArgumentParser(description="Karabo GUI")
+    parser.add_argument("-dev", "--dev", action="store_true")
+    return parser
+
+
 def main():
-    ap = argparse.ArgumentParser(description='Karabo GUI')
-    ap.add_argument('-dev', '--dev', action='store_true')
-    run_gui(ap.parse_args())
+    if is_bundled_gui():
+        parser = argparse.ArgumentParser(description="Karabo GUI")
+        parser.add_argument(
+            "program",
+            nargs="?",
+            default=GUI,
+            choices=(GUI, CINEMA, THEATRE, CONCERT),
+            help="Choose the Karabo application mode - cinema, theatre or "
+                 "concert. The main GUI is launched when no argument is "
+                 "provided."
+        )
+        ns, remaining = parser.parse_known_args()
+        program = ns.program
+
+        if program != GUI:
+            original_argv = sys.argv[:]
+            try:
+                sys.argv = [sys.argv[0], *remaining]
+                _get_program_main(program)()
+            finally:
+                sys.argv = original_argv
+            return
+
+        run_gui(create_gui_parser().parse_args(remaining))
+        return
+
+    run_gui(create_gui_parser().parse_args())
 
 
 if __name__ == '__main__':
