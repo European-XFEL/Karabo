@@ -32,6 +32,7 @@ dependencies:
   - setuptools_scm>=7.*
   - pip>=23.3.*
   # +++ run
+  - python=3.14.*
   - flake8=7.3.0
   - isort=8.0.1
   - pytest=9.0.2
