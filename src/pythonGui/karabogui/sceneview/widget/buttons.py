@@ -29,7 +29,7 @@ class PopupButtonWidget(KaraboSceneWidget, QToolButton):
     def __init__(self, model, parent=None):
         super().__init__(model=model, parent=parent)
         self.setMinimumSize(self.iconSize())
-
+        self.setCursor(Qt.PointingHandCursor)
         edit_text_action = QAction("Edit Text", self)
         edit_text_action.triggered.connect(self._edit_text)
         self.addAction(edit_text_action)
