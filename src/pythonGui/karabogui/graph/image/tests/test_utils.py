@@ -74,6 +74,12 @@ def test_bytescale():
     assert bytescaled[-1] == 100
 
     bytescaled = bytescale.scale(
+        image, cmin=min_level, cmax=max_level,
+        low=5, high=100, levels=(min_level, max_level))
+    assert bytescaled[0] == 5
+    assert bytescaled[-1] == 100
+
+    bytescaled = bytescale.scale(
         image, cmin=None, cmax=None,
         low=5, high=100)
     assert bytescaled[0] == 5
