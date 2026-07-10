@@ -199,7 +199,14 @@ class ByteScaler:
             self._out_buffer = np.empty(data.shape, dtype=np.uint8)
             self._shape = data.shape
 
-    def scale(self, data, cmin, cmax, low=0, high=255):
+    def scale(self, data, cmin, cmax, low=0, high=255, levels=None):
+        """Scale image data to byte values.
+
+        The optional levels argument carries the effective image levels
+        used by the caller. The base scaler keeps the existing linear
+        behaviour, while subclasses can use these levels for non-linear
+        mappings which need the full configured value range.
+        """
         high = round(high)
         low = round(low)
         if high > 255:
