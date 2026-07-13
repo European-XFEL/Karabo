@@ -248,7 +248,7 @@ class LoadProjectDialog(QDialog):
             get_logger().info(text)
             self.accept()
 
-    @Slot(str)
+    @Slot(int)
     def on_cbDomain_currentIndexChanged(self, domain):
         self.update_view()
 
