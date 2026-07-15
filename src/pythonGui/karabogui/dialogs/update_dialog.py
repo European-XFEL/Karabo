@@ -289,7 +289,7 @@ class UpdateDialog(QDialog):
             self._process.readyRead.connect(self._on_output)
             self._process.finished.connect(self._on_finished)
             self.loadingbar.setVisible(True)
-            self._process.start(cmd)
+            self._process.startCommand(cmd)
 
     def _start_package_install(self, package, tag):
         """Create a QProcess to update to the latest tag.
