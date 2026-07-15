@@ -35,7 +35,7 @@ class TestTipWizard(GuiTestCase):
         self.wizard = None
 
     def test_basic_wizard(self):
-        assert len(self.wizard.pageIds()) == 8
+        assert len(self.wizard.pageIds()) == 7
         assert self.wizard.windowTitle() == "Karabo Tips & Tricks"
         assert self.wizard.wizardStyle() == QWizard.ClassicStyle
 
