@@ -179,6 +179,24 @@ def test_arrow_with_polygon():
     assert arrow_model.hx2 == read_model.hx2
     assert arrow_model.hy2 == read_model.hy2
 
+    arrow_model.x = 30
+    arrow_model.y = 60
+
+    # When the arrow is moved (like in Paste action on Scene) make sure the
+    # arrow head points are also updated.
+    assert arrow_model.hx1 != read_model.hx1
+    assert arrow_model.hy1 != read_model.hy1
+    assert arrow_model.hx2 != read_model.hx2
+    assert arrow_model.hy2 != read_model.hy2
+
+    hx1, hy1, hx2, hy2 = get_arrowhead_points(
+        arrow_model.x1, arrow_model.y1, arrow_model.x2, arrow_model.y2)
+
+    assert arrow_model.hx1 == hx1
+    assert arrow_model.hy1 == hy1
+    assert arrow_model.hx2 == hx2
+    assert arrow_model.hy2 == hy2
+
 
 def test_polygon_arrow_from_xml_def():
 

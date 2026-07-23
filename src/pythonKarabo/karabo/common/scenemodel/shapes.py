@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from xml.etree.ElementTree import SubElement
 
-from traits.api import CInt, Property, String
+from traits.api import Bool, CInt, Property, String
 
 from karabo.common.utils import get_arrowhead_points
 
@@ -76,11 +76,37 @@ class ArrowPolygonModel(LineModel):
     width = Property(CInt)
     height = Property(CInt)
 
+    # To calculate arrowhead only once for x, y value changes.
+    _changing = Bool(False)
+
     def _get_width(self):
         return max(abs(self.x1 - self.x2), ARROW_MIN_SIZE)
 
     def _get_height(self):
         return max(abs(self.y1 - self.y2), ARROW_MIN_SIZE)
+
+    def _set_x(self, x):
+        super()._set_x(x)
+        self._recalculate_arrowhead_points()
+
+    def _set_y(self, y):
+        super()._set_y(y)
+        self._recalculate_arrowhead_points()
+
+    # Override x and y to avoid arrow head points outdated, when pasting the
+    # arrow. Pasting the arrow silently (without notifying the trait changed)
+    # update x and y values.
+    x = Property(LineModel._get_x, _set_x, trait=CInt)
+    y = Property(LineModel._get_y, _set_y, trait=CInt)
+
+    def _recalculate_arrowhead_points(self):
+        if not self._changing:
+            # Both x and y are not ready yet.
+            self._changing = True
+        else:
+            points = get_arrowhead_points(self.x1, self.y1, self.x2, self.y2)
+            self.hx1, self.hy1, self.hx2, self.hy2 = points
+            self._changing = False
 
 
 class RectangleModel(BaseShapeObjectData):
