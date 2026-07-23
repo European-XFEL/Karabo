@@ -16,11 +16,15 @@ Use this file when the code contains bound-Python buzzwords such as:
 - `PythonDevice`
 - `@KARABO_CLASSINFO(...)`
 - `@KARABO_CONFIGURATION_BASE_CLASS`
+- `karabo.bound.DeviceClient`
+
+Use this file also when the code is Python and contains the following
+bound-Python buzzwords (but note that these also appear in C++ code):
+
 - `registerInitialFunction(...)`
 - `registerSlot(...)` or `KARABO_SLOT(...)`
 - `KARABO_ON_DATA(...)`, `KARABO_ON_INPUT(...)`, `KARABO_ON_EOS(...)`
 - `Hash`, `Schema`, `ImageData`, `OutputChannel`, `InputChannel`
-- `karabo.bound.DeviceClient`
 
 Do not use this guide for:
 
