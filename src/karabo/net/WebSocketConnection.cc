@@ -90,10 +90,20 @@ namespace karabo::net {
             KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "onAccept : ec=" << ec;
 
             if (ec == beast::errc::operation_canceled) return; // 'stop()' is called?
-            if (ec) fail(ec, "accept");
+            if (ec) {
+                recycleAcceptor();
+                fail(ec, "accept");
+            }
             // Create websocket pointer
             m_ws = std::make_shared<websocket::stream<beast::tcp_stream>>(std::move(socket));
             run();
+        }
+
+        void recycleAcceptor() {
+            if (m_acceptor.is_open()) {
+                m_acceptor.cancel();
+                m_acceptor.close();
+            }
         }
 
         // Get on the correct executor
@@ -120,7 +130,10 @@ namespace karabo::net {
         void onHandshake(beast::error_code ec) {
             KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "onHandshake : ec=" << ec;
 
-            if (ec) return fail(ec, "accept-handshake");
+            if (ec) {
+                recycleAcceptor();
+                fail(ec, "accept-handshake");
+            }
 
             // For testing purposes we activate control callback...
             m_ws->control_callback([](boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
