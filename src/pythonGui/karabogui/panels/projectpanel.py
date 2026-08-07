@@ -99,13 +99,14 @@ class ProjectPanel(BasePanelWidget):
             name="new"
         )
         load = KaraboAction(
-            icon=icons.load, text="&Load Project",
+            icon=icons.project_open, text="&Load Project",
             tooltip="Load an Existing Project",
             triggered=_project_load_handler,
             name="load"
         )
         load_with_item = KaraboAction(
-            icon=icons.filein, text="Find and &Load Project with Item Names",
+            icon=icons.project_search,
+            text="Find and &Load Project with Item Names",
             tooltip="Find and Load Project with Item Names",
             triggered=_project_with_device_load_handler,
             name="load_with_item"
