@@ -19,6 +19,9 @@ import sys
 import subprocess
 import os
 import os.path as op
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
+from types import ModuleType
 from unittest.mock import MagicMock
 
 sys.path.append(op.abspath("../src/pythonKarabo"))
@@ -33,24 +36,72 @@ LOCAL_MODULES = [
 for mod_name in LOCAL_MODULES:
     sys.modules.pop(mod_name)
 
+# Optional dependencies imported by the documented APIs.
 MOCK_MODULES = [
-    "traits.traits_listener", "lxml", "paho", "async_timeout",
-    "paho.mqtt", "paho.mqtt.client", "karabogui._version",
-    "aiormq", "aiormq.exceptions", "aiormq.base",
-    "pycodestyle", "pyflakes.api", "natsort", "dateutil",
-    "dateutil.parser", "dateutil.tz", "psutil", "lxml",
-    "lxml.builder",
-    "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets", "qtpy.Qsci",
-    "pyqtgraph", "pyqtgraph.exporters", "pyqtgraph.graphicsItems",
-    "pyqtgraph.graphicsItems.LegendItem", "scipy", "scipy.optimize",
-    "scipy.ndimage", "scipy.stats", "lttbc", "karabogui.sceneview.api",
-    "qtpy.QtSvg", "tabulate", "karabogui.controllers.table.api", "aioredis",
-    "IPython.qt.console.pygments_highlighter", "qtpy.QtNetwork",
     "karabind",
-    "karabo._version", "karabo.common.packaging.utils",
+    "karabo.common.packaging.utils",
+    "karabogui._version",
+    "karabogui.controllers.table.api",
+    "karabogui.sceneview.api",
+    # karabogui.api only re-exports this function; importing its Qt-based
+    # implementation fails in the headless documentation environment.
+    "karabogui.sceneview.view",
+    "lttbc",
+    "natsort",
+    "psutil",
+    "pycodestyle",
+    "pyflakes.api",
+    "tabulate",
 ]
 
 sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+
+
+class MockPackage(ModuleType):
+    """Mock module that also supports imports of child modules."""
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.__path__ = []
+
+    def __getattr__(self, name):
+        value = MagicMock(name=f"{self.__name__}.{name}")
+        setattr(self, name, value)
+        return value
+
+
+class MockPackageFinder(MetaPathFinder, Loader):
+    """Create mocked package descendants on demand."""
+
+    def __init__(self, roots):
+        self.roots = tuple(roots)
+
+    def find_spec(self, fullname, path=None, target=None):
+        if any(fullname.startswith(f"{root}.") for root in self.roots):
+            return ModuleSpec(fullname, self, is_package=True)
+        return None
+
+    def create_module(self, spec):
+        return MockPackage(spec.name)
+
+    def exec_module(self, module):
+        pass
+
+
+# Only package roots are needed; descendants are created by MockPackageFinder.
+MOCK_PACKAGE_MODULES = [
+    "aiormq",
+    "dateutil",
+    "lxml",
+    "pyqtgraph",
+    "qtpy",
+    "scipy",
+    "sqlalchemy",
+    "sqlmodel",
+]
+sys.modules.update(
+    (mod_name, MockPackage(mod_name)) for mod_name in MOCK_PACKAGE_MODULES)
+sys.meta_path.insert(0, MockPackageFinder(MOCK_PACKAGE_MODULES))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

@@ -55,8 +55,6 @@ The atomic bindings
 
 .. autoclass:: karabogui.api.CharBinding()
 
-.. autoclass:: karabogui.api.ComplexBinding()
-
 .. autoclass:: karabogui.api.FloatBinding()
 
 .. autoclass:: karabogui.api.Int8Binding()
@@ -69,8 +67,6 @@ The atomic bindings
 
 .. autoclass:: karabogui.api.StringBinding()
 
-.. autoclass:: karabogui.api.TableBinding()
-
 .. autoclass:: karabogui.api.Uint8Binding()
 
 .. autoclass:: karabogui.api.Uint16Binding()
@@ -82,10 +78,6 @@ The atomic bindings
 .. autoclass:: karabogui.api.VectorBoolBinding()
 
 .. autoclass:: karabogui.api.VectorCharBinding()
-
-.. autoclass:: karabogui.api.VectorComplexDoubleBinding()
-
-.. autoclass:: karabogui.api.VectorComplexFloatBinding()
 
 .. autoclass:: karabogui.api.VectorDoubleBinding()
 

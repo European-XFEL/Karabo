@@ -118,17 +118,15 @@ Retrieve historic configuration information about a device:
 
 Working with named configurations:
 
-.. autofunction:: karabo.middlelayer.getConfigurationFromName
+.. autofunction:: karabo.middlelayer.getInitConfiguration
 
-.. autofunction:: karabo.middlelayer.getLastConfiguration
-
-.. autofunction:: karabo.middlelayer.listConfigurationFromName
+.. autofunction:: karabo.middlelayer.listInitConfigurations
 
 .. autofunction:: karabo.middlelayer.listDevicesWithConfiguration
 
-.. autofunction:: karabo.middlelayer.instantiateFromName
+.. autofunction:: karabo.middlelayer.instantiateDevice
 
-.. autofunction:: karabo.middlelayer.saveConfigurationFromName
+.. autofunction:: karabo.middlelayer.saveInitConfiguration
 
 
 The command line also provides functions to compare device configurations:
@@ -181,9 +179,6 @@ Writing a device
 
 .. autoclass:: karabo.middlelayer.DeviceClientBase
 
-.. autoclass:: karabo.middlelayer.Injectable
-   :members:
-
 .. autoexception:: karabo.middlelayer.KaraboError
 
 Synchronization
@@ -224,7 +219,7 @@ Karabo descriptors
 The atomic Karabo descriptors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. inheritance-diagram:: ComplexDouble ComplexFloat Double Float Int16 Int32 Int64 Int8 UInt16 UInt32 UInt64 UInt8 Bool VectorDouble VectorFloat VectorInt16 VectorInt32 VectorInt64 VectorInt8 VectorUInt16 VectorUInt32 VectorUInt64 VectorUInt8 VectorComplexDouble VectorComplexFloat VectorBool String VectorString VectorChar Char
+.. inheritance-diagram:: Double Float Int16 Int32 Int64 Int8 UInt16 UInt32 UInt64 UInt8 Bool VectorDouble VectorFloat VectorInt16 VectorInt32 VectorInt64 VectorInt8 VectorUInt16 VectorUInt32 VectorUInt64 VectorUInt8 VectorBool String VectorString VectorChar Char
    :parts: 1
 
 
@@ -257,10 +252,6 @@ can handle:
 .. autoclass:: karabo.middlelayer.String()
 
 .. autoclass:: karabo.middlelayer.VectorChar()
-
-.. autoclass:: karabo.middlelayer.ComplexDouble()
-
-.. autoclass:: karabo.middlelayer.ComplexFloat()
 
 .. autoclass:: karabo.middlelayer.Double()
 
@@ -303,10 +294,6 @@ can handle:
 .. autoclass:: karabo.middlelayer.VectorUInt64()
 
 .. autoclass:: karabo.middlelayer.VectorUInt8()
-
-.. autoclass:: karabo.middlelayer.VectorComplexDouble()
-
-.. autoclass:: karabo.middlelayer.VectorComplexFloat()
 
 .. autoclass:: karabo.middlelayer.VectorBool()
 
