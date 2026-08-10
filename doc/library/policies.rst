@@ -12,30 +12,18 @@ This section describes the policies implemented for the signal and slot communic
 
 - All signals and slots are uniquely defined by an instanceId (string) and a function name (string)
 - Signals and slots use the message broker for transport and routing
-- In a JMS sense signals are producers and slot are consumers
-- The connection information between a signal and a slot is kept with the signal (it keeps all instanceIds and function names of the connected slots)
-- The connected slots information is shipped in the header of the JMS message upon an signal emit
-- The correct routing of a connected signal slot pair is done using JMS selectors
+- In a sense signals are producers and slot are consumers
 - The slot will always select for messages that contain the slots own instanceId, i.e. on the broker the selection is done on an instance level
 - The final function routing is done on the slot instance locally
 - Messages are consumed by an extra thread into a local message queue of the slot instance
 - A configurable number of threads (default 2) pops the messages from the queue and trigger the final slot function call-back
 - A connect between a signal and slot in principle looks like connect(signalInstanceId, signalFunction, slotInstanceId, slotFunction)
-- Establishing connection can be done in two types: NO_TRACK, TRACK
-- In the NO_TRACK case, after the connection was established no further information about existence is tracked nor reported, lost connections are not re-established, 
-- In the TRACK case the connecting partners are automatically connected once the instances are availabe, this allows to connect to not-yet existing slots/signals 
-- The connect call itself returns a boolean indicating whether the connection could be established or not. The call has an internal timeout of 1 second.  
+- The connect call itself returns a boolean indicating whether the connection could be established or not. The call has an internal timeout of 1 second.
 - Besides the asynchronous signal and slot communication pattern 4 other exists
   - call (asynchronous, fire and forget)
   - request/reply (synchronous with timeout)
   - requestNoWait / reply to other slot (asynchronous)
   - request / reply on provided callBack (asynchronous)
-
- 
-
-
-
-
 
 Commands, Properties and State
 ==============================
@@ -72,7 +60,6 @@ State
 
 Devices can have so-called node elements, in which commands and properties can be nested. Sometimes it makes sense to understand an entire node as a sub-device. 
 In this case each node must at least contain an own state property and may have additional properties and commands. The addressing must always include the node name for disambuigation.
-
 
 Macros working with devices
 ===========================
