@@ -215,19 +215,20 @@ class ProjectManager(Device):
     async def slotSaveItems(self, info: Hash):
         """Save items in project database
 
-        :param info: Hash with
+        :param info: A hash containing:
 
-            items: list(Hash) object were each entry is of the form:
-                - xml: xml of item
-                - uuid: uuid of item
-                - domain: to write to
-            client: the client information (string) if provided
-            schema_version: the project db schema_version
+            * ``items``: a list of hashes. Each hash contains:
 
-        :raises: `ProjectDBError` in case of database (connection) problems
-            `TypeError` in case an no type information or an unknown type
-            is found in the root element.
-            `RuntimeError` if no database if connected.
+              * ``xml``: XML of an item
+              * ``uuid``: UUID of an item
+              * ``domain``: domain to write to
+            * ``client``: optional client information
+            * ``schema_version``: project database schema version
+
+        :raises ProjectDBError: if a database connection fails
+        :raises TypeError: if an item has no type information or
+                           an unknown type
+        :raises RuntimeError: if no database is connected.
         """
         items = info["items"]
         self.logger.debug(
@@ -428,10 +429,11 @@ class ProjectManager(Device):
 
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
-                - "uuid",
-                - "project_name",
-                - "date"
-                - "items"
+
+            - "uuid",
+            - "project_name",
+            - "date"
+            - "items"
         """
         return await self._slot_list_projects(
             "get_projects_with_device", info["domain"], info["name"])
@@ -447,10 +449,11 @@ class ProjectManager(Device):
 
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
-                - "uuid",
-                - "project_name",
-                - "date"
-                - "items"
+
+            - "uuid",
+            - "project_name",
+            - "date"
+            - "items"
         """
         return await self._slot_list_projects(
             "get_projects_with_macro", info["domain"], info["name"])
@@ -466,10 +469,11 @@ class ProjectManager(Device):
 
         :return: a Hash with key, "projects", with a list of Hashes for its
             value. Each Hash in the list has four keys:
-                - "uuid",
-                - "project_name",
-                - "date"
-                - "items"
+
+            - "uuid",
+            - "project_name",
+            - "date"
+            - "items"
         """
         return await self._slot_list_projects(
             "get_projects_with_server", info["domain"], info["name"])
