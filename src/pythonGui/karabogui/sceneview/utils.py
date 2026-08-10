@@ -24,6 +24,7 @@ from contextlib import contextmanager
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QFontMetrics
 
+from karabo.common.scenemodel.shapes import ArrowPolygonModel
 from karabogui.fonts import get_qfont
 
 from .const import GRID_STEP, SCREEN_MAX_VALUE
@@ -112,6 +113,8 @@ def add_offset(model, x=0, y=0):
         return
 
     model.trait_setq(x=model.x + x, y=model.y + y)
+    if isinstance(model, ArrowPolygonModel):
+        model.recalculate_arrowhead_points()
 
     # Recursively offset the children
     if "children" in model.trait_names():
