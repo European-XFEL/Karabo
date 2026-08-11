@@ -291,13 +291,14 @@ class UpdateDialog(QDialog):
             self.loadingbar.setVisible(True)
             self._process.start(cmd)
 
-    def _start_package_install(self, package, tag):
+    def _start_package_install(self, package, tag, force_reinstall=False):
         """Create a QProcess to update to the latest tag.
 
         This process' signals are connected to the given callbacks."""
         cmd = (f"{sys.executable} -m pip install {package}=={tag} "
-               f"--force-reinstall --index-url {_PYPI_INDEX} "
-               "--disable-pip-version-check")
+               f"--index-url {_PYPI_INDEX} --disable-pip-version-check")
+        if force_reinstall:
+            cmd += " --force-reinstall"
         self._start_process(cmd)
 
     def _start_package_uninstall(self, package):
@@ -338,7 +339,7 @@ class UpdateDialog(QDialog):
         """Updates gui extensions to the latest tag"""
         self._set_buttons_install()
         tag = self.label_latest.text()
-        self._start_package_install(_PKG_NAME, tag)
+        self._start_package_install(_PKG_NAME, tag, force_reinstall=True)
 
     @Slot()
     def _on_output(self):
