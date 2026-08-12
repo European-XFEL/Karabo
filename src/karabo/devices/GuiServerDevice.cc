@@ -1321,6 +1321,17 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::onGetClientDebugInfo(WeakChannelPointer channel) {
+            const Channel::Pointer chan = channel.lock();
+            if (!chan) return;
+
+            Hash result("type", "clientDebugInfo", "debugInfo", Hash());
+            const Hash options("clients", true, "topology", true, "clientAddress", getChannelAddress(chan));
+            result.set("debugInfo", getDebugInfo(options));
+            safeClientWrite(channel, result);
+        }
+
+
         bool GuiServerDevice::isUserAuthActive() const {
             return !get<string>("authServer").empty();
         }
@@ -1499,6 +1510,8 @@ namespace karabo {
                         onEndTemporarySession(channel, info);
                     } else if (type == "getGuiSessionInfo") {
                         onGetGuiSessionInfo(channel);
+                    } else if (type == "getClientDebugInfo") {
+                        onGetClientDebugInfo(channel);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
@@ -2809,7 +2822,9 @@ namespace karabo {
         karabo::data::Hash GuiServerDevice::getDebugInfo(const karabo::data::Hash& info) {
             Hash data;
 
-            if (info.empty() || info.has("clients")) {
+            const bool filterClient = info.has("clientAddress");
+            const std::string requestedClient = filterClient ? info.get<std::string>("clientAddress") : std::string();
+            if (info.empty() || info.has("clients") || filterClient) {
                 // connected clients
 
                 // Start with the client TCP connections
@@ -2819,6 +2834,7 @@ namespace karabo {
                     for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                         const std::string clientAddr = getChannelAddress(it->first);
                         if (clientAddr == "unknown") continue;
+                        if (filterClient && clientAddr != requestedClient) continue;
                         const std::vector<std::string> monitoredDevices(it->second.visibleInstances.begin(),
                                                                         it->second.visibleInstances.end());
                         const Channel::Pointer channel = it->first;
@@ -2844,6 +2860,7 @@ namespace karabo {
                             if (channel) {
                                 const std::string clientAddr = getChannelAddress(channel);
                                 if (clientAddr == "unknown") continue;
+                                if (filterClient && clientAddr != requestedClient) continue;
                                 if (data.has(clientAddr)) {
                                     std::vector<std::string>& pipelineConnections =
                                           data.get<std::vector<std::string>>(clientAddr + ".pipelineConnections");
