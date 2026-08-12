@@ -452,6 +452,7 @@ class ReactiveLoginDialog(QDialog):
                 refresh_token_user = auth_result.get("username")
                 get_config()["refresh_token"] = refresh_token
                 get_config()["refresh_token_user"] = refresh_token_user
+            reply.deleteLater()
             self.accept()
         else:
             self._error = auth_result.get("error_msg")
@@ -459,8 +460,7 @@ class ReactiveLoginDialog(QDialog):
                 self._clear_refresh_token()
             self.stackedWidget.setCurrentIndex(LoginType.USER_AUTHENTICATED)
             self._update_status_label()
-
-        reply.deleteLater()
+            reply.deleteLater()
 
     @Slot()
     def open_login_webpage(self):
@@ -638,6 +638,7 @@ class UserSessionDialog(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
+        self.access_manager.clearConnectionCache()
         super().done(result)
 
     # --------------------------------------------------------------------
@@ -681,14 +682,14 @@ class UserSessionDialog(QDialog):
                     # remembering and thus have to erase tokens.
                     self._clear_refresh_token()
                 get_network().onLogin()
-
+            reply.deleteLater()
             super().accept()
         else:
             error = auth_result.get("error_msg")
             self.error_label.setStyleSheet(
                 "QLabel#error_label {color:red;}")
             self.error_label.setText(error)
-        reply.deleteLater()
+            reply.deleteLater()
 
     @Slot(int)
     def _switch_temporary(self, index):
