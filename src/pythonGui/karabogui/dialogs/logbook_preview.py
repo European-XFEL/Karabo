@@ -295,8 +295,6 @@ class LogBookPreview(QDialog):
         self.zoom_factor_edit.setValidator(validator)
         self.zoom_factor.setLineEdit(self.zoom_factor_edit)
 
-        self._fit_in_view()
-
         self.data = None
         self._destinations = []
 
@@ -462,6 +460,10 @@ class LogBookPreview(QDialog):
         self.stream_widget.adjustSize()
         self._destinations.remove(widget)
         self._enable_destination_buttons()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._fit_in_view()
 
     # -----------------------------------------------------------------------
     # Internal Interface
