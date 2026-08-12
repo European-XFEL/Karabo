@@ -190,7 +190,10 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         pattern = text if use_reg_ex else f".*{re.escape(text)}"
         flags = 0 if case_sensitive else re.IGNORECASE
-        regex = re.compile(pattern, flags=flags)
+        try:
+            regex = re.compile(pattern, flags=flags)
+        except re.PatternError:
+            return []
 
         matcher = regex.fullmatch if full_match else regex.match
 
