@@ -28,33 +28,21 @@ sys.path.append(op.abspath("../src/pythonKarabo"))
 sys.path.append(op.abspath("../src/pythonGui"))
 
 LOCAL_MODULES = [
-    "karabo", "karabo.bound", "traits",
-    "karabo.common", "karabo.middlelayer", "karabo.native",
-    "karabo.project_db", "karabo.common.api",
-    "karabo.common.scenemodel", "karabo.common.scenemodel.api"]
-
-for mod_name in LOCAL_MODULES:
-    sys.modules.pop(mod_name)
-
-# Optional dependencies imported by the documented APIs.
-MOCK_MODULES = [
-    "karabind",
-    "karabo.common.packaging.utils",
-    "karabogui._version",
-    "karabogui.controllers.table.api",
-    "karabogui.sceneview.api",
-    # karabogui.api only re-exports this function; importing its Qt-based
-    # implementation fails in the headless documentation environment.
-    "karabogui.sceneview.view",
-    "lttbc",
-    "natsort",
-    "psutil",
-    "pycodestyle",
-    "pyflakes.api",
-    "tabulate",
+    "karabo",
+    "karabo.bound",
+    "karabo.common",
+    "karabo.common.api",
+    "karabo.common.scenemodel",
+    "karabo.common.scenemodel.api",
+    "karabo.middlelayer",
+    "karabo.native",
+    "karabo.project_db",
+    "traits",
 ]
 
-sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+# Use pop(..., None) to prevent KeyErrors if the module wasn't loaded
+for mod_name in LOCAL_MODULES:
+    sys.modules.pop(mod_name, None)
 
 
 class MockPackage(ModuleType):
@@ -93,12 +81,23 @@ MOCK_PACKAGE_MODULES = [
     "aiormq",
     "dateutil",
     "lxml",
+    "karabind",
     "pyqtgraph",
     "qtpy",
     "scipy",
     "sqlalchemy",
     "sqlmodel",
+    "tabulate",
+    "karabogui.controllers.table.api",
+    "karabogui.sceneview",
+    "lttbc",
+    "natsort",
+    "psutil",
+    "pycodestyle",
+    "pyflakes",
+    "tabulate",
 ]
+
 sys.modules.update(
     (mod_name, MockPackage(mod_name)) for mod_name in MOCK_PACKAGE_MODULES)
 sys.meta_path.insert(0, MockPackageFinder(MOCK_PACKAGE_MODULES))
@@ -160,7 +159,8 @@ copyright = "European XFEL GmbH - Controls Group"
 exclude_patterns = [
     ".build",  # the build directory
     "tools/netbeans.rst",  # deprecated editor keep for the moment
-    "whatsnew/template.rst"  # template for whatsnew pages. Should not be included
+    "whatsnew/template.rst"
+    # template for whatsnew pages. Should not be included
 ]
 
 # The reST default role (used for this markup: `text`) to use for all
