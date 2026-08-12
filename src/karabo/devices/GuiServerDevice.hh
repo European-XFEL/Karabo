@@ -526,6 +526,7 @@ namespace karabo {
              *      beginTemporarySession          onBeginTemporarySession
              *      endTemporarySession            onEndTemporarySession
              *      getGuiSessionInfo              onGetGuiSessionInfo
+             *      getClientDebugInfo             onGetClientDebugInfo
              *      =============================  =========================
              *
              * \endverbatim
@@ -706,6 +707,12 @@ namespace karabo {
              *      -"tempSessionDuration": the duration of a temporary session in seconds.
              */
             void onGetGuiSessionInfo(WeakChannelPointer channel);
+
+            /**
+             * Handle a `getClientDebugInfo` message by collecting debug information for the originating GUI
+             * connection and the system topology.
+             */
+            void onGetClientDebugInfo(WeakChannelPointer channel);
 
             /**
              * Callback helper for ``onExecute``
@@ -1062,6 +1069,11 @@ namespace karabo {
              */
             void slotDumpToLog();
 
+            /**
+             * Return selected debug information.
+             *
+             * If `clientAddress` is present, the clients section is limited to that connection.
+             */
             void slotDumpDebugInfo(const karabo::data::Hash& info);
 
             /**

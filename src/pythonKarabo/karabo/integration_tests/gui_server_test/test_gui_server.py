@@ -75,7 +75,8 @@ async def test_gui_server_execute_before_login(guiServer):
                     "killServer", "killDevice", "startMonitoringDevice",
                     "stopMonitoringDevice", "getPropertyHistory",
                     "getConfigurationFromPast", "subscribeNetwork",
-                    "requestNetwork", "error", "requestGeneric"}
+                    "requestNetwork", "error", "requestGeneric",
+                    "getClientDebugInfo"}
     adapter, _, _ = guiServer
     for msg_type in blockedTypes:
         h = Hash("type", msg_type)
@@ -280,6 +281,49 @@ async def test_request_generic(guiServer):
     assert len(request) == 1
     assert request["token"] == "here is a token of my appreciation"
     assert len(msg["reply"]) >= 1
+
+
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
+async def test_get_client_debug_info(guiServer):
+    adapter, Adapter, port = guiServer
+    first_version = "42.1.0"
+    second_version = "42.2.0"
+    await adapter.login(Hash("type", "login", "clientId", "first-client",
+                             "version", first_version))
+
+    second_adapter = Adapter(host="localhost", port=port)
+    try:
+        await second_adapter.login(
+            Hash("type", "login", "clientId", "second-client",
+                 "version", second_version)
+        )
+        await sleep(0.2)
+
+        request = Hash("type", "getClientDebugInfo")
+        await adapter.send(request)
+        first_reply = await adapter.get_next("clientDebugInfo")
+        assert set(first_reply.keys()) == {"type", "debugInfo"}
+        debug_info = first_reply["debugInfo"]
+        assert len(debug_info) == 2
+        topology = debug_info["systemTopology"]
+        assert isinstance(topology, Hash)
+        assert TEST_GUI_SERVER_ID in topology["device"]
+        client_address = next(key for key in debug_info.keys()
+                              if key != "systemTopology")
+        assert debug_info[client_address]["clientVersion"] == first_version
+
+        await second_adapter.send(request)
+        second_reply = await second_adapter.get_next("clientDebugInfo")
+        assert set(second_reply.keys()) == {"type", "debugInfo"}
+        debug_info = second_reply["debugInfo"]
+        assert len(debug_info) == 2
+        assert isinstance(debug_info["systemTopology"], Hash)
+        client_address = next(key for key in debug_info.keys()
+                              if key != "systemTopology")
+        assert debug_info[client_address]["clientVersion"] == second_version
+    finally:
+        await second_adapter.disconnect()
 
 
 @pytest.mark.timeout(60)
