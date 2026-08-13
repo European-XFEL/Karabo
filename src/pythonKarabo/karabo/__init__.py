@@ -13,27 +13,10 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-"""\
-Useful commands in Karabo:
-==========================
-
-connectDevice(deviceId)
-  connect to a remote device, returns a proxy to it
-
-getDevices()
-  get a list of running devices
-
-instantiate(serverId, classId, deviceId, **kwargs)
-  instantiate a remote device
-
-shutdown(deviceId)
-  shut down a remote device
-"""
+# flake8  # noqa
+from importlib.metadata import PackageNotFoundError, version
 
 try:
-    from karabo._version import version
-    from karabo.common.packaging import utils
-    __version__ = utils.extract_full_version(version)
-except ImportError:
-    # Don't cause a failure when running setup.py
+    __version__ = version(__name__)
+except PackageNotFoundError:
     __version__ = ''
