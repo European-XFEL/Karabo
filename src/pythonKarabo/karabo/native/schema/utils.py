@@ -18,12 +18,14 @@ from collections.abc import Callable
 import numpy as np
 
 import karabo.common.const as const
+from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.common.const import (
     is_boolean_type, is_bytearray_type, is_float_type, is_integer_type,
     is_string_type, is_vector_bool_type, is_vector_char_type,
     is_vector_float_type, is_vector_hash_type, is_vector_integer_type,
     is_vector_string_type, is_vector_type)
-from karabo.native.data import AccessMode, Hash, Schema
+from karabo.native.data import (
+    AccessMode, Hash, Schema, Timestamp, number_from_dtype)
 
 
 def get_default_value(descriptor, force=False):
@@ -234,3 +236,28 @@ def create_shape_validator(expected: Shape) -> Callable[[Shape], bool]:
         def match(actual: Shape) -> bool:
             return actual == expected
         return match
+
+
+def create_ndarray_hash(
+    array: np.ndarray,
+    timestamp: Timestamp | None = None
+) -> tuple[Hash, dict]:
+    """Create an ndarray hash and the attributes dictionary
+
+    Note: The array data is placed in a memoryview in the Hash!
+    """
+    attrs = timestamp.toDict() if timestamp is not None else {}
+
+    dtype = array.dtype
+    shape = np.array(array.shape, dtype=dtype)
+
+    h = Hash()
+    h.setElement("type", number_from_dtype(dtype), attrs)
+    h.setElement("isBigEndian", dtype.str[0] == ">", attrs)
+    h.setElement("shape", shape, attrs)
+    h.setElement("data", array.data, attrs)
+
+    # Set the ndarray hash classId!
+    array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
+    array_attrs.update(attrs)
+    return h, array_attrs

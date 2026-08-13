@@ -35,4 +35,5 @@ from .image_data import Image
 from .jsonencoder import KaraboJSONEncoder
 from .ndarray import NDArray
 from .utils import (
-    get_default_value, get_value_type_numpy, sanitize_table_schema)
+    create_ndarray_hash, get_default_value, get_value_type_numpy,
+    sanitize_table_schema)
