@@ -15,7 +15,8 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtCore import QPoint, QRect, Qt
-from qtpy.QtGui import QColor, QPen
+from qtpy.QtGui import QClipboard, QColor, QPen
+from qtpy.QtWidgets import QApplication
 from traits.api import Any, Enum, HasStrictTraits, Instance, String
 
 from karabogui.binding.api import DeviceProxy
@@ -45,6 +46,10 @@ class ProxySelectionTool(BaseSceneTool):
             device = proxy.root_proxy
             if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
                 if not device.online:
+                    deviceId = device.device_id
+                    clipboard = QApplication.clipboard()
+                    clipboard.clear(mode=QClipboard.Clipboard)
+                    clipboard.setText(deviceId, mode=QClipboard.Clipboard)
                     return  # ignore offline devices
                 broadcast_event(KaraboEvent.ShowConfiguration,
                                 {'proxy': device})
