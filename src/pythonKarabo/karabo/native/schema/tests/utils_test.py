@@ -22,7 +22,8 @@ from karabo.native import (
     Int32, RegexString, String, TypeHash, TypeNone, TypeSchema, VectorChar,
     VectorDouble, VectorHash, VectorRegexString, VectorString, VectorUInt8,
     get_default_value, sanitize_table_schema)
-from karabo.native.schema.utils import create_shape_validator
+from karabo.native.schema.utils import (
+    create_ndarray_hash, create_shape_validator)
 
 
 def get_test_table(access=AccessMode.READONLY):
@@ -278,6 +279,20 @@ class Tests(TestCase):
         assert validator((100, 100, 100))
         assert not validator((10, 100, 100))
         assert not validator((100, 100))
+
+    def test_create_array_hash(self):
+        h, attrs = create_ndarray_hash(
+            np.array([[1, 2], [3, 4]], dtype=np.float32))
+        self.assertIsInstance(h["data"], memoryview)
+        self.assertEqual(h["data"][0, 1], 2)
+        self.assertIn("__classId", attrs)
+        self.assertEqual(attrs["__classId"], "NDArray")
+        self.assertEqual(h["type"], 20)
+        self.assertNotIn("__classId", h["type", ...])
+        self.assertFalse(h["isBigEndian"])
+        self.assertNotIn("__classId", h["isBigEndian", ...])
+        self.assertEqual(h["shape"][1], 2)
+        self.assertEqual(len(h["data"]), 2)
 
 
 if __name__ == "__main__":

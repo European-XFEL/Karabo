@@ -15,14 +15,14 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import numpy
 
-from karabo.common.api import KARABO_HASH_CLASS_ID
 from karabo.native.data import (
-    AccessMode, Hash, NodeType, dtype_from_number, numpy_from_number)
+    AccessMode, Hash, NodeType, dtype_from_number, number_from_dtype,
+    numpy_from_number)
 
 from .basetypes import NoneValue, QuantityValue
 from .configurable import Configurable
 from .descriptors import Bool, ByteArray, Int32, Simple, Type, VectorUInt64
-from .utils import create_shape_validator
+from .utils import create_ndarray_hash, create_shape_validator
 
 
 class ArraySchema(Configurable):
@@ -108,7 +108,7 @@ class NDArray(Type):
         schema = ArraySchema.getClassSchema(device, state).hash
         schema["shape", "defaultValue"] = numpy.array(self.shape,
                                                       dtype=numpy.uint64)
-        schema["type", "defaultValue"] = self._gettype(self.dtype)
+        schema["type", "defaultValue"] = number_from_dtype(self.dtype)
         schema["isBigEndian", "defaultValue"] = self.dtype.str[0] == ">"
 
         return schema, attrs
@@ -140,29 +140,6 @@ class NDArray(Type):
 
         return data
 
-    def _gettype(self, dtype):
-        dstr = dtype.str
-        if dstr not in Type.strs:
-            dstr = dtype.newbyteorder().str
-
-        return Type.strs[dstr].number
-
     def toDataAndAttrs(self, data):
-        attrs = {}
-        if data.timestamp is not None:
-            attrs = data.timestamp.toDict()
-
-        # We are using fast-path Hash setting of values and attrs since
-        # we don't have nodes in our Hash.
-        h = Hash()
-        h.setElement("type", self._gettype(data.dtype), attrs)
-        h.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
-        h.setElement("shape",
-                     numpy.array(data.shape, dtype=numpy.uint64),
-                     attrs)
-        h.setElement("data", data.value.data, attrs)
-
-        # Mark this as a Hash Type element
-        array_attrs = {KARABO_HASH_CLASS_ID: "NDArray"}
-        array_attrs.update(**attrs)
-        return h, array_attrs
+        h, attrs = create_ndarray_hash(data.value, data.timestamp)
+        return h, attrs

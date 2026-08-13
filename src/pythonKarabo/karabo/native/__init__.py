@@ -30,7 +30,7 @@ from .data.typenums import (
     HASH_TYPE_TO_XML_TYPE, XML_TYPE_TO_HASH_TYPE, HashType)
 from .data.utils import (
     create_html_hash, dictToHash, dtype_from_number, get_array_data,
-    get_image_data, hashToDict, numpy_from_number)
+    get_image_data, hashToDict, number_from_dtype, numpy_from_number)
 from .data.xml_reader import XMLParser, decodeXML, loadFromFile
 from .data.xml_writer import encodeXML, saveToFile, writeXML
 from .exceptions import KaraboError
@@ -55,6 +55,7 @@ from .schema.image_data import Image
 from .schema.jsonencoder import KaraboJSONEncoder
 from .schema.ndarray import NDArray
 from .schema.utils import (
-    get_default_value, get_value_type_numpy, sanitize_table_schema)
+    create_ndarray_hash, get_default_value, get_value_type_numpy,
+    sanitize_table_schema)
 from .time_mixin import TimeMixin, get_timestamp
 from .weak import Weak
