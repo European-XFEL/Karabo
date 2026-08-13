@@ -916,9 +916,21 @@ namespace karabo {
 
         void GuiServerDevice::registerConnect(const karabo::util::Version& version,
                                               const karabo::net::Channel::Pointer& channel, const std::string& userId,
-                                              const std::string& oneTimeToken) {
+                                              const std::string& oneTimeToken, const bool isLoginOverLogin) {
             std::lock_guard<std::mutex> lock(m_channelMutex);
-            m_channels[channel] = ChannelData(version, userId, oneTimeToken); // keeps channel information
+            if (!isLoginOverLogin) {
+                // A new session is being established - recycle most of the channel data, but reuse the
+                // channel as the underlying network connection with the GUI Client must be preserved.
+                m_channels[channel] = ChannelData(version, userId, oneTimeToken);
+            } else {
+                // When a session is being refreshed, most of the context (e.g. visibleInstances and
+                // requestedSchemas) must be preserved
+                auto& channelData = m_channels[channel];
+                channelData.userId = userId;
+                channelData.oneTimeToken = oneTimeToken;
+                channelData.sessionStartTime = karabo::data::Epochstamp();
+            }
+
             // Update the number of clients connected
             set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
         }
@@ -997,7 +1009,8 @@ namespace karabo {
                         }
                         level = loginAccessLevel;
                     }
-                    registerConnect(clientVersion, channel, beginSessionResult.userId, beginSessionResult.sessionToken);
+                    registerConnect(clientVersion, channel, beginSessionResult.userId, beginSessionResult.sessionToken,
+                                    isLoginOverLogin);
 
                     // A session whose user is an OBSERVER is considered a read-only session.
                     const bool readOnly = (level == Schema::AccessLevel::OBSERVER);
@@ -1369,12 +1382,11 @@ namespace karabo {
                         sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                         return;
                     }
-                    bool isLoginOverLogin =
-                          false; // Is this a login over login (session escalation or session refresh)?
-                                 // Login over logins require a one-time token (no read-only session can
-                                 // be established on top of another) and only emit a notification in
-                                 // case of a failed authorization. Normal logins (for establishing a
-                                 // session) disconnect the client upon a failed authorization.
+                    bool isLoginOverLogin = false; // Is this a login over login (session refresh)?
+                                                   // Login over logins require a one-time token (no read-only session
+                                                   // can be established on top of another) and only emit a notification
+                                                   // in case of a failed authorization. Normal logins (for establishing
+                                                   // a session) disconnect the client upon a failed authorization.
 
                     bool isThereTemporarySession =
                           false; // Only one temporary session can be created for a given connection.
