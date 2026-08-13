@@ -368,9 +368,12 @@ namespace karabo {
              * previously triggered by GUI client - the token is used by the GUI Server to
              * validate the authentication and to authorize the user (send the user's login access
              * level back to the GUI Client).
+             * @param isLoginOverLogin true means the connection is to refresh an existing session
+             * with a potential change of userId and access level.
              */
             void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel,
-                                 const std::string& userId = "", const std::string& oneTimeToken = "");
+                                 const std::string& userId = "", const std::string& oneTimeToken = "",
+                                 const bool isLoginOverLogin = false);
 
             /**
              * @brief Handler for login messages expected to be sent by a
