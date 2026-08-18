@@ -487,6 +487,10 @@ class Manager(QObject):
         krb_access.TEMPORARY_SESSION_WARNING = True
         broadcast_event(KaraboEvent.UserSession, {})
 
+    def handle_clientDebugInfo(self, **info):
+        info = info.get("debugInfo")
+        broadcast_event(KaraboEvent.ClientDebugInfo, {"info": info})
+
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
         systemTopology["server"] = realign_topo_hash(

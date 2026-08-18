@@ -40,7 +40,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ApplicationConfigurationDialog, ClientTopologyDialog,
-    DataViewDialog, DevelopmentTopologyDialog, GuiSessionInfo,
+    DataViewDialog, DevelopmentTopologyDialog, GuiDebugInfo, GuiSessionInfo,
     ProjectTopologyDialog, ScreenCaptureDialog, UpdateDialog,
     UserSessionDialog, get_pkg_version)
 from karabogui.events import (
@@ -536,6 +536,9 @@ class MainWindow(QMainWindow):
         self.acHelpAboutQt = QAction("About Qt", self)
         self.acHelpAboutQt.triggered.connect(QApplication.instance().aboutQt)
 
+        self.acClientDebug = QAction("Debug Client", self)
+        self.acClientDebug.triggered.connect(self.onDebugClient)
+
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
 
@@ -646,6 +649,7 @@ class MainWindow(QMainWindow):
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
+        mHelpMenu.addAction(self.acClientDebug)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
         mHelpMenu.addAction(self.acShortCuts)
@@ -925,6 +929,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onWizard(self):
         TipsTricksWizard(parent=self).open()
+
+    @Slot()
+    def onDebugClient(self):
+        GuiDebugInfo(parent=self).show()
 
     @Slot(QAction)
     def onChangeAccessLevel(self, action):

@@ -588,6 +588,10 @@ class Network(QObject):
                  "level", level)
         self._write_hash(h)
 
+    def getClientDebugInfo(self):
+        h = Hash("type", "getClientDebugInfo")
+        self._write_hash(h)
+
     # ------------------------------------------------------------------------
 
     def set_server_information(self, read_only=False, **kwargs):

@@ -30,6 +30,7 @@ from .device_capability import DeviceCapabilityDialog
 from .font_dialog import FontDialog
 from .format_fmt import FormatFmtDialog
 from .format_label import FormatLabelDialog
+from .guidebuginfo import GuiDebugInfo
 from .guisessioninfo import GuiSessionInfo
 from .init_configuration import (
     InitConfigurationDialog, SaveConfigurationDialog)

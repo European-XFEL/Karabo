@@ -28,6 +28,7 @@ class KaraboEvent(Enum):
     ActiveDestinations = "Active Proposal (Logbook) list "
     BigDataProcessing = "Big data delay"
     ClearConfigurator = "Clear configurator"
+    ClientDebugInfo = "Debug Client Info"
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"
     CustomEvent = "Custom Event"  # Generic event

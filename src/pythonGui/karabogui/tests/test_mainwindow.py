@@ -93,10 +93,10 @@ def test_mainwindow(gui_app, mocker, subtests):
                      action.text() == "&Help"][0]
         assert help_menu
         help_actions = help_menu.actions()
-        assert len(help_actions) == 5
+        assert len(help_actions) == 6
         expected = [
-            "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
-            "Keyboard Shortcuts"]
+            "About", "About Qt", "Debug Client", "Tips'N'Tricks",
+            "Check for Updates", "Keyboard Shortcuts"]
         assert expected == [action.text() for action in help_actions]
 
     with subtests.test("Test Access Level"):
