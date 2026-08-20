@@ -43,8 +43,7 @@ SERVER_READ_ONLY = None
 ACCESS_LEVEL_MAP = {
     "observer": 0,
     "operator": 1,
-    "expert": 2,
-    "god": 5}
+    "expert": 2}
 
 
 class AccessRole(Enum):
