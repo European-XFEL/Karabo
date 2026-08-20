@@ -78,6 +78,19 @@ async def test_device_context():
     assert ctx_device.destructed is True
     assert device.destructed is True
 
+    # Second round with removal
+    deviceId = f"test-mdl-{uuid.uuid4()}"
+    device = WW({"_deviceId_": deviceId})
+    ctx_deviceId = f"test-mdl-{uuid.uuid4()}"
+    ctx_device = WW({"_deviceId_": ctx_deviceId})
+    async with AsyncDeviceContext(device=device) as ctx:
+        devices = ctx.instances
+        await ctx.device_context(new=ctx_device)
+        assert len(devices) == 2
+        await ctx.remove_device_context("new")
+        assert ctx_device.destructed is True
+        assert len(devices) == 1
+
 
 @pytest.mark.timeout(30)
 @run_test
