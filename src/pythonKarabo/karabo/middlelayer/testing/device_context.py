@@ -70,6 +70,19 @@ class AsyncDeviceContext:
         await gather(*(d.startInstance() for d in devices.values()))
         await self.wait_online(devices)
 
+    async def remove_device_context(self, *devices: str):
+        """Remove a device context and shutdown the instance
+
+        Note: Provide the devices with their context names
+        """
+        instances = []
+        names = set(devices)
+        for name in names:
+            assert name in self.instances
+            instances.append(self.instances.pop(name))
+
+        await gather(*(d.slotKillDevice() for d in instances))
+
     async def shutdown(self):
         devices = [d for d in self.instances.values()
                    if not isinstance(d, MiddleLayerDeviceServer)]
