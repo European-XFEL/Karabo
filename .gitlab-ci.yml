@@ -126,11 +126,8 @@ variables:
     GUI_DEST_DIR: karaboGui
   script:
     - source ci/build "$CI_JOB_NAME"
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)$/
-  except:
-    - branches
-    - schedules
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.)(\d+\.)(\d+)$/ && $CI_PIPELINE_SOURCE != "schedule"'
 
 .prerelease_build: &prerelease-build
   stage: build
@@ -144,11 +141,8 @@ variables:
     GUI_DEST_DIR: karaboGui
   script:
     - source ci/build "$CI_JOB_NAME"
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)$/
-  except:
-    - branches
-    - schedules
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)$/ && $CI_PIPELINE_SOURCE != "schedule"'
 
 .release_build_conda: &release-build-conda
   stage: build
@@ -172,11 +166,16 @@ variables:
       --index-mirror
       --guiextensions-test
       --update-bundle-version
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)$/
-  except:
-    - branches
-    - schedules
+  rules:
+    # 1. Do not run on schedules
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    # 2. Do not run on branch pushes
+    - if: '$CI_COMMIT_BRANCH'
+      when: never
+    # 3. Only run on tags matching the regex pattern
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/'
+      when: always
 
 .prerelease_build_conda: &prerelease-build-conda
   stage: build
@@ -199,11 +198,8 @@ variables:
       --index-mirror
       --guiextensions-test
       --update-bundle-version
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/
-  except:
-    - branches
-    - schedules
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/ && $CI_PIPELINE_SOURCE != "schedule"'
 
 .nightly_build_conda: &nightly-build-conda
   stage: build
@@ -223,8 +219,8 @@ variables:
       -P $KARABO_CONDA_CHANNEL_PATH/nightly
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
-  only:
-    - schedules
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
 .manual_build_conda_dependency_update: &manual-build-conda-dependency-update
   stage: build
@@ -238,9 +234,8 @@ variables:
       -P $KARABO_CONDA_CHANNEL_PATH/nightly
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
-  only:
-    variables:
-      - $REFRESH_MIRROR
+  rules:
+    - if: '$REFRESH_MIRROR && ($CI_COMMIT_BRANCH || $CI_COMMIT_TAG)'
   when: manual
 
 .nightly_build: &nightly-build
@@ -264,79 +259,59 @@ variables:
     - bash build.sh -q $DEPS_BASE_NAME CI
     - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     - $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-  only:
-    refs:
-      - /^deps-(add|update|remove)-.+$/
-      - merge_requests
-    changes:
-      - "extern/**/*"
-  except:
-    - schedules
-
-.except_main: &except-main
-  except:
-    refs:
-      - /^(main)$/ # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - schedules
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule" && ($CI_COMMIT_REF_NAME =~ /^deps-(add|update|remove)-.+$/ || $CI_PIPELINE_SOURCE == "merge_request_event")'
+      changes:
+        - "extern/**/*"
 
 .integration_tests: &integration-tests
   stage: test
   <<: *services_template
   <<: *artifacts-spec
   <<: *setup_build_env
-  only:
-    refs:
-      - /^(main)$/ # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - merge_requests
-    changes:
-      - "src/karabo/core/**/*"
-      - "src/karabo/devices/**/*"
-      - "src/karabo/xms/**/*"
-      - "src/integrationTests/**/*"
-      - "src/pythonKarabo/karabo/integration_tests/**/*"
-      - "src/pythonKarabo/karabo/bound/device.py"
-      - "src/pythonKarabo/karabo/bound/device_server.py"
-      - "src/pythonKarabo/karabo/bound_devices/**/*"
-      - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
-      - "src/pythonKarabo/karabo/influxdb/**/*"
-      - "extern/**/*"
-  except:
-    refs:
-      - schedules
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_REF_NAME =~ /^(\d+\.)(\d+\.)(X-hotfix)$/)'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || ($CI_PIPELINE_SOURCE != "schedule" && ($CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_REF_NAME =~ /^(\d+\.)(\d+\.)(X-hotfix)$/))'
+      changes:
+        - "src/karabo/core/**/*"
+        - "src/karabo/devices/**/*"
+        - "src/karabo/xms/**/*"
+        - "src/integrationTests/**/*"
+        - "src/pythonKarabo/karabo/integration_tests/**/*"
+        - "src/pythonKarabo/karabo/bound/device.py"
+        - "src/pythonKarabo/karabo/bound/device_server.py"
+        - "src/pythonKarabo/karabo/bound_devices/**/*"
+        - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
+        - "src/pythonKarabo/karabo/influxdb/**/*"
+        - "extern/**/*"
 
 .cpp_unit_tests: &cpp-unit-tests
   stage: test
   <<: *services_template
   <<: *artifacts-spec
   <<: *setup_build_env
-  only:
-    refs:
-      - merge_requests
-    changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
       - "src/karabo/**/*"
       - "src/deviceServer/**/*"
       - "src/brokerMessageLogger/**/*"
       - "src/tools/brokerRates/**/*"
       - "src/tools/dataLoggerIndex/**/*"
       - "extern/**/*"
-  <<: *except-main
 
 .python_unit_tests: &python-unit-tests
   stage: test
   <<: *services_template
   <<: *artifacts-spec
   <<: *setup_build_env
-  only:
-    refs:
-      - merge_requests
-    changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
       - "src/karabind/**/*" # bound api new binding code
       - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"
       - "extern/**/*"
-  <<: *except-main
 
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
@@ -348,10 +323,9 @@ variables:
       -c $KARABO_CONDA_CHANNEL
       --ci --clean --test
       --skip-build
-  only:
-    refs:
-      - merge_requests
-    changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
       - "src/pythonGui/**/*"
       - "src/pythonKarabo/karabo/native/**/*"
       - "src/pythonKarabo/karabo/common/**/*"
@@ -383,10 +357,9 @@ variables:
 doc_test:
   stage: test
   <<: *docs_build
-  only:
-    refs:
-      - merge_requests
-    changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
       - "doc/**/*"
 
 ### Jobs
@@ -406,10 +379,9 @@ pre-commit-check:
     - pip install pre-commit
     - pre-commit run --all-files
   cache: !reference [.build_cache, cache_rw]
-  only:
-    refs:
-      - merge_requests
-    changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
       - "src/**/*"
   allow_failure: false
 
@@ -417,8 +389,8 @@ systemtest:
   stage: systemtest
   image: europeanxfel/karabo-ci:miniconda-3-002
   allow_failure: true
-  only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/'
   script:
     - python ci/portal/portal_start.py
 
@@ -681,12 +653,12 @@ internal_mirror_publish:
     - git push internal_mirror --tags --force
 
 # NB: no documentation is built for A.B.X-hotfix! only add documentation against main
-pages:
+deploy-pages:
   stage: docs
   <<: *docs_build
-  only:
-    refs:
-      - /^(main)$/ # the changes check will default to true
+  pages: true
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
   artifacts:
     paths:
       - public
