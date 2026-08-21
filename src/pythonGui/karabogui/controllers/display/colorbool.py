@@ -66,12 +66,16 @@ class DisplayColorBool(BaseBindingController):
             # is not yet ready or the property proxy is not set.
             return
 
+        tooltip = f"{proxy.key}\n"
         if not self.model.invert:
             color_state = State.ACTIVE if value else State.PASSIVE
         else:
             color_state = State.PASSIVE if value else State.ACTIVE
+            tooltip = f"{tooltip}Inverted: "
+
         # Set the tooltip according to the value
-        self.widget.setToolTip(f"{value}")
+        tooltip = f"{tooltip}{value}"
+        self.widget.setToolTip(tooltip)
         svg = self.icon.with_color(STATE_COLORS[color_state])
         self.widget.load(bytearray(svg, encoding='UTF-8'))
 

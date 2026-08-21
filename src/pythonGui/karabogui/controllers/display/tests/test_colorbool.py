@@ -54,12 +54,14 @@ def test_colorbool(gui_app, mocker):
                         proxy.root_proxy.binding)
     active = controller.icon.with_color(STATE_COLORS[State.ACTIVE])
     assert controller.widget.loaded_data == bytearray(active, encoding="UTF-8")
+    assert controller.widget.toolTip() == "prop\nTrue"
 
     apply_configuration(Hash("prop", False), proxy.root_proxy.binding)
     passive = controller.icon.with_color(STATE_COLORS[State.PASSIVE])
     assert controller.widget.loaded_data == bytearray(passive,
                                                       encoding="UTF-8")
 
+    assert controller.widget.toolTip() == "prop\nFalse"
     # teardown
     controller.destroy()
     assert controller.widget is None
