@@ -559,9 +559,9 @@ class KaraboImageView(QWidget):
     @Slot()
     def _set_roi_configuration(self):
         config = {}
-        aux_plots_tool = self.toolbar.toolsets[AuxPlots].current_tool
-        if aux_plots_tool is not None:
-            config['aux_plots'] = aux_plots_tool
+        aux_plot = self.toolbar.toolsets.get(AuxPlots)
+        if aux_plot and aux_plot.current_tool is not None:
+            config['aux_plots'] = aux_plot.current_tool
 
         config['roi_tool'] = self.roi.current_tool
         items = []
