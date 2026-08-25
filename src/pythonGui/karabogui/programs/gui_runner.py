@@ -19,6 +19,7 @@ import sys
 from importlib import import_module
 
 from karabo.common.scenemodel.api import set_scene_reader
+from karabogui.const import GUI_VERSION_DETAILED
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_config
@@ -64,6 +65,8 @@ def run_gui(ns):
 def create_gui_parser():
     parser = argparse.ArgumentParser(description="Karabo GUI")
     parser.add_argument("-dev", "--dev", action="store_true")
+    parser.add_argument("-V", "--version", action="version",
+                        version=f"%(prog)s {GUI_VERSION_DETAILED}")
     return parser
 
 
