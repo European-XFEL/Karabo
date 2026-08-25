@@ -612,7 +612,7 @@ class BaseFilterTableController(BaseTableController):
 
     def add_row_below(self):
         row = self.sourceRow()
-        self._item_model.add_row(row)
+        self._item_model.add_row_below(row)
 
     def duplicate_row(self):
         row = self.sourceRow()

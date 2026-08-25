@@ -670,6 +670,23 @@ def test_filter_table_model_view_set_value(filter_table_model_view_setup):
     assert_model_row(controller, 3, "d", True, "CHANGING", 1, 5.0, ["d"])
 
 
+def test_filter_table_model_view_add_initial_row(gui_app):
+    proxy = get_property_proxy(Object.getClassSchema(), "prop")
+    model = FilterTableElementModel()
+    controller = BaseFilterTableController(proxy=proxy, model=model)
+    controller.create(None)
+    controller.set_read_only(False)
+
+    assert controller.sourceModel().rowCount() == 0
+    assert controller.tableModel().rowCount() == 0
+
+    controller.add_row_below()
+
+    assert controller.sourceModel().rowCount() == 1
+    assert controller.tableModel().rowCount() == 1
+    controller.destroy()
+
+
 def test_filter_table_model_view_filter_combo(filter_table_model_view_setup):
     controller, _, _ = filter_table_model_view_setup
     model = controller.sourceModel()
