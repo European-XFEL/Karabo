@@ -13,6 +13,9 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+#
+# REMOVEME added to trigger CI
+
 """This tests the communication between bound API and middlelayer API"""
 import json
 import os
