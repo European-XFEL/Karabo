@@ -257,16 +257,8 @@ class TestDevice(PythonDevice):
         if not isinstance(alarm, AlarmCondition):
             raise RuntimeError("Middle layer 'alarmCondition' property "
                                "is of type", type(alarm).__name__)
-        # FIXME:
-        # In principle we should use set and execute here, i.e. no 'NoWait'.
-        # But, within a slot call, it does not work to call back synchronously
-        # to the caller of the slot: The reply we expect here will not be
-        # processed because we block here in backfire and messages are executed
-        # in order of arrival per sender...
-        # Could be fixed by posting the synchronous calls out of this thread
-        # and using an AsyncReply - which does not yet exist for bound Python.
-        remote.setNoWait(instance_id, "value", 99)
-        remote.executeNoWait(instance_id, "slot")
+        remote.set(instance_id, "value", 99)
+        remote.execute(instance_id, "slot")
 
     def injectSchema(self):
         schema = Schema()

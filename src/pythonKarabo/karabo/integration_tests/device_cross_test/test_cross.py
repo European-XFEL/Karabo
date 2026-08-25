@@ -328,7 +328,6 @@ async def test_cross(deviceTest):
         assert proxy.injectedNode.number2 == 2
 
         await proxy.backfire()
-        await sleep(1)  # See FIXME in backfire slot of the bound device
 
         device = deviceTest["device"]
         assert device.value == 99
