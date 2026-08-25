@@ -292,6 +292,7 @@ class Tests(TestCase):
         self.assertFalse(h["isBigEndian"])
         self.assertNotIn("__classId", h["isBigEndian", ...])
         self.assertEqual(h["shape"][1], 2)
+        self.assertEqual(h["shape"].dtype, np.uint64)
         self.assertEqual(len(h["data"]), 2)
 
 

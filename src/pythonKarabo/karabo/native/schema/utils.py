@@ -249,7 +249,7 @@ def create_ndarray_hash(
     attrs = timestamp.toDict() if timestamp is not None else {}
 
     dtype = array.dtype
-    shape = np.array(array.shape, dtype=dtype)
+    shape = np.array(array.shape, dtype=np.uint64)
 
     h = Hash()
     h.setElement("type", number_from_dtype(dtype), attrs)
