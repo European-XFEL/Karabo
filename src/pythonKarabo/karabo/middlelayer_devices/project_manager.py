@@ -195,6 +195,10 @@ class ProjectManager(Device):
             return await self.slotLoadItems(info)
         elif action_type == "listDomains":
             return await self.slotListDomains()
+        elif action_type == "listProjects":
+            return await self.slotListProjects(info)
+        elif action_type == "listScenes":
+            return await self.slotListScenes(info)
         elif action_type == "updateTrashed":
             return await self.slotUpdateTrashed(info)
         elif action_type == "saveItems":
@@ -303,11 +307,14 @@ class ProjectManager(Device):
 
                 items: list of Hashes where each entry has keys: uuid,
                        item_type and simple_name
+
+        DEPRECATED: This is deprecated since Karabo 3.2.X.
+            Use: slotListProjects instead
         """
         domain = info['domain']
         item_types = info.get('item_types', _ITEM_TYPES)
         async with self.db_handle as db_session:
-            hl = []
+            hl = HashList([])
             res = await db_session.list_items(domain, item_types)
             for r in res:
                 item_type = r['item_type']
@@ -317,6 +324,53 @@ class ProjectManager(Device):
                          'date', r['date'])
                 if item_type == PROJECT_DB_TYPE_PROJECT:
                     h["is_trashed"] = r["is_trashed"]
+                hl.append(h)
+        return Hash('items', hl)
+
+    @slot
+    async def slotListProjects(self, info: Hash):
+        """List all projects in domain w
+
+        :param info: The input Hash with keys
+                       - domain: domain to list items from
+
+        :return: HashList:
+                items: list of Hashes where each entry has keys: uuid,
+                       item_type, date, is_trashed and simple_name
+        """
+        domain = info['domain']
+        async with self.db_handle as db_session:
+            hl = HashList([])
+            res = await db_session.list_projects(domain)
+            for r in res:
+                h = Hash('uuid', r['uuid'],
+                         'item_type', 'project',
+                         'simple_name', r['simple_name'],
+                         "is_trashed", r["is_trashed"],
+                         'date', r['date'])
+                hl.append(h)
+        return Hash('items', hl)
+
+    @slot
+    async def slotListScenes(self, info: Hash):
+        """List all scenes of project with uuid in a domain
+
+        :param info: The input Hash with keys
+                       - uuid: uuid of the project
+
+        :return: HashList:
+                items: list of Hashes where each entry has keys: uuid,
+                       item_type, date and simple_name
+        """
+        project = info["uuid"]
+        async with self.db_handle as db_session:
+            hl = HashList([])
+            res = await db_session.list_scenes(project)
+            for r in res:
+                h = Hash('uuid', r['uuid'],
+                         'item_type', 'scene',
+                         'simple_name', r['simple_name'],
+                         'date', r['date'])
                 hl.append(h)
         return Hash('items', hl)
 
