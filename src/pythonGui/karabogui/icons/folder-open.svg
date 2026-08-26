@@ -34,6 +34,8 @@
      showguides="false" />
   <defs
      id="defs3">
+    <style
+       id="style-hide-folder-stripes">#path9788,#path9784,#path9778,#path9798,#path9800,#path9782,#path9780,#path9776,#path9774,#path9794,#path9792,#path9790,#path9786,#path9796,#path9802{display:none}</style>
     <radialGradient
        id="radialGradient6719"
        xlink:href="#linearGradient5060"
@@ -93,7 +95,7 @@
          offset="0" />
       <stop
          id="stop1791"
-         stop-color="#b9b9b9"
+         stop-color="#5f5f5f"
          offset="1" />
     </radialGradient>
     <linearGradient
@@ -171,7 +173,7 @@
   </defs>
   <g
      id="layer1"
-     transform="translate(-0.29106785,-3.0904991)">
+     transform="matrix(1.11465,0,0,1.05053,-2.3215,-5.34772)">
     <g
        id="g6707"
        transform="matrix(0.01398351,0,0,0.01233643,28.728839,31.522405)">
