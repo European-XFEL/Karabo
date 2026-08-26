@@ -153,9 +153,11 @@ class BoolButtonDelegate(TableButtonDelegate):
             message_box = QMessageBox()
             message_box.setModal(False)
             confirm = message_box.question(
-                self.parent(), "Confirmation",
+                self.parent(),
+                "Confirmation",
                 f"Do you really want to proceed with <b>{self.text}</b>?",
-                QMessageBox.No, QMessageBox.Yes)
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No)
             if confirm == QMessageBox.No:
                 return
 

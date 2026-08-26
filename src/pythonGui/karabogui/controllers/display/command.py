@@ -201,8 +201,8 @@ class DisplayCommand(BaseBindingController):
             confirmation = message_box.question(
                 self.widget, 'Confirmation',
                 'Continue with this operation?',
-                QMessageBox.No,
-                QMessageBox.Yes)
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No)
 
             if confirmation == QMessageBox.No:
                 return
