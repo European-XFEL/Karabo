@@ -147,27 +147,27 @@ class DeviceServerController(BaseProjectGroupController):
         menu.addAction(remove_all_action)
 
         # Sub menu for device sorting
-        sort_menu = menu.addMenu("&Sort options")
+        sort_menu = menu.addMenu("&Sort devices")
         sort_menu.setIcon(icons.edit)
         sort_menu.setEnabled(project_allowed)
         if not project_allowed:
             sort_menu.setToolTip(project_allowed_tooltip)
 
         sort_alpha = QAction(
-            icons.stringAttribute, 'Sort devices alphabetically', menu)
+            icons.stringAttribute, 'Alphabetically', menu)
         sort_alpha.triggered.connect(partial(self._sort_alphabetically,
                                              parent=parent))
 
         sort_domain = QAction(icons.folderDomain,
-                              'Sort devices by domain', menu)
+                              'By domain', menu)
         sort_domain.triggered.connect(partial(self._sort_devices_naming,
                                               level=0, parent=parent))
         sort_type = QAction(icons.folderType,
-                            'Sort devices by type', menu)
+                            'By type', menu)
         sort_type.triggered.connect(partial(self._sort_devices_naming,
                                             level=1, parent=parent))
         sort_member = QAction(icons.deviceInstance,
-                              'Sort devices by member', menu)
+                              'By member', menu)
         sort_member.triggered.connect(partial(self._sort_devices_naming,
                                               level=2, parent=parent))
 
