@@ -63,6 +63,8 @@ namespace karabo::net {
 
 
        public:
+        KARABO_CLASSINFO(WebSocketListener, "WebSocketListener", "1.0")
+
         explicit WebSocketListener(tcp::acceptor& acctor, Connection::Pointer conn,
                                    const Connection::ConnectionHandler& handler)
             : m_ioc(EventLoop::getIOService()),
@@ -72,7 +74,7 @@ namespace karabo::net {
               m_ws(nullptr) {}
 
         ~WebSocketListener() {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "Destructor is called";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Destructor is called";
         }
 
         void start() {
@@ -87,23 +89,16 @@ namespace karabo::net {
         }
 
         void onAccept(beast::error_code ec, tcp::socket socket) {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "onAccept : ec=" << ec;
+            KARABO_LOG_FRAMEWORK_DEBUG << "onAccept : ec=" << ec;
 
-            if (ec == beast::errc::operation_canceled) return; // 'stop()' is called?
+            if (ec == asio::error::operation_aborted) return; // 'stop()' is called?
             if (ec) {
-                recycleAcceptor();
-                fail(ec, "accept");
+                m_handler(ec, Connection::ChannelPointer());
+                return; // WebSocketListener destructor should be called now
             }
             // Create websocket pointer
             m_ws = std::make_shared<websocket::stream<beast::tcp_stream>>(std::move(socket));
             run();
-        }
-
-        void recycleAcceptor() {
-            if (m_acceptor.is_open()) {
-                m_acceptor.cancel();
-                m_acceptor.close();
-            }
         }
 
         // Get on the correct executor
@@ -117,7 +112,7 @@ namespace karabo::net {
         }
 
         void onRun() {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "onRun ...";
+            KARABO_LOG_FRAMEWORK_DEBUG << "onRun ...";
 
             m_ws->set_option(websocket::stream_base::timeout::suggested(beast::role_type::server));
             m_ws->set_option(websocket::stream_base::decorator([](websocket::response_type& res) {
@@ -128,19 +123,20 @@ namespace karabo::net {
         }
 
         void onHandshake(beast::error_code ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "onHandshake : ec=" << ec;
+            KARABO_LOG_FRAMEWORK_DEBUG << "onHandshake : ec=" << ec;
 
             if (ec) {
-                recycleAcceptor();
-                fail(ec, "accept-handshake");
+                KARABO_LOG_FRAMEWORK_INFO << "WebSocket handshake failed: " << ec.message();
+                m_handler(ec, Connection::ChannelPointer());
+                return; // WebSocketListener destructor is called now
             }
 
             // For testing purposes we activate control callback...
             m_ws->control_callback([](boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
                 if (kind == boost::beast::websocket::frame_type::ping) {
-                    KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "Ping received!";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Ping received!";
                 } else if (kind == boost::beast::websocket::frame_type::close) {
-                    KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "Close frame received.";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Close frame received.";
                 }
             });
 
@@ -166,6 +162,7 @@ namespace karabo::net {
 
 
        public:
+        KARABO_CLASSINFO(WebSocketConnector, "WebSocketConnector", "1.0")
         WebSocketConnector(boost::asio::ip::tcp::resolver& resver, Connection::Pointer conn,
                            const Connection::ConnectionHandler& handler)
             : m_ioc(EventLoop::getIOService()),
@@ -175,7 +172,7 @@ namespace karabo::net {
               m_handler(handler) {}
 
         ~WebSocketConnector() {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketConnector") << "Destructor is called.";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Destructor is called.";
         }
 
         void start(const std::string& host, const std::string& port) {
@@ -187,7 +184,7 @@ namespace karabo::net {
         }
 
         void onResolve(beast::error_code ec, tcp::resolver::results_type results) {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketConnector") << "onResolve: ec=" << ec;
+            KARABO_LOG_FRAMEWORK_DEBUG << "onResolve: ec=" << ec;
             if (ec) return fail(ec, "resolve");
             // Set the timeout for the operation
             beast::get_lowest_layer(*m_ws).expires_after(std::chrono::seconds(30));
@@ -197,7 +194,7 @@ namespace karabo::net {
         }
 
         void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketConnector") << "onConnect: ec=" << ec;
+            KARABO_LOG_FRAMEWORK_DEBUG << "onConnect: ec=" << ec;
             if (ec) return fail(ec, "connect");
 
             // Turn off the timeout on the tcp_stream, because
@@ -223,15 +220,15 @@ namespace karabo::net {
         }
 
         void onHandshake(beast::error_code ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketConnector") << "onHandshake: ec=" << ec;
+            KARABO_LOG_FRAMEWORK_DEBUG << "onHandshake: ec=" << ec;
             if (ec) return fail(ec, "handshake");
 
             // For testing purposes we activate control callback...
             m_ws->control_callback([](boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
                 if (kind == boost::beast::websocket::frame_type::ping) {
-                    KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "Ping received!";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Ping received!";
                 } else if (kind == boost::beast::websocket::frame_type::close) {
-                    KARABO_LOG_FRAMEWORK_DEBUG_C("karabo::net::WebSocketListener") << "Close frame received.";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Close frame received.";
                 }
             });
 
@@ -339,6 +336,9 @@ namespace karabo::net {
             if (ec) fail(ec, "bind");
             // Start listening for incoming connections
             m_acceptor.listen(asio::socket_base::max_listen_connections, ec);
+            if (m_port == 0) {
+                m_port = m_acceptor.local_endpoint().port();
+            }
             if (ec) fail(ec, "listen");
         } catch (const std::exception& e) {
             if (m_acceptor.is_open()) {
@@ -352,7 +352,6 @@ namespace karabo::net {
 
     int WebSocketConnection::startAsync(const Connection::ConnectionHandler& handler) {
         if (!handler) throw KARABO_PARAMETER_EXCEPTION("Empty handler");
-        beast::error_code ec;
         if (m_connectionType == "server") {
             tcp::endpoint endpoint(tcp::v4(), m_port);
             if (!m_acceptor.is_open()) initServer(endpoint);
