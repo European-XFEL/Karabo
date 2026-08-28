@@ -60,10 +60,9 @@ namespace karabo {
         class Connection : public std::enable_shared_from_this<Connection> {
             friend class Channel;
 
-           protected:
-            typedef std::shared_ptr<Channel> ChannelPointer;
 
            public:
+            typedef std::shared_ptr<Channel> ChannelPointer;
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
