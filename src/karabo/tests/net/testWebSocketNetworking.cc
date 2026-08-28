@@ -211,3 +211,68 @@ TEST(TestWebSocketNetworking, testWriteAsync) {
     auto testDuration = finishTime - startTime;
     std::clog << "Test took " << duration_cast<milliseconds>(testDuration).count() << " milliseconds." << std::endl;
 }
+
+
+TEST(TestWebSocketNetworking, testAcceptAfterPeerDisconnectDuringHandshake) {
+    namespace asio = boost::asio;
+    using asio::ip::tcp;
+
+    auto server = Connection::create("WebSocket", Hash("type", "server"));
+    Channel::Pointer serverChannel;
+    Channel::Pointer clientChannel;
+    auto timeout = std::make_shared<asio::steady_timer>(EventLoop::getIOService(), 5s);
+    timeout->async_wait([](const boost::system::error_code& ec) {
+        if (!ec) EventLoop::stop();
+    });
+    const auto finishWhenConnected = [&serverChannel, &clientChannel, &timeout]() {
+        if (serverChannel && clientChannel) {
+            timeout->cancel();
+            EventLoop::stop();
+        }
+    };
+    // Construct the onConnect handler of the server. Once a client is connected, the server must be enabled to take
+    // more connections. A recursive function would suit here. Since I failed to do that with a lambda expression
+    // (maybe since C++20 has still some restriction, did not check deeply), we prepare the server only for a second
+    // client connecting as fits to this test.
+    bool onConnectFailed = false;
+    auto onConnect = [&server, &serverChannel, &finishWhenConnected, &onConnectFailed](
+                           const karabo::net::ErrorCode& ec, const Channel::Pointer& channel) {
+        if (!ec) {
+            EXPECT_TRUE(false) << "First connection attempt is expected to fail (no handshake)";
+        } else {
+            onConnectFailed = true;
+            auto onConnectInner = [&](const karabo::net::ErrorCode& ecIn, const Channel::Pointer& channel) {
+                if (!ecIn) {
+                    serverChannel = channel;
+                    finishWhenConnected();
+                }
+            };
+            server->startAsync(std::bind(onConnectInner, _1, _2));
+        }
+    };
+    const int port = server->startAsync(std::bind(onConnect, _1, _2));
+
+    // Queue a TCP peer which disconnects without completing the WebSocket handshake.
+    asio::io_context peerContext;
+    tcp::socket disconnectingPeer(peerContext);
+    disconnectingPeer.connect(tcp::endpoint(asio::ip::address_v4::loopback(), port));
+    disconnectingPeer.close();
+
+    auto client = Connection::create("WebSocket", Hash("type", "client", "hostname", "localhost", "port", port));
+    client->startAsync(
+          [&clientChannel, &finishWhenConnected](const karabo::net::ErrorCode& ec, const Channel::Pointer& channel) {
+              if (!ec) {
+                  clientChannel = channel;
+                  finishWhenConnected();
+              }
+          });
+
+    EventLoop::run();
+
+    EXPECT_TRUE(onConnectFailed);
+    EXPECT_TRUE(serverChannel) << "Server stopped accepting after a peer disconnected during the handshake";
+    EXPECT_TRUE(clientChannel) << "Client could not establish a WebSocket after the failed handshake";
+
+    client->stop();
+    server->stop();
+}

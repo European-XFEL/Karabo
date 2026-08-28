@@ -890,27 +890,33 @@ namespace karabo {
             if (e) return;
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
-                setupConnection(channel, "port");
-                // TODO: Avoid to re-register TCP acceptor socket (allows handling multiple clients)
-                // Normally re-registration should be done internally in TcpConnection
-                m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
+                if (channel) {
+                    setupConnection(channel, "port");
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Incoming connection failed: " << e.value() << " -- " << e.message();
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.what();
-                m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
             }
+            // Always be available for new connection:
+            m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
         }
 
 
         void GuiServerDevice::onWsConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
-            if (e) return;
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Incoming WebSocket connection";
-                setupConnection(channel, "webport");
-                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
+                if (channel) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Incoming WebSocket connection";
+                    setupConnection(channel, "webport");
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Incoming WebSocket connection failed: " << e.value() << " -- "
+                                              << e.message();
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onWsConnect(): " << e.what();
-                m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
             }
+            // Always be available for new connection:
+            m_webConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onWsConnect, this, _1, _2));
         }
 
 
