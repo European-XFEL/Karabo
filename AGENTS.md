@@ -1,55 +1,35 @@
 # AGENTS.md
 
-This file routes work in this repository to the correct API-specific guide.
+## Development environments
 
-The first decision is which API the task is about:
+This repository uses separate development environments for the **Karabo
+Framework** and **karaboGui**. Use the environment corresponding to the
+component you are working on.
 
-- C++ device
-- bound-Python device
-- middlelayer device
+### Karabo Framework
 
-That API choice can come either from the request itself or from the code being
-edited. Use both signals together.
+The repository contains the Framework environment in the root `karabo/`
+directory.
 
-## API Routing
+Activate it with:
 
-- If the request explicitly says `C++ device`, `cpp device`, `C++ framework`,
-  or otherwise clearly asks for the classic C++ API, use
-  `AGENTS.cpp.md`.
-- If the code contains `karabo::core::Device`,
-  `expectedParameters(Schema&)`, `KARABO_REGISTER_FOR_CONFIGURATION`,
-  `KARABO_SLOT`, `KARABO_ON_DATA`, `karabo::data::Hash`, or
-  `karabo::core::DeviceClient`, use
-  `AGENTS.cpp.md`.
-- If the request explicitly says `bound device`, `bound Python`,
-  `pybind11 binding`, `karabind`, or otherwise clearly asks for the bound API,
-  use
-  `AGENTS.python-bound.md`.
-- If the code contains `from karabo.bound import ...`, `from karabind import
-  ...`, `PythonDevice`, `@KARABO_CLASSINFO`,
-  `@KARABO_CONFIGURATION_BASE_CLASS`, `registerInitialFunction`,
-  `updateSchema(schema)`, or bound `DeviceClient`, use
-  `AGENTS.python-bound.md`.
-- If the request explicitly says `middlelayer device`, `middle layer`, `MDL
-  device`, `Karabo async Python device`, or otherwise clearly asks for
-  Karabo's descriptor-based asynchronous Python API, use
-  `AGENTS.middlelayer.md`.
-- If the code imports `karabo.middlelayer` (including
-  `karabo.middlelayer.*`), or subclasses its `Device`, `DeviceClientBase`, or
-  `Macro`, use `AGENTS.middlelayer.md`.
-- Also use `AGENTS.middlelayer.md` when descriptor-style class attributes are
-  combined with characteristic middlelayer symbols such as `@Slot(...)`,
-  `@slot`, `@InputChannel(...)`, `OutputChannel(...)`,
-  `async def onInitialization(...)`, `getDevice(...)`, `connectDevice(...)`,
-  `setWait(...)`, or `background(...)`.
+    bash -c 'source "karabo/activate"'
 
-## Repository Rule
+### karaboGui
 
-- Do not mix the APIs in one implementation style.
-- Prefer explicit API intent plus buzzwords and imported symbols over directory
-  names when deciding.
-- Do not route on generic symbols such as `Hash`, `State`, `String`, `Slot`,
-  `Configurable`, or `async def` alone. Require an API-specific import, base
-  class, or a combination of characteristic symbols.
-- Use directory location only as a fallback when the API surface is still
-  unclear.
+For `karaboGui` development, activate the dedicated Conda environment:
+
+    bash -c 'conda activate karabogui'
+
+### Environment requirement
+
+If the required environment cannot be activated, **stop and report the problem
+**. Do not continue with another environment or attempt to work around the
+failure without instructions.
+
+## Testing
+
+Run Karabo-backed tests **outside the file sandbox**.
+
+The Framework activation script writes files under the user's home directory,
+which may not be accessible from the file sandbox.
