@@ -49,9 +49,9 @@ TEST(TestHttpClient, testHttpsGet) {
 
     cli.asyncGet("/", reqHeaders, "", [](const http::response<http::string_body>& resp) {
         // The page is retrieved over the secure connection.
-        ASSERT_TRUE(resp.result_int() == 200);
-        ASSERT_TRUE(resp.body().size() > 0);
-        ASSERT_TRUE(resp.base()["Content-Type"] == "text/html; charset=utf-8");
+        ASSERT_EQ(resp.result_int(), 200);
+        ASSERT_GT(resp.body().size(), 0);
+        ASSERT_EQ(resp.base()["Content-Type"], "text/html; charset=utf-8");
     });
 }
 

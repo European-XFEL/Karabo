@@ -887,7 +887,6 @@ namespace karabo {
 
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
-            if (e) return;
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
                 if (channel) {
