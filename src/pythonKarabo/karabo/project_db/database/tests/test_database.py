@@ -120,10 +120,12 @@ async def test_project_interface(database, subtests):
                 # has thus been replaced by a UUID check
                 assert itemxml.attrib['uuid'] == testproject2
 
-        with subtests.test(msg='test_list_items'):
-            await create_hierarchy(db)
+        with subtests.test(msg='test_list_items_projects'):
+            project_uuid, _, scene_uuids = await create_hierarchy(db)
             items = await db.list_items('LOCAL', ['project', 'scene'])
             assert len(items) == 5
+            p_items = await db.list_projects('LOCAL')
+            assert len(p_items) == 1
             scenecnt = 0
             for i in items:
                 if i["item_type"] == "scene":
@@ -243,6 +245,16 @@ async def test_project_interface(database, subtests):
             config = await db.get_device_config_from_device_uuid(
                 device_uuid)
             assert config is not None
+
+        with subtests.test(msg='test_list_scenes'):
+            project_uuid, *_ = await create_hierarchy(db, "Scene!")
+            items = await db.list_scenes(project_uuid)
+            assert len(items) == 4, items
+            for i in items:
+                assert i["item_type"] == "scene"
+                assert "date" in i
+                assert "simple_name" in i
+                assert "uuid" in i
 
 
 @pytest.mark.timeout(60)
