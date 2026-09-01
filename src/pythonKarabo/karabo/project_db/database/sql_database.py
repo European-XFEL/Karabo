@@ -135,6 +135,26 @@ class SQLDatabase(DatabaseBase):
         result = [item for group in results for item in group]
         return result
 
+    async def list_projects(
+            self, domain: str) -> list[dict[str, any]]:
+        """List projects in domain
+
+        :param domain: domain to list items from
+        :return: list of dicts with keys: uuid, item_type, simple_name
+        """
+        if not await self.domain_exists(domain):
+            raise ProjectDBError(f'Domain "{domain}" not found')
+
+        return await self._get_domain_projects(domain)
+
+    async def list_scenes(self, project_uuid: str) -> list[dict[str, any]]:
+        """List scenes in a project with project_uuid
+
+        :param project_uuid: the uuid of the project
+        :return: list of dicts with keys: uuid, item_type, simple_name
+        """
+        return await self._get_project_scenes(project_uuid)
+
     async def list_named_items(
             self, domain: str, item_type: str, simple_name: str
     ) -> list[dict[str, any]]:
@@ -750,7 +770,23 @@ class SQLDatabase(DatabaseBase):
         items = await self._execute_all(
             select(Scene)
             .join(Project).join(ProjectDomain)
-            .where(ProjectDomain.name == domain))
+            .where(ProjectDomain.name == domain)
+        )
+        return [{"uuid": i.uuid, "item_type": "scene",
+                 "simple_name": i.name, "date": datetime_to_str(i.date)}
+                for i in items]
+
+    async def _get_project_scenes(self, project_uuid: str):
+        project = await self._execute_first(
+            select(Project)
+            .join(ProjectDomain)
+            .where(Project.uuid == project_uuid))
+        if project is None:
+            raise ProjectDBError(
+                f"Project with uuid not found {project_uuid}")
+
+        items = await self._get_scenes_of_project(project)
+
         return [{"uuid": i.uuid, "item_type": "scene",
                  "simple_name": i.name, "date": datetime_to_str(i.date)}
                 for i in items]
