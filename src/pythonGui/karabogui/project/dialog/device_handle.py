@@ -41,6 +41,8 @@ class DeviceHandleDialog(QDialog):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui('device_handle.ui'), self)
 
+        self.buttonBox.button(QDialogButtonBox.Cancel).setDefault(True)
+
         validator = InputValidator(parent=self)
         self.leTitle.setValidator(validator)
 
