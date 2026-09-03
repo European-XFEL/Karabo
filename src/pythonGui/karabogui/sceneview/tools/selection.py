@@ -15,8 +15,8 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtCore import QPoint, QRect, Qt
-from qtpy.QtGui import QClipboard, QColor, QPen
-from qtpy.QtWidgets import QApplication
+from qtpy.QtGui import QClipboard, QColor, QCursor, QPen
+from qtpy.QtWidgets import QApplication, QToolTip
 from traits.api import Any, Enum, HasStrictTraits, Instance, String
 
 from karabogui.binding.api import DeviceProxy
@@ -27,9 +27,14 @@ from karabogui.sceneview.layout.layouts import GroupLayout
 from karabogui.sceneview.utils import (
     round_down_to_grid, round_up_to_grid, save_painter_state)
 from karabogui.sceneview.widget.unknown import UnknownSvgWidget
+from karabogui.util import create_table_string
 
 NONRESIZABLE_OBJECTS = (GroupLayout,)
 NONSELECTABLE_OBJECTS = (UnknownSvgWidget,)
+_SELECTION_ATTR = [
+    "displayedName", "defaultValue", "valueType",
+    "unitSymbol", "metricPrefixSymbol", "displayType",
+    "minInc", "maxInc", "minExc", "maxExc", "options"]
 
 
 class ProxySelectionTool(BaseSceneTool):
@@ -40,20 +45,38 @@ class ProxySelectionTool(BaseSceneTool):
     def mouse_down(self, scene_view, event):
         # Only controller might have proxies
         controller = scene_view.controller_at_position(event.pos())
-        if controller is not None:
-            # Use the main proxy of the controller
-            proxy = controller.widget_controller.proxy
-            device = proxy.root_proxy
-            if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
-                if not device.online:
-                    deviceId = device.device_id
-                    clipboard = QApplication.clipboard()
-                    clipboard.clear(mode=QClipboard.Clipboard)
-                    clipboard.setText(deviceId, mode=QClipboard.Clipboard)
-                    return  # ignore offline devices
-                broadcast_event(KaraboEvent.ShowConfiguration,
-                                {'proxy': device})
+        if controller is None:
             return
+
+        proxy = controller.widget_controller.proxy
+        device = proxy.root_proxy
+        if not isinstance(device, DeviceProxy):
+            # ignore DeviceClassProxy or ProjectDevice
+            return
+        if event.button() == Qt.LeftButton:
+            if not device.online:
+                deviceId = device.device_id
+                clipboard = QApplication.clipboard()
+                clipboard.clear(mode=QClipboard.Clipboard)
+                clipboard.setText(deviceId, mode=QClipboard.Clipboard)
+                return
+            broadcast_event(KaraboEvent.ShowConfiguration,
+                            {'proxy': device})
+        elif event.button() == Qt.RightButton:
+            if not device.online or proxy.binding is None:
+                return
+            attributes = proxy.binding.attributes
+            info = {"key": proxy.key}
+            for key in _SELECTION_ATTR:
+                value = attributes.get(key)
+                if value is not None:
+                    info.update({key: str(value)})
+
+            table = create_table_string(info)
+            if description := attributes.get("description"):
+                header = f"<center><i>{description}</i></center><hr>"
+                table = header + table
+            QToolTip.showText(QCursor.pos(), table, widget=scene_view)
 
     def mouse_move(self, scene_view, event):
         pass
