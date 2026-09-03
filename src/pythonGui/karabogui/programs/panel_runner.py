@@ -74,6 +74,7 @@ def run_scene_link(ns):
 
 
 def run_panel(ns):
+    QApplication.setDesktopSettingsAware(False)
     app = QApplication(sys.argv)
     # Run the lazy initializers (icons, widget controllers)
     icons.init()

@@ -52,6 +52,7 @@ def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     app = QApplication.instance()
     if app is None:
+        QApplication.setDesktopSettingsAware(False)
         app = QApplication(args)
     app.styleHints().setColorScheme(Qt.ColorScheme.Light)
     # Set directly the QSettings environment to have access
