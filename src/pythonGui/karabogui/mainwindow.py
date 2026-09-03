@@ -169,7 +169,7 @@ PAGES_FW_LINK = "https://karabo.pages.xfel.eu/Framework/public"
 PAGES_LINK = "https://karabodevices3.pages.xfel.eu"
 PAGES_MACRO_LINK = f"{PAGES_LINK}/howtomacro/"
 PAGES_GUI_LINK = "https://karabo.pages.xfel.eu/howtogui/"
-KEYBOARD_SHORTCUTS = f"{PAGES_GUI_LINK}/keyboard_shortcuts.html"
+KEYBOARD_SHORTCUTS = f"{PAGES_GUI_LINK}/keyboard_shortcuts"
 
 
 class MainWindow(QMainWindow):
