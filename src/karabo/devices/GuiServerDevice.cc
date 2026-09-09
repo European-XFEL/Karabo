@@ -1577,7 +1577,8 @@ namespace karabo {
         bool GuiServerDevice::isProjectLoadingReplyType(const std::string& replyType) {
             return replyType == "projectListDomains" || replyType == "projectListItems" ||
                    replyType == "projectLoadItems" || replyType == "projectBeginUserSession" ||
-                   replyType == "projectEndUserSession";
+                   replyType == "projectEndUserSession" || replyType == "projectListScenes" ||
+                   replyType == "projectListProjects";
         }
 
         bool GuiServerDevice::violatesReadOnly(const std::string& type, const karabo::data::Hash& info) {
