@@ -30,7 +30,8 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["ubuntu-22-004", "ubuntu-24-002", "ubuntu-26", "redhat-9-006"]
+      - ARCH_TAG:
+          ["ubuntu-22-004", "ubuntu-24-002", "ubuntu-26", "redhat-9-006"]
   only_redhat9:
     matrix:
       - ARCH_TAG: ["redhat-9-006"]
@@ -227,7 +228,7 @@ variables:
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   rules:
-    - if: '$REFRESH_MIRROR && ($CI_COMMIT_BRANCH || $CI_COMMIT_TAG)'
+    - if: "$REFRESH_MIRROR && ($CI_COMMIT_BRANCH || $CI_COMMIT_TAG)"
   when: manual
 
 .nightly_build: &nightly-build
@@ -285,12 +286,12 @@ variables:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-      - "src/karabo/**/*"
-      - "src/deviceServer/**/*"
-      - "src/brokerMessageLogger/**/*"
-      - "src/tools/brokerRates/**/*"
-      - "src/tools/dataLoggerIndex/**/*"
-      - "extern/**/*"
+        - "src/karabo/**/*"
+        - "src/deviceServer/**/*"
+        - "src/brokerMessageLogger/**/*"
+        - "src/tools/brokerRates/**/*"
+        - "src/tools/dataLoggerIndex/**/*"
+        - "extern/**/*"
 
 .python_unit_tests: &python-unit-tests
   stage: test
@@ -300,10 +301,10 @@ variables:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-      - "src/karabind/**/*" # bound api new binding code
-      - "src/karabo/**/*" # bound api depends on the c++ build
-      - "src/pythonKarabo/**/*"
-      - "extern/**/*"
+        - "src/karabind/**/*" # bound api new binding code
+        - "src/karabo/**/*" # bound api depends on the c++ build
+        - "src/pythonKarabo/**/*"
+        - "extern/**/*"
 
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
@@ -318,11 +319,11 @@ variables:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-      - "src/pythonGui/**/*"
-      - "src/pythonKarabo/karabo/native/**/*"
-      - "src/pythonKarabo/karabo/common/**/*"
-      - "conda-recipes/karabo-native/**/*"
-      - "conda-recipes/karabogui/**/*"
+        - "src/pythonGui/**/*"
+        - "src/pythonKarabo/karabo/native/**/*"
+        - "src/pythonKarabo/karabo/common/**/*"
+        - "conda-recipes/karabo-native/**/*"
+        - "conda-recipes/karabogui/**/*"
   <<: *artifacts-spec
 
 # Docs
@@ -352,7 +353,7 @@ doc_test:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-      - "doc/**/*"
+        - "doc/**/*"
 
 ### Jobs
 
@@ -374,7 +375,7 @@ pre-commit-check:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-      - "src/**/*"
+        - "src/**/*"
   allow_failure: false
 
 systemtest:
@@ -589,11 +590,14 @@ internal_mirror_publish:
     # Retrieves the main branch and the tags of the Karabo Framework repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch main --single-branch FrameworkHead
     - cd FrameworkHead
-    # loop over all branches that are either main, or a hotfix branch and fetch them too, allowing tags to be pushed
+    # Loop over all branches that are either main, or a hotfix branch and fetch them too, allowing tags to be pushed
+    # Sleeps for 1 second after fetching each branch to avoid errors 429 ("Too many requests") similar to the one
+    # that occurred in https://git.xfel.eu/Karabo/Framework/-/jobs/1577508.
     - |
       for remote_branch in $(git ls-remote --heads origin | awk '{print $2}' | grep -E '^refs/heads/[0-9]+\.[0-9]+\.[xX]-hotfix$'); do
         branch_name=${remote_branch#refs/heads/}
         git fetch origin "$remote_branch:$branch_name"
+        sleep 1
       done
     # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
     - git remote rm origin
