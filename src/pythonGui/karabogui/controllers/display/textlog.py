@@ -89,11 +89,12 @@ class DisplayTextLog(BaseBindingController):
         ver_layout.addLayout(hor_layout)
 
         # nice color background
-        objectName = generateObjectName(widget)
-        sheet = ('QWidget#{} {{ background-color : rgba{}; }}'
-                 ''.format(objectName, ALL_OK_COLOR))
-        self.log_widget.setObjectName(objectName)
-        self.log_widget.setStyleSheet(sheet)
+        viewport = self.log_widget.viewport()
+        objectName = generateObjectName(viewport)
+        sheet = (f'QWidget#{objectName} {{ background-color : rgba'
+                 f'{ALL_OK_COLOR}; }}')
+        viewport.setObjectName(objectName)
+        viewport.setStyleSheet(sheet)
         return widget
 
     def value_update(self, proxy):
