@@ -103,3 +103,18 @@ def test_time_stamp(widget):
 
     # Tooltip with milliseconds
     assert model.data(index, Qt.ToolTipRole) == "2021-07-05T15:08:35.250"
+
+
+def test_time_stamp_sorting_includes_milliseconds(gui_app):
+    widget = LogWidget()
+    widget.initialize([
+        {"timestamp": "2026-09-16T16:12:35.250", "type": "INFO",
+         "category": "first", "message": "first", },
+        {"timestamp": "2026-09-16T16:12:35.251", "type": "INFO",
+         "category": "second", "message": "second", }, ])
+
+    widget.table.sortByColumn(0, Qt.AscendingOrder)
+
+    model = widget.table.model()
+    assert model.data(model.index(0, 2), Qt.DisplayRole) == "first"
+    assert model.data(model.index(1, 2), Qt.DisplayRole) == "second"

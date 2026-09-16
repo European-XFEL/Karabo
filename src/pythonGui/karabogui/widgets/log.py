@@ -153,6 +153,7 @@ class LogWidget(QWidget):
         self.filter_model = LogFilterModel()
         self.filter_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.filter_model.setFilterRole(Qt.DisplayRole)
+        self.filter_model.setSortRole(Qt.UserRole)
         self.filter_model.setFilterKeyColumn(INSTANCE_COLUMN)
         self.filter_model.setSourceModel(self.table_model)
 
@@ -354,6 +355,8 @@ class TableLogModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             if column == TIME_STAMP_COLUMN:
                 return log[column].toString(Qt.ISODate)
+            return log[column]
+        elif role == Qt.UserRole:
             return log[column]
         if role == Qt.ToolTipRole:
             if column == TIME_STAMP_COLUMN:
