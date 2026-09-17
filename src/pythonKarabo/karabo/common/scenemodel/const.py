@@ -94,7 +94,7 @@ IMAGE_ELEMENT_TAG = NS_SVG + "image"
 UNKNOWN_WIDGET_CLASS = "UnknownWidget"
 SVG_GROUP_TAG = NS_SVG + "g"
 # Minimum width or height of the arrow.
-ARROW_MIN_SIZE = 10
+LINE_MIN_SIZE = 10
 
 # Float formatting constants
 DEFAULT_FORMAT = "g"

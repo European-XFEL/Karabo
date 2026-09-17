@@ -20,7 +20,7 @@ from traits.api import CInt, Property, String
 from karabo.common.utils import get_arrowhead_points
 
 from .bases import BaseShapeObjectData
-from .const import ARROW_MIN_SIZE, NS_KARABO, NS_SVG, SVG_GROUP_TAG
+from .const import LINE_MIN_SIZE, NS_KARABO, NS_SVG, SVG_GROUP_TAG
 from .io_utils import get_numbers, set_numbers
 from .registry import register_scene_reader, register_scene_writer
 
@@ -40,6 +40,15 @@ class LineModel(BaseShapeObjectData):
     # Add x and y to follow the generic object interface
     x = Property(CInt)
     y = Property(CInt)
+
+    width = Property(CInt)
+    height = Property(CInt)
+
+    def _get_width(self):
+        return max(abs(self.x1 - self.x2), LINE_MIN_SIZE)
+
+    def _get_height(self):
+        return max(abs(self.y1 - self.y2), LINE_MIN_SIZE)
 
     def _get_x(self):
         return min([self.x1, self.x2])
@@ -72,15 +81,6 @@ class ArrowPolygonModel(LineModel):
     hy1 = CInt
     hx2 = CInt
     hy2 = CInt
-
-    width = Property(CInt)
-    height = Property(CInt)
-
-    def _get_width(self):
-        return max(abs(self.x1 - self.x2), ARROW_MIN_SIZE)
-
-    def _get_height(self):
-        return max(abs(self.y1 - self.y2), ARROW_MIN_SIZE)
 
     def recalculate_arrowhead_points(self):
         points = get_arrowhead_points(self.x1, self.y1, self.x2, self.y2)
