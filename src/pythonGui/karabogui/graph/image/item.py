@@ -15,12 +15,13 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
-from pyqtgraph import GraphicsObject, Point, functions as fn, getConfigOption
+from pyqtgraph import (
+    ColorMap, GraphicsObject, Point, functions as fn, getConfigOption)
 from qtpy.QtCore import QPointF, QRectF, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QImage, QTransform, qRgb
 from scipy.ndimage import zoom
 
-from karabogui.graph.common.api import MouseTool
+from karabogui.graph.common.api import GRAYSCALE, MouseTool
 
 from .utils import ByteScaler, map_rect_to_transform, scale_levels
 
@@ -30,6 +31,12 @@ NULL_COLOR = QColor(255, 255, 255, 70)
 
 def karabo_default_image():
     return np.zeros(shape=(10, 10), dtype=np.uint8)
+
+
+def _get_grayscale_lut():
+    lut = ColorMap(*zip(*GRAYSCALE)).getLookupTable(
+        alpha=False)
+    return lut
 
 
 class KaraboImageItem(GraphicsObject):
@@ -60,6 +67,7 @@ class KaraboImageItem(GraphicsObject):
         # We have row-major
         self.axisOrder = getConfigOption("imageAxisOrder")
         self.setImage(karabo_default_image())
+        self.setLookUpTable(_get_grayscale_lut())
 
     # ---------------------------------------------------------------------
     # Public abstract methods
@@ -335,8 +343,7 @@ class KaraboImageItem(GraphicsObject):
                                         img_format=QImage.Format_Indexed8)
 
             # 7. Set color table
-            if self._qlut is not None:
-                qimage.setColorTable(self._qlut)
+            qimage.setColorTable(self._qlut)
             self.qimage = qimage
         else:
             if image.shape[-1] == 3:
