@@ -122,6 +122,18 @@ class Macro(Macro):
             pass
 """
 
+UNSTOPPABLE_MACRO_BASE_EXC_TUPLE = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def run(self):
+        try:
+            print(f"{self.name}")
+        except (ValueError, BaseException):
+            # this macro will catch the CancelledError and never stop.
+            pass
+"""
+
 STOPPABLE_MACRO_CANCELLED_EXC = """
 from asyncio import CancelledError
 from karabo.middlelayer import Macro
@@ -133,6 +145,17 @@ class Macro(Macro):
         except CancelledError as e:
             print("do something")
             raise e
+"""
+
+STOPPABLE_MACRO_EXCEPTION_TUPLE = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def run(self):
+        try:
+            print(f"{self.name}")
+        except (Exception, RuntimeError):
+            pass
 """
 
 SUB_IMPORT_MACRO = """
@@ -248,9 +271,13 @@ class Tests(TestCase):
         self.assertEqual(len(res), 1, "\n".join(res))
         res = validate_macro(UNSTOPPABLE_MACRO_BASE_EXC)
         self.assertEqual(len(res), 1, "\n".join(res))
+        res = validate_macro(UNSTOPPABLE_MACRO_BASE_EXC_TUPLE)
+        self.assertEqual(len(res), 1, "\n".join(res))
         # this code is dangerous.
         # But we will allow it for the moment
         res = validate_macro(STOPPABLE_MACRO_CANCELLED_EXC)
+        self.assertEqual(len(res), 0, "\n".join(res))
+        res = validate_macro(STOPPABLE_MACRO_EXCEPTION_TUPLE)
         self.assertEqual(len(res), 0, "\n".join(res))
 
     def test_sub_imports(self):
