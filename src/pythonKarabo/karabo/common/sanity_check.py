@@ -156,21 +156,24 @@ def has_base_exceptions(tree):
                 " Use `except Exception as e:`"
                 " or catch the specific exceptions."
                 " This behaviour will likely result in a macro"
-                " that cannot be stopped"
-            )
+                " that cannot be stopped")
             if node.type is None:
                 reports.append(
                     f"Found `except:` clause in line {node.lineno}:"
-                    " {explanation}"
-                )
+                    " {explanation}")
+            elif isinstance(node.type, ast.Tuple):
+                for child in node.type.elts:
+                    if child.id == "BaseException":
+                        reports.append(
+                            f"Found `except {child.id}:`"
+                            f" clause in line {node.lineno}: {explanation}")
             elif node.type.id == "BaseException":
                 # catch the `except BaseException:`
                 # XXX: the CancelledError is dangerous as well,
                 # but we chose to allow it here
                 reports.append(
                     f"Found `except {node.type.id}:`"
-                    f" clause in line {node.lineno}: {explanation}"
-                )
+                    f" clause in line {node.lineno}: {explanation}")
     return reports
 
 
