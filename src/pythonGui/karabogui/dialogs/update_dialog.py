@@ -84,6 +84,10 @@ def get_index_list() -> dict:
     except requests.Timeout:
         return {}
     package_list = result.json()
+    if "error" in package_list:
+        # e.g. {'message': '404 Project Not Found',
+        #       'error': 'Project not found'}
+        return {}
 
     tag_regex = re.compile(_TAG_REGEX)
     uniques = defaultdict(list)
