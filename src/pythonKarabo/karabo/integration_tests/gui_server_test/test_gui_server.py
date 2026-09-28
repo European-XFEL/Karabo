@@ -716,6 +716,18 @@ async def test_disconnect(guiServer):
 
 @pytest.mark.timeout(60)
 @pytest.mark.asyncio
+async def test_websocket_close_updates_connected_client_count(guiServer):
+    adapter, _, _ = guiServer
+    await adapter.login()
+    await assert_wait_property(TEST_GUI_SERVER_ID, "connectedClientCount", 1)
+
+    await adapter.disconnect()
+
+    await assert_wait_property(TEST_GUI_SERVER_ID, "connectedClientCount", 0)
+
+
+@pytest.mark.timeout(60)
+@pytest.mark.asyncio
 async def test_slot_notify(guiServer):
     adapter, Adapter, PORT = guiServer
     await adapter.login()
