@@ -126,14 +126,13 @@ class ConfigurationTreeView(QTreeView):
             proxy = model.index_ref(index)
             yield
         finally:
-            if proxy is None:
-                # XXX: Avoid a full model search for `None`
-                return
-            root_index = model.index(0, 0, QModelIndex())
-            matches = model.match(root_index, Qt.UserRole, proxy.path, 1,
-                                  Qt.MatchRecursive)
-            index = matches[0] if matches else QModelIndex()
-            self.setCurrentIndex(index)
+            # XXX: Avoid a full model search for `None`
+            if proxy is not None:
+                root_index = model.index(0, 0, QModelIndex())
+                matches = model.match(root_index, Qt.UserRole, proxy.path, 1,
+                                      Qt.MatchRecursive)
+                index = matches[0] if matches else QModelIndex()
+                self.setCurrentIndex(index)
 
     def sourceModel(self):
         """Public method to retrieve the source model"""
