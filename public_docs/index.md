@@ -18,3 +18,5 @@ and in [this publication](https://www.tandfonline.com/doi/pdf/10.1080/08940886.2
 
 The Karabo source repository is on [GitHub](https://github.com/European-XFEL/Karabo) and
 also contains our [Contributing Guidelines](https://github.com/European-XFEL/Karabo/blob/main/CONTRIBUTING.md).
+
+Please read our [guidelines for using AI tools](https://github.com/European-XFEL/Karabo/blob/main/public_docs.md).
