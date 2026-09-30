@@ -42,9 +42,11 @@ namespace karabo {
             SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType>(expected) {}
 
             /**
-             * The <b>options</b> method specifies values allowed for the parameter.
-             * @param opts A string with space separated values. The values are casted to the proper type.
-             * @param sep  A separator symbols. Default values are " ,;"
+             * The <b>options</b> method specifies values allowed for this parameter.
+             *
+             * @param opts A string with the allowed values. The values are separated by any of the
+             *             separator symbols and casted to the proper type.
+             * @param sep  Separator symbols (i.e. any of these seperates values before casting)."
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
@@ -52,9 +54,9 @@ namespace karabo {
             }
 
             /**
-             * The <b>options</b> method specifies values allowed for this parameter. Each value is an element of the
-             * vector. This function can be used when space cannot be used as a separator.
-             * @param opts vector of strings. The values are casted to the proper type.
+             * The <b>options</b> method specifies values allowed for this parameter.
+             *
+             * @param opts A vector with the allowed values.
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::vector<ValueType>& opts) {
