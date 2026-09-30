@@ -53,6 +53,7 @@ namespace karabo::net {
         std::size_t m_readBytes;
         std::size_t m_writtenBytes;
         std::atomic<bool> m_writeInProgress;
+        std::atomic<bool> m_closeInProgress;
         unsigned int m_messageSize;
 
        public:
