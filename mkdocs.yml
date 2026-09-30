@@ -46,6 +46,7 @@ nav:
   - Karathon API Reference: karathon.md
   - Bound API Reference: bound.md
   - C++ API Reference: cpp.md
+  - AI Policy: policy.md
 
 plugins:
 - search
