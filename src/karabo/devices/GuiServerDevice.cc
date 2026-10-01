@@ -26,6 +26,7 @@
 #include <filesystem>
 
 #include "karabo/core/InstanceChangeThrottler.hh"
+#include "karabo/core/ServiceIds.hh"
 #include "karabo/data/schema/SimpleElement.hh"
 #include "karabo/data/schema/VectorElement.hh"
 #include "karabo/data/types/Hash.hh"
@@ -451,7 +452,7 @@ namespace karabo {
                   .displayedName("Data Log Manager Id")
                   .description("The DataLoggerManager device to query for log readers.")
                   .assignmentOptional()
-                  .defaultValue(karabo::util::DATALOGMANAGER_ID)
+                  .defaultValue(karabo::core::DATALOGMANAGER_ID)
                   .reconfigurable()
                   .expertAccess()
                   .commit();
@@ -507,6 +508,7 @@ namespace karabo {
               m_checkConnectionTimer(EventLoop::getIOService()),
               m_networkConnections(),
               m_readyNetworkConnections(),
+              m_dataLogManagerId(config.get<std::string>("dataLogManagerId")),
               m_isReadOnly(config.get<bool>("isReadOnly")),
               m_timeout(config.get<int>("timeout")),
               m_onlyAppModeClients(config.get<bool>("onlyAppModeClients")) {
@@ -638,8 +640,11 @@ namespace karabo {
 
                 // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
                 // we would not need loggerMapConnectedHandler...
-                asyncConnect(get<std::string>("dataLogManagerId"), "signalLoggerMap", "slotLoggerMap",
+                asyncConnect(m_dataLogManagerId, "signalLoggerMap", "slotLoggerMap",
                              bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
+                // Once (and forever) connect to "signalProjectUpdate"
+                asyncConnect(core::PROJECTMANAGER_ID, "signalProjectUpdate", "slotProjectUpdate");
+
 
                 // Switch on instance tracking - which is blocking a while.
                 // Note that instanceNew(..) will be called for all instances already in the game.
@@ -771,7 +776,7 @@ namespace karabo {
         }
 
         void GuiServerDevice::loggerMapConnectedHandler() {
-            requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "slotLoggerMap");
+            requestNoWait(m_dataLogManagerId, "slotGetLoggerMap", "slotLoggerMap");
         }
 
 
@@ -2301,8 +2306,7 @@ namespace karabo {
                     str << "Note that macros are not logged.";
                 } else if (m_loggerMap.empty()) {
                     str << "Logger map empty - maybe logging system is offline or GUI server's "
-                        << "'dataLogManagerId' (pointing to '" << get<std::string>("dataLogManagerId")
-                        << "') is misconfigured?";
+                        << "'dataLogManagerId' (pointing to '" << m_dataLogManagerId << "') is misconfigured?";
                 } else {
                     str << "No entry in logger map for '" << deviceId << "'";
                 }
@@ -2506,14 +2510,13 @@ namespace karabo {
                         }
                     }
 
-                    if (instanceId == get<std::string>("dataLogManagerId")) {
+                    if (instanceId == m_dataLogManagerId) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                         // Even this request might not be needed since the logger manager emits the
                         // corresponding signal. But we cannot be 100% sure that our 'connect' has been
                         // registered in time.
-                        requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "slotLoggerMap");
+                        requestNoWait(m_dataLogManagerId, "slotGetLoggerMap", "slotLoggerMap");
                     }
-                    registerPotentialProjectManager(topologyEntry);
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.what();
@@ -2572,13 +2575,6 @@ namespace karabo {
                         } else {
                             ++mapIter;
                         }
-                    }
-                }
-                {
-                    std::unique_lock lk(m_projectManagerMutex);
-                    auto manager = m_projectManagers.find(instanceId);
-                    if (manager != m_projectManagers.end()) {
-                        m_projectManagers.erase(manager);
                     }
                 }
                 {
@@ -3122,18 +3118,6 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::registerPotentialProjectManager(const karabo::data::Hash& topologyEntry) {
-            std::string type, instanceId;
-            typeAndInstanceFromTopology(topologyEntry, type, instanceId);
-            if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
-                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "ProjectManager") {
-                std::unique_lock lk(m_projectManagerMutex);
-                asyncConnect(instanceId, "signalProjectUpdate", "slotProjectUpdate");
-                m_projectManagers.insert(instanceId);
-            }
-        }
-
-
         void GuiServerDevice::slotProjectUpdate(const Hash& info, const std::string& instanceId) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectUpdate : info ...\n" << info;
@@ -3158,12 +3142,6 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> GuiServerDevice::getKnownProjectManagers() const {
-            std::shared_lock lk(m_projectManagerMutex);
-            return std::vector<std::string>(m_projectManagers.begin(), m_projectManagers.end());
-        }
-
-
         void GuiServerDevice::onRequestGeneric(WeakChannelPointer channel, const karabo::data::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Generic request called with:  " << info;
@@ -3176,7 +3154,7 @@ namespace karabo {
                     } else if (slot == "slotDeleteInitConfiguration") {
                         logUserAction(channel, "Deleted init configuration '" + args.get<std::string>("name") + "'");
                     }
-                } else if (instanceId == "KaraboProjectDB" && slot == "slotGenericRequest") {
+                } else if (instanceId == core::PROJECTMANAGER_ID && slot == "slotGenericRequest") {
                     const std::string& type = args.get<std::string>("type");
                     if (type == "saveItems") {
                         const std::vector<Hash>& items = args.get<std::vector<Hash>>("items");
@@ -3259,15 +3237,6 @@ namespace karabo {
                 h.set("reason", std::move(failTxt));
             }
             safeClientWrite(channel, h);
-        }
-
-        bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId,
-                                                    const std::string& type, const std::string& reason) {
-            std::shared_lock lk(m_projectManagerMutex);
-            if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
-            Hash h("type", type, "reply", Hash("success", false, "reason", reason));
-            safeClientWrite(channel, h, LOSSLESS);
-            return false;
         }
 
         std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
