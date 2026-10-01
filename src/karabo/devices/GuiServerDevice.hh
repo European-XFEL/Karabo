@@ -165,11 +165,9 @@ namespace karabo {
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
             typedef std::map<karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
 
+            const std::string m_dataLogManagerId;
             mutable std::mutex m_loggerMapMutex;
             karabo::data::Hash m_loggerMap;
-
-            std::set<std::string> m_projectManagers;
-            mutable std::shared_mutex m_projectManagerMutex;
 
             const bool m_isReadOnly;
             static const std::unordered_set<std::string> m_writeCommands;
@@ -1145,29 +1143,6 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
-
-            /**
-             * Checks if an instance at instanceId is a ProjectManager. If so, register it to the list of known project
-             * services
-             * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
-             */
-            void registerPotentialProjectManager(const karabo::data::Hash& topologyEntry);
-
-            /**
-             * Return a list of project services known to this GUI server
-             * @return
-             */
-            std::vector<std::string> getKnownProjectManagers() const;
-
-            /**
-             * Check if a given project manager identified by id is known in the distributed system
-             * @param channel to forward a failure message to if not
-             * @param deviceId of the project manager device
-             * @param type of the request
-             * @return true if the project manager id exists in the distributed system
-             */
-            bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string& type,
-                                       const std::string& reason);
 
             /**
              * Utility for getting a "name" from client connections.

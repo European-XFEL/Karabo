@@ -28,6 +28,7 @@
 #include <mutex>
 
 #include "Device.hh"
+#include "ServiceIds.hh"
 #include "karabo/data/io/FileTools.hh"
 #include "karabo/data/types/FromLiteral.hh"
 #include "karabo/data/types/NDArray.hh"
@@ -65,12 +66,12 @@ namespace karabo {
             if (serviceDeviceIds.has("dataLoggerManagerId")) {
                 m_dataLoggerManagerId = serviceDeviceIds.get<std::string>("dataLoggerManagerId");
             } else {
-                m_dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID;
+                m_dataLoggerManagerId = karabo::core::DATALOGMANAGER_ID;
             }
             if (serviceDeviceIds.has("configurationManagerId")) {
                 m_configManagerId = serviceDeviceIds.get<std::string>("configurationManagerId");
             } else {
-                m_configManagerId = DEFAULT_CONFIG_MANAGER_ID;
+                m_configManagerId = karabo::core::CONFIGMANAGER_ID;
             }
         }
 
