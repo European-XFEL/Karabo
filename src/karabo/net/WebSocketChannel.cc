@@ -134,9 +134,6 @@ namespace karabo::net {
 
 
     void WebSocketChannel::onRead(beast::error_code ec, std::size_t bytes_transferred) {
-        // This indicates that the session was closed
-        if (ec == websocket::error::closed) return;
-
         const char* archive = nullptr;
         std::size_t len = 0;
         if (!ec) {
