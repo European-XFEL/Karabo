@@ -19,6 +19,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from abc import abstractmethod
+from enum import Enum
 
 from qtpy.QtCore import QLine, QMargins, QPoint, QRect, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QPainterPath, QPen, QPolygon, QTransform
@@ -104,6 +105,9 @@ class BaseShape(ABCHasStrictTraits):
             fill_opacity = 1.0
 
         pen = dialog.pen
+        style = pen.style()
+        # XXX: Changed to Enum
+        style = style.value if isinstance(style, Enum) else style
         self.model.trait_set(
             stroke='none' if pen.style() == Qt.NoPen else pen.color().name(),
             stroke_opacity=pen.color().alphaF(),
@@ -111,7 +115,7 @@ class BaseShape(ABCHasStrictTraits):
             stroke_dashoffset=pen.dashOffset(),
             stroke_width=0 if pen.style() == Qt.NoPen else pen.widthF(),
             stroke_dasharray=pen.dashPattern(),
-            stroke_style=pen.style(),
+            stroke_style=style,
             stroke_linejoin=QT_PEN_JOIN_STYLE_TO_STR[pen.joinStyle()],
             stroke_miterlimit=pen.miterLimit(),
             fill=fill,
