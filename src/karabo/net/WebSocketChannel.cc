@@ -114,6 +114,7 @@ namespace karabo::net {
           m_readBytes(0),
           m_writtenBytes(0),
           m_writeInProgress(false),
+          m_closeInProgress(false),
           m_messageSize(0) {
         m_queue[4] = Queue::Pointer(new LosslessQueue);
         m_queue[2] = Queue::Pointer(new RemoveOldestQueue(kDefaultQueueCapacity));
@@ -206,7 +207,7 @@ namespace karabo::net {
         // connection gracefully. It is important to follow this protocol for remote
         // application like python or nodejs based. If simple close low-level socket
         // the remote peers will not be noticed.
-        if (m_ws) {
+        if (m_ws && !m_closeInProgress.exchange(true)) {
             // Capture the 'guard' to prevent premature ~WebSocketChannel() call
             m_ws->async_close(websocket::close_code::normal, [guard{shared_from_this()}](const ErrorCode& ec) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Websocket closed: #" << ec.value() << " -- " << ec.message();
